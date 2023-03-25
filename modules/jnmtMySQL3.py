@@ -1,0 +1,234 @@
+# -*-coding: utf-8-*-
+import logging
+import sys
+import traceback
+import decimal
+import pandas as pd
+from sqlalchemy import create_engine
+from itertools import cycle
+from urllib.parse import quote_plus as urlquote
+from sshtunnel import SSHTunnelForwarder
+'''
+九牛账号密码：mysql数据库地址: rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com 端口: 3306 只读账号 imr_bi    密码：dfpllj@#@0
+('mysql+pymysql://数据库用户名:数据库密码@数据库地址/数据库名')
+'''
+
+
+# rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com
+# URL = 'mysql+pymysql://zsdatastat:ZS_quna1@192.168.1.219:3306/'   # zs_mongo
+# URL = 'mysql+pymysql://root:021412@localhost:3306/'    # zs_test
+# URL = 'mysql+pymysql://imr_bi:dfpllj@#@0@rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com:3306/'
+ssh_host = "39.98.80.80" # 堡垒机ip地址或主机名
+ssh_port = 22 # 堡垒机连接mysql服务器的端口号，一般都是22，必须是数字
+ssh_user = "root" # 这是你在堡垒机上的用户名
+ssh_password = "021412Abc." # 这是你在堡垒机上的用户密码
+mysql_host = "127.0.0.1" # 这是你mysql服务器的主机名或ip地址
+mysql_port = 3306 # 这是你mysql服务器上的端口，3306，mysql就是3306，必须是数字
+mysql_user = "root" # 这是你mysql数据库上的用户名
+mysql_password = "021412Abc." # 这是你mysql数据库的密码
+mysql_db = "mydb1" # mysql服务器上的数据库名
+server = SSHTunnelForwarder(
+                # 跳板机ip与ssh登录端口号
+                ssh_address_or_host=(ssh_host, ssh_port),
+                # 跳板机登录账号
+                ssh_username=ssh_user,
+                # 跳板机登录密码
+                ssh_password = ssh_password,
+                # # PC(客户端)的私钥路径
+                # ssh_pkey="/users/eddy/.ssh/id_rsa",
+                # PC(客户端)的密码
+                # ssh_private_key_password="wdswzddyh,5",
+                # 远程MYSQL服务器的绑定的IP和端口号
+                remote_bind_address=(mysql_host, mysql_port)
+                )
+server.start()
+local_port = str(server.local_bind_port)
+URL=f'mysql+pymysql://{mysql_user}:{mysql_password}@{"127.0.0.1"}:{local_port}/'
+
+# URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
+
+
+
+class QunaMysql(object):
+    # 初始化
+    def __init__(self, schema='jnmt_sql'):
+        self._engin = create_engine(URL + schema + '?charset=utf8',
+                                    pool_pre_ping=True,
+                                    pool_recycle=3600 * 4)
+        self.schema = schema
+
+    # 连接池状态
+    def getPoolStatus(self):
+        return self._engin.pool.status()
+
+    # 获取连接
+    def getConnection(self):
+        conn = self._engin.connect()
+        # logging.info(self._engin.pool.status())
+        # print("=======")
+        return conn
+
+    # 释放连接
+    def closeConnection(self, conn):
+        if conn:
+            conn.close()
+            # print(self._engin.pool.status())
+            # print("********")
+
+    # 执行sql
+    def executeSqlByEngine(self, sql='SELECT * FROM DUAL'):
+        return self._engin.execute(sql)
+
+    # 执行sql
+    def executeSqlByConn(self, sql='SELECT * FROM DUAL', conn=None):
+        conn = conn or self.getConnection()
+        with conn as connection:
+            return connection.execute(sql)
+
+    def executeSqlWithParamByConn(self, sql='SELECT * FROM DUAL', data=None, conn=None):
+        if data is None:
+            return
+        conn = conn or self.getConnection()
+        with conn as connection:
+            return connection.execute(sql, data)
+
+    # 批量执行更新sql语句
+    def executeSqlManyByConn(self, sql='', data=[], conn=None):
+        if len(data) > 0:
+            conn = conn or self.getConnection()
+            with conn as connection:
+                return connection.execute(sql, data)
+
+    # 加载数据到df(自定义索引) 不推荐
+    def load_DataFrame_Conn(self, sql='SELECT * FROM DUAL', conn=None):
+        conn = conn or self.getConnection()
+        with conn as connection:
+            dataList = list(connection.execute(sql))
+            dataFrame = pd.DataFrame(dataList, index=[(n + 1) for n in range(len(dataList))])
+            return dataFrame
+
+    # 加载数据到df 不推荐
+    def get_DataFrame_Conn(self, sql='SELECT * FROM DUAL', conn=None):
+        conn = conn or self.getConnection()
+        with conn as connection:
+            dataList = list(connection.execute(sql))
+            dataFrame = pd.DataFrame(dataList)
+            return dataFrame
+
+    # 加载数据到df
+    def get_DataFrame_PD(self, sql='SELECT * FROM DUAL', conn=None):
+        conn = conn or self.getConnection()
+        with conn as connection:
+            dataFrame = pd.read_sql(sql, connection)
+            return dataFrame
+
+
+    # 保存df到数据库
+    def save_DataFrame_PD(self, pd, table, conn=None):
+        conn = conn or self.getConnection()
+        with conn as connection:
+            pd.to_sql(table, connection, if_exists='append', index=False)
+
+    def get_list(self, sql='SELECT * FROM DUAL'):
+        '''返回结果为list'''
+        result = self._engin.execute(sql)
+        result_list = []
+        for i in result:
+            result_list.append(i[0])
+        return result_list
+
+    def get_dict(self, sql, key_names=None):
+        '''返回结果为 dictionary in dictionary
+        {"John":{"address":"3103 13th South Street","phone":"258-563-3654"}}
+
+        sql 查询的第一个字段作为 最外层字典的 key
+        其余字段另成为内层字典的 value
+        :param key_names 指定内层字典 dict 的key，如未指定，命名为col_0，col_1...
+        '''
+        result = self._engin.execute(sql).fetchall()
+        result_dict = {}
+
+        for record in result:
+            dict_key, *fields = record
+
+            # 如果没有提供其余字段的键名
+            # 则自动生成一个
+            if key_names is None:
+                key_names = []
+                for num in range(len(fields)):
+                    key_names.append("col_{}".format(num))
+
+            elif len(key_names) != len(fields):
+                raise ValueError("{} key names are privided,{} is required".format(len(key_names), len(fields)))
+            # sqlalchemy 返回的小数 type 是decimal.Decimal
+            # 需要转换
+            for index, record in enumerate(fields):
+                if isinstance(record, decimal.Decimal):
+                    fields[index] = float(record)
+
+            key_iter = cycle(key_names)
+            data_dict = {}
+            for each_field in fields:
+                data_dict[next(key_iter)] = each_field
+
+            result_dict[dict_key] = data_dict
+
+        return result_dict
+
+
+if __name__ == '__main__':
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        stream=sys.stdout,
+                        filemode='a+')
+
+    try:
+        qunaMysql = QunaMysql()
+        # ===============================
+        # df = qunaMysql.load_DataFrame_PD(sql="select * from zzss_sale_test;")
+        # df = qunaMysql.load_DataFrame_PD(sql="select * from zzss_sale_test;",conn=qunaMysql.getConnection())
+
+        # df = qunaMysql.load_DataFrame_Conn(sql="select * from zzss_sale_test;")
+
+        # result = qunaMysql.executeSqlByConn(sql="insert zzss_sale_test (k1,k2) values ('1','1');")
+        # # result = qunaMysql.executeSqlByConn(sql="delete from  zzss_sale_test where k1='10';")
+        # result = qunaMysql.executeSqlByConn(sql="select * from zzss_sale_test;")
+        # dataList = list(result)
+        # df = pd.DataFrame(dataList, index=[(n + 1) for n in range(len(dataList))])
+
+        # for i in range(20):
+        #     qunaMysql.executeSqlByConn(sql="insert zzss_sale_test (k1,k2) values ('1','1');")
+        #     qunaMysql.executeSqlByConn(sql="delete from  zzss_sale_test where k1='10';")
+        #     result = qunaMysql.executeSqlByConn(sql="select * from zzss_sale_test;")
+        #     dataList = list(result)
+        #     df = pd.DataFrame(dataList, index=[(n + 1) for n in range(len(dataList))])
+        #     # print(df)
+        #     print("-------")
+
+
+        # connection = qunaMysql.getConnection()
+        # with connection as conn:
+        #     for i in range(20):
+        #         conn.execute("insert zzss_sale_test (k1,k2) values ('1','1');")
+        #         conn.execute("delete from  zzss_sale_test where k1='10';")
+        #         print("-------")
+
+        # conn = qunaMysql.getConnection()
+        # for i in range(20):
+        #     conn.execute("insert zzss_sale_test (k1,k2) values ('1','1');")
+        #     conn.execute("delete from  zzss_sale_test where k1='10';")
+        #     print("-------")
+        # qunaMysql.closeConnection(conn)
+
+
+
+    except:
+        ex = traceback.format_exc()
+        logging.error(ex)
+    finally:
+        print(qunaMysql._engin.pool.status())
+        # print(qunaMysql._engin.pool.checkedin())
+        # print(qunaMysql._engin.pool.checkedout())
+        pass
