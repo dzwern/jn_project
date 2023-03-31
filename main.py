@@ -70,25 +70,62 @@ from sqlalchemy import create_engine
 from itertools import cycle
 from urllib.parse import quote_plus as urlquote
 
-
-userName = 'imr_bi'
-password = 'dfpllj@#@0'
-dbHost = 'rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com'
+userName = 'dzw'
+password = 'dsf#4oHGd'
+dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
 dbPort = 3306
 URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
-schema='crm_bi'
+schema = 'crm_tm_jnmt'
+schema2 = 'hhx_dx'
+engine = create_engine(URL + schema + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+engine2 = create_engine(URL + schema2 + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
 
 
-engine=create_engine(URL + schema + '?charset=utf8',pool_pre_ping=True,pool_recycle=3600 * 4)
-
-connection=engine.connect()
-
-
-result = connection.execute("select * from jnmt_sys_dept")
-
-for row in result:
- print(row)
+# 加载数据到df
+def get_DataFrame_PD(sql='SELECT * FROM DUAL'):
+    conn = engine.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
 
 
+# 批量执行更新sql语句
+def executeSqlManyByConn(sql, data):
+    conn = engine2.connect()
+    if len(data) > 0:
+        with conn as connection:
+            return connection.execute(sql, data)
 
 
+def get_sql():
+    sql = '''
+    select * from sys_tenant
+    '''
+    df = get_DataFrame_PD(sql)
+    return df
+
+
+def save_sql(df):
+    sql = '''
+     INSERT INTO `sys_tenant` 
+     (`name`,`status`,`create_by`,`create_time`,`update_by`,`update_time`,`remark`,`version`,`order_num`) 
+     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+     ON DUPLICATE KEY UPDATE
+         `name`= VALUES(`name`),`status`= VALUES(`status`),`create_by`=VALUES(`create_by`),
+         `create_time`=values(`create_time`),`update_by`=values(`update_by`),`update_time`=values(`update_time`),
+         `remark`=values(`remark`),`version`=values(`version`),`order_num`=values(`order_num`)
+     '''
+    data = df.values.tolist()
+    executeSqlManyByConn(sql, data)
+
+
+def main():
+    df_sql = get_sql()
+    df_sql = df_sql.iloc[:, 1:]
+    print(df_sql)
+    save_sql(df_sql)
+    print('储存完成')
+
+
+if __name__ == '__main__':
+    main()

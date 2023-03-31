@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from itertools import cycle
 from urllib.parse import quote_plus as urlquote
 
+
 '''
 九牛账号密码：mysql数据库地址: rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com 端口: 3306 只读账号 imr_bi    密码：dfpllj@#@0
 ('mysql+pymysql://数据库用户名:数据库密码@数据库地址/数据库名')
@@ -18,16 +19,21 @@ from urllib.parse import quote_plus as urlquote
 # URL = 'mysql+pymysql://zsdatastat:ZS_quna1@192.168.1.219:3306/'   # zs_mongo
 # URL = 'mysql+pymysql://root:021412@localhost:3306/'    # zs_test
 # URL = 'mysql+pymysql://imr_bi:dfpllj@#@0@rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com:3306/'
-userName = 'imr_bi'
-password = 'dfpllj@#@0'
-dbHost = 'rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com'
+# userName = 'imr_bi'
+# password = 'dfpllj@#@0'
+# dbHost = 'rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com'
+# dbPort = 3306
+# URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
+userName = 'dzw'
+password = 'dsf#4oHGd'
+dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
 dbPort = 3306
 URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
 
 
 class QunaMysql(object):
     # 初始化
-    def __init__(self, schema='crm_bi'):
+    def __init__(self, schema='crm_tm_jnmt'):
         self._engin = create_engine(URL + schema + '?charset=utf8',
                                     pool_pre_ping=True,
                                     pool_recycle=3600 * 4)

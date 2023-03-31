@@ -6,8 +6,7 @@
 # @FileName: demo1.py
 # @description:
 """
-import pandas as pd
-from modules import jnmtMySQL3
+from modules.mysql import jnmtMySQL3
 
 
 def get_member():

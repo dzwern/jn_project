@@ -9,7 +9,7 @@
 
 import pandas as pd
 
-from modules import jnmtMySQL
+from modules.mysql import jnmtMySQL
 
 '''
 <1000

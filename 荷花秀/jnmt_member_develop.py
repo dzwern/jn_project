@@ -7,10 +7,7 @@
 # @description: 进粉开发数
 """
 
-import pandas as pd
-from modules import jnmtMySQL
-from modules import jnmtMySQL2
-from modules import jnmtMySQL3
+from modules.mysql import jnmtMySQL2, jnmtMySQL, jnmtMySQL3
 
 
 def get_member_credit():

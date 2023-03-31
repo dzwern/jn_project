@@ -7,8 +7,7 @@
 # @description:
 """
 
-import pandas as pd
-from modules import jnmtMySQL2
+from modules.mysql import jnmtMySQL2
 
 
 def get_member():

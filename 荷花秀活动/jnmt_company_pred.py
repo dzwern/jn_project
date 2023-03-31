@@ -7,9 +7,7 @@
 # @description: 活动预估，预估进度，精确设备
 """
 
-
-
-from modules import jnmtMySQL
+from modules.mysql import jnmtMySQL
 
 
 def main():

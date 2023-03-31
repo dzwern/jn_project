@@ -9,7 +9,7 @@
 """
 
 import pandas as pd
-from modules import jnmtMySQL
+from modules.mysql import jnmtMySQL
 
 
 # 客户最近购买时间，时间间隔

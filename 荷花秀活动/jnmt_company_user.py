@@ -7,8 +7,7 @@
 # @description: 活动中员工业绩数据源
 """
 
-
-from modules import jnmtMySQL
+from modules.mysql import jnmtMySQL
 
 
 def main():

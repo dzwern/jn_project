@@ -7,7 +7,7 @@
 # @description:
 """
 import pandas as pd
-from modules import jnmtMySQL
+from modules.mysql import jnmtMySQL
 
 
 # 新系统订单
