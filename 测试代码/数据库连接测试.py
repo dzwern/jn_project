@@ -3,7 +3,7 @@
 """
 # @Time    : 2023/3/17 16:37
 # @Author  : diaozhiwei
-# @FileName: demo1.py
+# @FileName: 数据库连接测试.py
 # @description:
 """
 from modules.mysql import jnmtMySQL3

@@ -1,10 +1,11 @@
 # -*-conding:utf-8 -*-
 # !/usr/bin/env python3
 """
-# @Time    : 2023/3/15 9:28
+# @Time    : 2023/4/1 14:59
 # @Author  : diaozhiwei
-# @FileName: hhx_member_transfer_day.py
-# @description: 荷花秀日常数据流转
+# @FileName: hhx_product_campaign.py
+# @description: 活动期间商品监控
+# @update:
 """
 
 

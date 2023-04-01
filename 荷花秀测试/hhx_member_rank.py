@@ -3,8 +3,8 @@
 """
 # @Time    : 2023/3/18 14:24
 # @Author  : diaozhiwei
-# @FileName: test2.py
-# @description:
+# @FileName: hhx_member_rank.py
+# @description: 查看客户排名
 """
 
 from modules.mysql import jnmtMySQL2

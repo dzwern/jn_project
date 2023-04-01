@@ -1,15 +1,13 @@
 # -*-conding:utf-8 -*-
 # !/usr/bin/env python3
 """
-# @Time    : 2023/3/7 18:02
+# @Time    : 2023/3/4 18:07
 # @Author  : diaozhiwei
-# @FileName: jnmt_member.py
-# @description: 对客户进行部门分层
+# @FileName: hhx_member_divide.py
+# @description: 各个部门的客户分级模型
 """
 
 import pandas as pd
-
-from modules.mysql import jnmtMySQL
 
 '''
 <1000
@@ -56,11 +54,9 @@ def member_divide2(x, y):
         return 'V3'
     elif 5000 > x >= 2000:
         return 'V3'
-    elif 10000 > x >= 5000:
+    elif x >= 5000 and y < 7:
         return 'V4'
-    elif x >= 10000 and y < 7:
-        return 'V4'
-    elif x >= 10000 and y >= 7:
+    elif x >= 5000 and y >= 7:
         return 'V5'
 
 
@@ -74,22 +70,16 @@ v5	>20000
 
 
 # 光华部
-def member_divide3(x,y):
+def member_divide3(x):
     if x < 500:
         return 'V1'
-    elif 1000 > x >= 500:
+    elif 500 <= x < 2000:
         return 'V2'
-    elif 2000 > x >= 1000 and y < 4:
-        return 'V2'
-    elif 2000 > x >= 1000 and y >= 4:
+    elif 2000 <= x < 5000:
         return 'V3'
-    elif 5000 > x >= 2000:
-        return 'V3'
-    elif 10000 > x >= 5000:
+    elif 5000 <= x < 20000:
         return 'V4'
-    elif x >= 10000 and y < 7:
-        return 'V4'
-    elif x >= 10000 and y >= 7:
+    else:
         return 'V5'
 
 
@@ -150,66 +140,32 @@ def member_divide5(x, y):
         return 'V5'
 
 
-def get_member():
-    sql = '''
-    SELECT
-            a.member_id,
-            a.dept_name2,
-            count( 1 ) cishu,
-            sum(a.order_amount) orders
-    FROM
-            jnmt_t_orders_total a 
-    WHERE a.member_id in 
-    (
-    SELECT 
-      DISTINCT t.member_id 
-    FROM
-    (
-    SELECT
-        a.member_id,
-        count(1)cishu
-    FROM
-        jnmt_t_orders_total a
-    GROUP BY a.member_id
-    )t
-    where t.cishu>1
-    )
-    GROUP BY a.member_id,a.dept_name2
-    '''
-    df = jnmt_sql.get_DataFrame_PD(sql)
-    return df
-
-
-def main():
-    # 总数据
-    df_member = get_member()
+def member_divide(df):
     # 光辉部
-    df1 = df_member[df_member['dept_name2'] == '光辉部']
-    df1['客户等级'] = df1['orders'].apply(lambda x: member_divide1(x))
+    df1 = df[df['所属部门'] == '光辉部']
+    df1['客户等级'] = df1['历史购买金额'].apply(lambda x: member_divide1(x))
     # print(df1)
     # 光芒部
-    df2 = df_member[df_member['dept_name2'] == '光芒部']
-    df2['客户等级'] = df2.apply(lambda x: member_divide2(x['orders'], x['cishu']), axis=1)
+    df2 = df[df['所属部门'] == '光芒部']
+    df2['客户等级'] = df2.apply(lambda x: member_divide2(x['历史购买金额'], x['历史购买次数']), axis=1)
     # print(df2)
     # 光华部
-    df3 = df_member[df_member['dept_name2'] == '光华部']
-    df3['客户等级'] = df3.apply(lambda x: member_divide3(x['orders'], x['cishu']), axis=1)
+    df3 = df[df['所属部门'] == '光华部']
+    df3['客户等级'] = df3['历史购买金额'].apply(lambda x: member_divide3(x))
     # print(df3)
     # 光源部蜂蜜
-    df4 = df_member[df_member['dept_name2'] == '光源蜂蜜部']
-    df4['客户等级'] = df4.apply(lambda x: member_divide4(x['orders'], x['cishu']), axis=1)
+    df4 = df[df['所属部门'] == '光源部蜂蜜']
+    df4['客户等级'] = df4.apply(lambda x: member_divide4(x['历史购买金额'], x['历史购买次数']), axis=1)
     # print(df4)
     # 光源部海参
-    df5 = df_member[df_member['dept_name2'] == '光源海参部']
-    df5['客户等级'] = df5.apply(lambda x: member_divide5(x['orders'], x['cishu']), axis=1)
+    df5 = df[df['所属部门'] == '光源部海参']
+    df5['客户等级'] = df5.apply(lambda x: member_divide5(x['历史购买金额'], x['历史购买次数']), axis=1)
     print(df5)
     df_member_divide = pd.concat([df1, df2, df3, df4, df5])
     print(df_member_divide)
-    df_member_divide.to_excel('./客户衰退2.xlsx', index=False)
+    df_member_divide.to_excel('./客户分层2.xlsx', index=False)
 
 
 if __name__ == '__main__':
-    jnmt_sql = jnmtMySQL.QunaMysql('jnmt_sql')
-    main()
-
-
+    df_member = pd.read_excel('./客户分层.xlsx')
+    member_divide(df_member)
