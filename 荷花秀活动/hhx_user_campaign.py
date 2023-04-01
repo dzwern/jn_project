@@ -3,7 +3,7 @@
 """
 # @Time    : 2023/3/15 9:24
 # @Author  : diaozhiwei
-# @FileName: jnmt_company_user.py
+# @FileName: hhx_user_campaign.py
 # @description: 活动中员工业绩数据源
 """
 

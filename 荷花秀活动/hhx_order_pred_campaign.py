@@ -3,7 +3,7 @@
 """
 # @Time    : 2023/3/15 9:31
 # @Author  : diaozhiwei
-# @FileName: jnmt_company_pred.py
+# @FileName: hhx_order_pred_campaign.py
 # @description: 活动预估，预估进度，精确设备
 """
 

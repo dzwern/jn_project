@@ -3,9 +3,9 @@
 """
 # @Time    : 2023/3/15 9:23
 # @Author  : diaozhiwei
-# @FileName: jnmt_company_base.py
-# @description: 活动基础订单数据源，主要为订单数据
-
+# @FileName: hhx_order_middle.py
+# @description: 荷花秀订单基础信息表，主要内容有订单类型，订单时间，订单状态，订单客户等信息
+# @update：增量更新，每小时更新前7天数据，保证状态变更
 """
 import datetime
 from modules.mysql import jnmtMySQL
@@ -511,7 +511,7 @@ def save_sql(df):
      '''
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
-
+@utils.print_execute_time
 def main():
     # 基础数据表
     df_hhx_orders = get_hhx_orders()

@@ -3,9 +3,9 @@
 """
 # @Time    : 2023/3/29 17:02
 # @Author  : diaozhiwei
-# @FileName: jnmt_company_member.py
-# @description:
-荷花秀客户数汇总
+# @FileName: hhx_member_middle.py
+# @description: 荷花秀客户基础信息数据，主要内容有：客户基础信息，客户时间，客户销售，客户所属等信息
+# @update: 增量更新，每日更新，需要注意客户销售情况，保证状态变更
 """
 
 from datetime import datetime

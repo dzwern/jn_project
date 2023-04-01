@@ -1,5 +1,9 @@
 """
-发送钉钉消息
+# @Time    : 2023/3/31 14:06
+# @Author  : diaozhiwei
+# @FileName: hhx_wechat_middle.py
+# @description: 钉钉调动
+# @update:
 """
 
 import requests
@@ -91,7 +95,3 @@ class DingTalk(object):
             logging.info("信息发送成功....")
         else:
             logging.info("信息发送失败....")
-
-
-
-

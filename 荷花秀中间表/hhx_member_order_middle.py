@@ -3,7 +3,7 @@
 """
 # @Time    : 2023/3/30 10:51
 # @Author  : diaozhiwei
-# @FileName: jnmt_member_level.py
+# @FileName: hhx_member_order_middle.py
 # @description:
 客户消费等级，客户消费等级变为更新表，每次按照近5日的销售情况进行分级，
 （1）购买次数，购买金额：按照5日进行更新，防止状态变更导致的影响，在活动复盘时期，可以提前运行

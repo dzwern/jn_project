@@ -3,12 +3,13 @@
 """
 # @Time    : 2023/3/31 14:06
 # @Author  : diaozhiwei
-# @FileName: jnmt_wechat_middle.py
+# @FileName: hhx_wechat_middle.py
 # @description: 微信基础设置
-# @update:
+# @update: 增量更新，每日更新
 """
 
-from modules.mysql import jnmtMySQL
+# from modules.mysql import jnmtMySQL
+from modules.mysql import jnmtMySQL4
 import pandas as pd
 
 
@@ -130,8 +131,10 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    # hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
+    # hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    hhx_sql = jnmtMySQL4.QunaMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2 = jnmtMySQL4.QunaMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
     # startTime = utils.get_time_args(sys.argv)
     # time1 = startTime

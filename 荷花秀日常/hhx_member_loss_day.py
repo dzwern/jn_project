@@ -3,7 +3,7 @@
 """
 # @Time    : 2023/3/14 16:11
 # @Author  : diaozhiwei
-# @FileName: jnmt_member_loss.py
+# @FileName: hhx_member_loss_day.py
 # @description:
 客户衰退，流失
 """

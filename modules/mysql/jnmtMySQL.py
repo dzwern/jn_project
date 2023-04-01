@@ -1,4 +1,11 @@
 # -*-coding: utf-8-*-
+"""
+# @Time    : 2023/3/31 14:06
+# @Author  : diaozhiwei
+# @FileName: hhx_wechat_middle.py
+# @description: 数据库连接
+# @update:
+"""
 import logging
 import sys
 import traceback
@@ -8,12 +15,10 @@ from sqlalchemy import create_engine
 from itertools import cycle
 from urllib.parse import quote_plus as urlquote
 
-
 '''
-九牛账号密码：mysql数据库地址: rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com 端口: 3306 只读账号 imr_bi    密码：dfpllj@#@0
+九牛账号密码：mysql数据库地址: rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com 端口: 3306 只读账号 imr_bi  密码：dfpllj@#@0
 ('mysql+pymysql://数据库用户名:数据库密码@数据库地址/数据库名')
 '''
-
 
 # rm-2ze366az6q84dcs4fyo.mysql.rds.aliyuncs.com
 # URL = 'mysql+pymysql://zsdatastat:ZS_quna1@192.168.1.219:3306/'   # zs_mongo
@@ -46,16 +51,12 @@ class QunaMysql(object):
     # 获取连接
     def getConnection(self):
         conn = self._engin.connect()
-        # logging.info(self._engin.pool.status())
-        # print("=======")
         return conn
 
     # 释放连接
     def closeConnection(self, conn):
         if conn:
             conn.close()
-            # print(self._engin.pool.status())
-            # print("********")
 
     # 执行sql
     def executeSqlByEngine(self, sql='SELECT * FROM DUAL'):
@@ -103,7 +104,6 @@ class QunaMysql(object):
         with conn as connection:
             dataFrame = pd.read_sql(sql, connection)
             return dataFrame
-
 
     # 保存df到数据库
     def save_DataFrame_PD(self, pd, table, conn=None):
@@ -159,58 +159,15 @@ class QunaMysql(object):
 
 
 if __name__ == '__main__':
-
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S',
                         stream=sys.stdout,
                         filemode='a+')
-
     try:
         qunaMysql = QunaMysql()
-        # ===============================
-        # df = qunaMysql.load_DataFrame_PD(sql="select * from zzss_sale_test;")
-        # df = qunaMysql.load_DataFrame_PD(sql="select * from zzss_sale_test;",conn=qunaMysql.getConnection())
-
-        # df = qunaMysql.load_DataFrame_Conn(sql="select * from zzss_sale_test;")
-
-        # result = qunaMysql.executeSqlByConn(sql="insert zzss_sale_test (k1,k2) values ('1','1');")
-        # # result = qunaMysql.executeSqlByConn(sql="delete from  zzss_sale_test where k1='10';")
-        # result = qunaMysql.executeSqlByConn(sql="select * from zzss_sale_test;")
-        # dataList = list(result)
-        # df = pd.DataFrame(dataList, index=[(n + 1) for n in range(len(dataList))])
-
-        # for i in range(20):
-        #     qunaMysql.executeSqlByConn(sql="insert zzss_sale_test (k1,k2) values ('1','1');")
-        #     qunaMysql.executeSqlByConn(sql="delete from  zzss_sale_test where k1='10';")
-        #     result = qunaMysql.executeSqlByConn(sql="select * from zzss_sale_test;")
-        #     dataList = list(result)
-        #     df = pd.DataFrame(dataList, index=[(n + 1) for n in range(len(dataList))])
-        #     # print(df)
-        #     print("-------")
-
-
-        # connection = qunaMysql.getConnection()
-        # with connection as conn:
-        #     for i in range(20):
-        #         conn.execute("insert zzss_sale_test (k1,k2) values ('1','1');")
-        #         conn.execute("delete from  zzss_sale_test where k1='10';")
-        #         print("-------")
-
-        # conn = qunaMysql.getConnection()
-        # for i in range(20):
-        #     conn.execute("insert zzss_sale_test (k1,k2) values ('1','1');")
-        #     conn.execute("delete from  zzss_sale_test where k1='10';")
-        #     print("-------")
-        # qunaMysql.closeConnection(conn)
-
-
-
     except:
         ex = traceback.format_exc()
         logging.error(ex)
     finally:
-        print(qunaMysql._engin.pool.status())
-        # print(qunaMysql._engin.pool.checkedin())
-        # print(qunaMysql._engin.pool.checkedout())
         pass
