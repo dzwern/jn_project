@@ -27,7 +27,7 @@ def send_dingTalk(access_token,mobile_list):
 
     context = '''
     ----------------------------
-    测试数据：+++++++++++
+    测试数据：数据有误
     ---------------------------
     '''
     dingTalk.send_DingTalk_text(context,mobile_list)

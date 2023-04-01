@@ -1,15 +1,13 @@
 # -*-conding:utf-8 -*-
 # !/usr/bin/env python3
 """
-# @Time    : 2023/3/30 10:51
+# @Time    : 2023/4/1 15:40
 # @Author  : diaozhiwei
-# @FileName: hhx_member_order_middle.py
-# @description:
-客户消费等级，客户消费等级变为更新表，每次按照近5日的销售情况进行分级，
-（1）购买次数，购买金额：按照5日进行更新，防止状态变更导致的影响，在活动复盘时期，可以提前运行
-（2）最近购买时间：实时更新，选择符合状态进行更新
-数据更新：首次全量更新，之后增量更新
+# @FileName: hhx_member_order_middle2.py
+# @description: 
+# @update:
 """
+
 
 from modules.mysql import jnmtMySQL
 import pandas as pd
@@ -149,6 +147,8 @@ def get_member_order():
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
+    and a.create_time>='2023-02-16'
+    and a.create_time<'2023-02-17'
     GROUP BY a.member_id
     '''
     df = hhx_sql.get_DataFrame_PD(sql)
@@ -170,6 +170,8 @@ def get_member_order2():
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
+    and a.create_time>='2023-02-16'
+    and a.create_time<'2023-02-17'
     GROUP BY a.member_id
     '''
     df = hhx_sql.get_DataFrame_PD(sql)
@@ -193,6 +195,29 @@ def get_member_new_time():
     '''
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
+
+
+# 客户总表
+def get_member():
+    sql='''
+    SELECT
+        a.member_id,
+        a.wechat_name,
+        a.wechat_number,
+        a.user_name,
+        a.nick_name,
+        a.dept_name1,
+        a.dept_name2,
+        a.dept_name,
+        a.order_nums,
+        a.order_amounts,
+        a.order_nums_2023,
+        a.order_amounts_2023
+    FROM
+        t_member_level a
+    '''
+
+
 
 
 def save_sql(df):
@@ -231,6 +256,8 @@ def main():
     # 增量更新，在之前的数据基础上加数据，需要把之前的数据减之后在加
     # 客户最近购买时间
     df_hhx_order_time = get_member_new_time()
+    # 历史
+
     df_hhx_member = df_hhx_member.merge(df_hhx_order_time, on=['member_id'], how='left')
     # 光辉部
     df1 = df_hhx_member[df_hhx_member['dept_name2'] == '光辉部']
@@ -269,7 +296,3 @@ if __name__ == '__main__':
     st = '2023-02-01'
     et = '2023-03-01'
     main()
-
-
-
-
