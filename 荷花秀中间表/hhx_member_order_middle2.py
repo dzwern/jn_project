@@ -4,7 +4,7 @@
 # @Time    : 2023/4/1 15:40
 # @Author  : diaozhiwei
 # @FileName: hhx_member_order_middle2.py
-# @description: 
+# @description: 更新客户订单情况，更新到客户昨日的销售情况，注意订单状态的改变
 # @update:
 """
 
@@ -134,12 +134,12 @@ def get_member_base():
 
 
 # 客户销售数据
-def get_member_order():
+def get_member_order(st,et):
     sql = '''
     SELECT
         a.member_id,
-        count(DISTINCT LEFT(a.create_time,10)) order_nums,
-        sum(a.order_amount) order_amounts
+        count(DISTINCT LEFT(a.create_time,10)) order_nums_new,
+        sum(a.order_amount) order_amounts_new
     FROM t_orders a
     WHERE
         a.tenant_id = 11 
@@ -147,21 +147,21 @@ def get_member_order():
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
-    and a.create_time>='2023-02-16'
-    and a.create_time<'2023-02-17'
+    and a.create_time>='{}'
+    and a.create_time<'{}'
     GROUP BY a.member_id
-    '''
+    '''.format(st,et)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
 
 # 客户2023年销售数据
-def get_member_order2():
+def get_member_order2(st,et):
     sql = '''
     SELECT
         a.member_id,
-        count(DISTINCT LEFT(a.create_time,10)) order_nums_2023,
-        sum(a.order_amount) order_amounts_2023
+        count(DISTINCT LEFT(a.create_time,10)) order_nums_2023_new,
+        sum(a.order_amount) order_amounts_2023_new
     FROM t_orders a
     WHERE
         a.tenant_id = 11 
@@ -170,20 +170,18 @@ def get_member_order2():
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
-    and a.create_time>='2023-02-16'
-    and a.create_time<'2023-02-17'
     GROUP BY a.member_id
-    '''
+    '''.format(st,et)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
 
 # 客户最近购买时间
-def get_member_new_time():
+def get_member_new_time(st,et):
     sql = '''
     SELECT
         a.member_id,
-        max(a.create_time) last_time
+        max(a.create_time) last_time_new
     FROM t_orders a
     WHERE
         a.tenant_id = 11 
@@ -191,15 +189,17 @@ def get_member_new_time():
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
+    and a.create_time>='{}'
+    and a.create_time<'{}'
     GROUP BY a.member_id
-    '''
+    '''.format(st,et)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
 
 # 客户总表
-def get_member():
-    sql='''
+def get_member_old():
+    sql = '''
     SELECT
         a.member_id,
         a.wechat_name,
@@ -212,12 +212,29 @@ def get_member():
         a.order_nums,
         a.order_amounts,
         a.order_nums_2023,
-        a.order_amounts_2023
+        a.order_amounts_2023,
+        a.last_time
     FROM
         t_member_level a
     '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
+# 临时表读取
+def get_member_tmp():
+    sql = '''
+    SELECT
+        a.member_id,
+        a.order_nums order_nums_tmp,
+        a.order_amounts order_amounts_tmp,
+        a.order_nums_2023 order_nums_2023_tmp,
+        a.order_amounts_2023  order_amounts_2023_tmp
+    FROM
+        t_member_level_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 def save_sql(df):
@@ -241,24 +258,73 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表的储存
+def save_sql2(df):
+    sql = '''
+    INSERT INTO `t_member_level_tmp` 
+     (`member_id`,`order_nums`,`order_amounts`,`order_nums_2023`,`order_amounts_2023`) 
+     VALUES (%s,%s,%s,%s,%s)
+     ON DUPLICATE KEY UPDATE
+         `member_id`= VALUES(`member_id`),`order_nums`=values(`order_nums`),`order_amounts`=values(`order_amounts`),
+         `order_nums_2023`=values(`order_nums_2023`),`order_amounts_2023`=values(`order_amounts_2023`)
+         '''
+    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+
+
+# 中间表删除
+def del_sql():
+    sql = '''
+    delete from t_member_level_tmp
+    '''
+    hhx_sql2.executeSqlManyByConn(sql)
+
+
 def main():
+    '''最新销售数据'''
     # 客户基础数据
     df_hhx_member = get_member_base()
+    df_hhx_member_old=df_hhx_member[['member_id']]
     # 客户所属部门
     df_hhx_user = get_hhx_user()
     df_hhx_member = df_hhx_member.merge(df_hhx_user, on=['dept_name'], how='left')
     # 客户销售数据
-    df_hhx_order = get_member_order()
+    df_hhx_order = get_member_order(st,et)
     df_hhx_member = df_hhx_member.merge(df_hhx_order, on=['member_id'], how='left')
     # 客户销售数据2
-    df_hhx_order2 = get_member_order2()
+    df_hhx_order2 = get_member_order2(st,et)
     df_hhx_member = df_hhx_member.merge(df_hhx_order2, on=['member_id'], how='left')
     # 增量更新，在之前的数据基础上加数据，需要把之前的数据减之后在加
-    # 客户最近购买时间
-    df_hhx_order_time = get_member_new_time()
-    # 历史
+    # 客户销售数据3
+    df_hhx_order3 = get_member_order(st2,et)
+    df_hhx_member_old = df_hhx_member_old.merge(df_hhx_order3, on=['member_id'], how='left')
+    # 客户销售数据4
+    df_hhx_order4 = get_member_order2(st2,et)
+    df_hhx_member_old = df_hhx_member_old.merge(df_hhx_order4, on=['member_id'], how='left')
+    df_hhx_member_old=df_hhx_member_old.fillna(0)
 
+    # 临时表数据
+    df_member_tmp=get_member_tmp()
+    '''历史销售数据'''
+    df_member_old = get_member_old()
+    # 汇总-临时
+    df_member_old=df_member_old.merge(df_member_tmp,on=['member_id'],how='left')
+    df_member_old=df_member_old[['member_id','order_nums', 'order_amounts','order_nums_2023', 'order_amounts_2023',
+                                 'last_time','order_nums_tmp','order_amounts_tmp','order_nums_2023_tmp',
+                                 'order_amounts_2023_tmp']]
+    # 客户最近购买时间
+    df_hhx_order_time = get_member_new_time(st,et)
     df_hhx_member = df_hhx_member.merge(df_hhx_order_time, on=['member_id'], how='left')
+    '''储存临时表，当前时间前2天-10天数据'''
+    df_hhx_member=df_hhx_member.fillna(0)
+    df_hhx_member=df_hhx_member.merge(df_member_old,on=['member_id'], how='left')
+    df_hhx_member=df_hhx_member
+    '''计算公式=历史销售数据-【2-10天】销售数据+【1-10天】销售数据'''
+
+
+    # 删除临时表数据
+    del_sql()
+    # 保存临时表数据
+    save_sql2(df_hhx_member_old)
     # 光辉部
     df1 = df_hhx_member[df_hhx_member['dept_name2'] == '光辉部']
     df1['member_level'] = df1['order_amounts'].apply(lambda x: member_divide1(x))
@@ -293,6 +359,7 @@ if __name__ == '__main__':
     # st = time1 - relativedelta(days=1)
     # et = time1 - relativedelta(days=0)
     # 时间转化
-    st = '2023-02-01'
-    et = '2023-03-01'
+    st = '2023-03-01'
+    st2 = '2023-03-02'
+    et = '2023-04-01'
     main()
