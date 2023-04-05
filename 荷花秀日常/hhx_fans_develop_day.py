@@ -1,80 +1,77 @@
 # -*-conding:utf-8 -*-
 # !/usr/bin/env python3
 """
-# @Time    : 2023/3/17 16:35
+# @Time    : 2023/4/3 9:30
 # @Author  : diaozhiwei
 # @FileName: hhx_fans_develop_day.py
-# @description: 进粉开发数
+# @description: 进粉开发，基础数据为各个设备每日进粉数，以及在之后的订单中开发的客户数，计算粉丝开发率
+# @update:
 """
 
-from modules.mysql import jnmtMySQL2, jnmtMySQL, jnmtMySQL3
+from modules.mysql import jnmtMySQL
+import pandas as pd
+import datetime
 
 
+# 基础数据，每日进粉数
 def get_member_credit():
     sql = '''
     SELECT
-        f.dept_id,
         f.dept_name,
-        left(a.promotion_date,10) date2,
         e.nick_name,
-        d.wecaht_number,
-        sum(c.credit) jinfen
-    FROM
-        jnmt_t_promotion a
-    LEFT JOIN jnmt_t_promotion_allocation b on a.promotion_id=b.promotion_id
-    LEFT JOIN jnmt_t_wechat_fans_log c on b.we_chat_id=c.wechat_id and a.promotion_date=c.new_sprint_time
-    LEFT JOIN jnmt_t_wechat d on d.id=b.we_chat_id
-    LEFT JOIN jnmt_sys_user e on e.user_id=d.sys_user_id
-    LEFT JOIN jnmt_sys_dept f on e.dept_id=f.dept_id
+        d.id wechat_id,
+        d.wecaht_number wechat_number,
+        left(a.new_sprint_time,10) date2,
+        sum(a.credit) jinfen 
+    FROM t_wechat_fans_log a
+    LEFT JOIN t_wechat d on d.id=a.wechat_id
+    LEFT JOIN sys_user e on e.user_id=d.sys_user_id
+    LEFT JOIN sys_dept f on e.dept_id=f.dept_id
     where a.tenant_id=11
-    and a.promotion_date>='2023-01-01'
-    and a.promotion_date<'2023-03-20'
-    and b.deleted=0
-    GROUP BY f.dept_id,f.dept_name,e.nick_name,d.wecaht_number,left(a.promotion_date,10)
-    '''
-    df = jnmt_sql.get_DataFrame_PD(sql)
+    and a.new_sprint_time>='{}'
+    and a.new_sprint_time<'{}'
+    and a.credit>0
+    GROUP BY f.dept_name,e.nick_name,d.wecaht_number,left(a.new_sprint_time,10)
+    '''.format(st,et)
+    df = hhx_sql.get_DataFrame_PD(sql)
     return df
+
+
+# 员工信息
+def get_hhx_user():
+    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组', '光芒部二组', '光芒部六组', '光芒部三组',
+           '光芒部一组', '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组',
+           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
+    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端', '光芒部蜜梓源后端',
+           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光华部蜜梓源面膜进粉前端',
+           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉后端',
+           '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端', '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组',
+           '光源部海参组']
+    df3 = ['光辉部', '光辉部', '光辉部', '光辉部', '光芒部', '光芒部', '光芒部', '光芒部', '光华部', '光华部', '光华部',
+           '光华部', '光华部', '光华部', '光源部', '光源部', '光源部', '光源部']
+    df = {"dept_name": df1,
+          'dept_name1': df2,
+          'dept_name2': df3}
+    data = pd.DataFrame(df)
+    return data
 
 
 def get_member_develop():
     sql = '''
-        select
-        t.dept_id,
-        t.dept_name,
-        t.nick_name,
-        t.wecaht_number,
-        left(t.first_time2,10) date2,
-        DATEDIFF(left(t.create_time,10),left(t.first_time2,10)) day2,
-        count(DISTINCT t.member_id) members
-    FROM
-    (
     SELECT
-        d.dept_id,
-        d.dept_name,
-        c.nick_name,
-        e.wecaht_number,
-        a.member_id,
-        MAX(IFNULL(b.incoming_line_time, b.add_wechat_time)) first_time2,
-        min(a.create_time) create_time,
-        a.order_amount 
+        a.dept_name,
+        a.nick_name,
+        a.wechat_number,
+        left(a.first_time,10) date2,
+        min(a.time_diff) day,
+        count(DISTINCT a.member_id) members
     FROM
-        jnmt_t_orders a
-    LEFT JOIN  jnmt_t_member b on a.member_id=b.id
-    LEFT JOIN jnmt_sys_user c on a.sys_user_id=c.user_id
-    LEFT JOIN jnmt_sys_dept d on c.dept_id=d.dept_id
-    LEFT JOIN jnmt_t_wechat e on a.wechat_id=e.id
-    WHERE
-        a.tenant_id = 11
-    -- 订单状态
-    and a.order_state NOT IN (6,8,10,11)
-    and a.refund_state not in (4)
-    GROUP BY a.order_sn
-    )t
-    WHERE t.first_time2>='2023-01-01'
-    and t.first_time2<'2023-03-20'
-    GROUP BY t.dept_id,t.dept_name,t.nick_name,t.wecaht_number,left(t.create_time,10),DATEDIFF(left(t.create_time,10),left(t.first_time2,10))
-    '''
-    df = jnmt_sql.get_DataFrame_PD(sql)
+        hhx_t_orders_tmp a
+    where a.first_time>='{}'
+    and a.first_time<'{}'
+    GROUP BY a.dept_name,a.nick_name,a.wechat_number,left(a.first_time,10)
+    '''.format(st,et)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -100,52 +97,72 @@ def get_develop(x):
 
 def save_sql(df):
     sql = '''
-     INSERT INTO `jnmt_member_develop` 
-     (`dept_id`,`dept_name`,`nick_name`,`wecaht_number`,`date2`,`jianfen`,
-     `0`,`1-3`,`4-7`,`8-30`,`31-90`,`91-180`,`181-360`,`361`,`total`) 
-     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+     INSERT INTO `t_fans_develop_day` 
+     (`id`,`dept_name1`,`dept_name2`,`dept_name`,`nick_name`,
+     `wechat_id`,`wechat_number`,`date2`,`jinfen`,`0_days`,
+     `1_3_days`,`4_7_days`,`8_30_days`,`31_90_days`,`91_180_days`,
+     `181_360_days`,`361_days`,`total`,`develop_rate`) 
+     VALUES (
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s
+     )
      ON DUPLICATE KEY UPDATE
-         `dept_id`= VALUES(`dept_id`),`dept_name`= VALUES(`dept_name`),`nick_name`=VALUES(`nick_name`),
-         `wecaht_number`=values(`wecaht_number`),`date2`=values(`date2`),`jianfen`=values(`jianfen`),
-         `0`=values(`0`),`1-3`=values(`1-3`),`4-7`=values(`4-7`),
-         `8-30`=values(`8-30`),`31-90`=values(`31-90`),`91-180`=values(`91-180`),
-         `181-360`=values(`181-360`),`361`=values(`361`),`total`=values(`total`)
+         `dept_name1`= VALUES(`dept_name1`),`dept_name2`= VALUES(`dept_name2`),`dept_name`= VALUES(`dept_name`),
+         `nick_name`=VALUES(`nick_name`),`wechat_id`=VALUES(`wechat_id`),`wechat_number`=values(`wechat_number`),
+         `date2`=values(`date2`),`jinfen`=values(`jinfen`),`0_days`=values(`0_days`),
+         `1_3_days`=values(`1_3_days`),`4_7_days`=values(`4_7_days`),`8_30_days`=values(`8_30_days`),
+         `31_90_days`=values(`31_90_days`),`91_180_days`=values(`91_180_days`),`181_360_days`=values(`181_360_days`),
+         `361_days`=values(`361_days`),`total`=values(`total`),`develop_rate`=values(`develop_rate`)
      '''
-    jnmt_sql3.executeSqlManyByConn(sql, df.values.tolist())
+    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
 def main():
-    # 进粉数
+    # 设备进粉数
     df_credit = get_member_credit()
     # 产出
     df_develop = get_member_develop()
-    df_develop['day2'] = df_develop.apply(lambda x: get_develop(x['day2']), axis=1)
-    df_credit = df_credit
-    df_develop = df_develop
+    df_develop['day2'] = df_develop.apply(lambda x: get_develop(x['day']), axis=1)
     # 分组
-    df_develop = df_develop.groupby(["dept_id", "dept_name", "nick_name", "wecaht_number", "date2", "day2"])[
+    df_develop = df_develop.groupby(["dept_name", "nick_name", "wechat_number", "date2", "day2"])[
         'members'].sum().reset_index()
-    df_develop = df_develop.set_index(["dept_id", "dept_name", "nick_name", "wecaht_number", "date2", "day2"])[
+    df_develop = df_develop.set_index(["dept_name", "nick_name", "wechat_number", "date2", "day2"])[
         "members"]
     df_develop = df_develop.unstack().reset_index()
     df_develop = df_develop.fillna(0)
-    df = df_credit.merge(df_develop, on=["dept_id", "dept_name", "nick_name", "wecaht_number", "date2"], how='left')
-    df['91-180天'] = 0
-    df['181-360天'] = 0
-    df['total'] = df['当日']+df['1-3天']+df['4-7天']+df['8-30天']+df['31-90天']+df['91-180天']+df['181-360天']+df['1年以上']
-    df = df.fillna(0)
-    print(df)
-    df = df[
-        ["dept_id", "dept_name", "nick_name", "wecaht_number", "date2", "jinfen", "当日", "1-3天", "4-7天", "8-30天",
-         "31-90天", "91-180天", "181-360天", "1年以上", "total"]]
-    save_sql(df)
+    df_hhx_develop = df_credit.merge(df_develop, on=["dept_name", "nick_name", "wechat_number", "date2"],
+                                     how='left')
+    df_hhx_develop['91-180天'] = 0
+    df_hhx_develop['181-360天'] = 0
+    df_hhx_develop['total'] = df_hhx_develop['当日'] + df_hhx_develop['1-3天'] + df_hhx_develop['4-7天'] + \
+                              df_hhx_develop['8-30天'] + df_hhx_develop['31-90天'] + df_hhx_develop['91-180天'] + \
+                              df_hhx_develop['181-360天'] + df_hhx_develop['1年以上']
+    df_hhx_develop = df_hhx_develop.fillna(0)
+    df_hhx_develop['develop_rate'] = (df_hhx_develop['total'] / df_hhx_develop['jinfen']).apply(lambda x: format(x,'.2%'))
+    # 筛选开发率>100%的数据
+    # df_hhx_develop['develop_rate']=df_hhx_develop[df_hhx_develop['develop_rate']]
+    # df_hhx_develop['develop_rate'][df_hhx_develop[df_hhx_develop['total']>df_hhx_develop['jinfen']] > 1] = '100%'
+    # 部门
+    df_hhx_user = get_hhx_user()
+    df_hhx_develop = df_hhx_develop.merge(df_hhx_user, on=['dept_name'], how='left')
+    df_hhx_develop = df_hhx_develop.fillna(0)
+    df_hhx_develop['id']=df_hhx_develop['wechat_id'].astype(str)+df_hhx_develop['date2'].astype(str)
+    df_hhx_develop = df_hhx_develop[
+        ["id","dept_name1", 'dept_name2', "dept_name", "nick_name", "wechat_id", "wechat_number", "date2", "jinfen",
+         "当日","1-3天", "4-7天", "8-30天", "31-90天", "91-180天", "181-360天", "1年以上", "total", "develop_rate"]]
+    df_hhx_develop=df_hhx_develop
+    print(df_hhx_develop)
+    save_sql(df_hhx_develop)
 
 
 if __name__ == '__main__':
-    jnmt_sql = jnmtMySQL.QunaMysql('crm_bi')
-    jnmt_sql2 = jnmtMySQL2.QunaMysql('jnmt_sql')
-    jnmt_sql3 = jnmtMySQL3.QunaMysql('mydb1')
+    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
+    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    # 时间转化
+    st = '2023-01-01'
+    et = '2023-04-01'
+    st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
+    et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     main()
-
-
-

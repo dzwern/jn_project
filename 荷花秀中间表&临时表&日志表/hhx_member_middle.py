@@ -112,7 +112,7 @@ def get_member_order():
         a.order_amounts_2023,
         a.last_time 
     FROM
-        t_member_level a
+        t_member_level_middle a
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -218,7 +218,7 @@ def get_member_source2(x):
 
 def save_sql(df):
     sql = '''
-    INSERT INTO `hhx_t_member` 
+    INSERT INTO `t_member_middle` 
      (`id`,`member_id`,`balance`,`point`,`phone`,
      `user_name2`,`wechat_number2`,`member_identity`,`member_source`,`member_source_level2`,
      `incoming_line_time`,`add_wechat_time`,`first_time`,`create_time`,`wechat_id`,

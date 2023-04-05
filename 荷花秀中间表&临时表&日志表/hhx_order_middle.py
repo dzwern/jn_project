@@ -10,6 +10,7 @@
 import datetime
 from modules.mysql import jnmtMySQL
 import pandas as pd
+from modules.func import utils
 
 
 # 订单基础信息
@@ -475,7 +476,7 @@ def get_hhx_activity(x):
 # 保存数据
 def save_sql(df):
     sql = '''
-    INSERT INTO `hhx_t_orders_tmp` 
+    INSERT INTO `t_orders_middle` 
      (`id`,`order_sn`,`original_order_sn`,`order_type`,`no_performance_type`,
      `clinch_type`,`dept_name1`,`dept_name2`,`dept_name`,`sys_user_id`,
      `user_name`,`nick_name`,`wechat_id`,`wechat_name`,`wechat_number`,
@@ -510,6 +511,7 @@ def save_sql(df):
          `project_category_id`=values(`project_category_id`),`is_activity`=values(`is_activity`),`activity_name`=values(`activity_name`)
      '''
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+
 
 @utils.print_execute_time
 def main():
@@ -578,8 +580,12 @@ if __name__ == '__main__':
     # st = time1 - relativedelta(days=1)
     # et = time1 - relativedelta(days=0)
     # 时间转化
-    st = '2023-03-01'
-    et = '2023-03-02'
+    st = '2023-01-01'
+    et = '2023-03-08'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     main()
+
+
+
+

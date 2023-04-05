@@ -3,12 +3,9 @@
 """
 # @Time    : 2023/3/30 10:51
 # @Author  : diaozhiwei
-# @FileName: hhx_member_order_middle.py
-# @description:
-客户消费等级，客户消费等级变为更新表，每次按照近5日的销售情况进行分级，
-（1）购买次数，购买金额：按照5日进行更新，防止状态变更导致的影响，在活动复盘时期，可以提前运行
-（2）最近购买时间：实时更新，选择符合状态进行更新
-数据更新：首次全量更新，之后增量更新
+# @FileName: hhx_member_level_middle.py
+# @description:首次全量更新
+数据更新：
 """
 
 from modules.mysql import jnmtMySQL
@@ -135,13 +132,32 @@ def get_member_base():
     return df
 
 
-# 客户销售数据
+# 客户销售数据【老系统】
+def get_member_order_old():
+    sql='''
+    SELECT
+        a.member_id,
+        count(DISTINCT LEFT(a.ORDER_DATE,10)) order_nums_old,
+        sum(a.ORDER_MONEY) order_amounts_old
+    FROM
+        oldcrm_t_orders a 
+    WHERE
+        a.tenant_id = 11 
+    AND a.ORDER_STATE in ('已签收','已发货') 
+    and a.member_id>1
+    GROUP BY a.member_id
+    '''
+    df = hhx_sql.get_DataFrame_PD(sql)
+    return df
+
+
+# 客户销售数据【新系统】
 def get_member_order():
     sql = '''
     SELECT
         a.member_id,
-        count(DISTINCT LEFT(a.create_time,10)) order_nums,
-        sum(a.order_amount) order_amounts
+        count(DISTINCT LEFT(a.create_time,10)) order_nums_new,
+        sum(a.order_amount) order_amounts_new
     FROM t_orders a
     WHERE
         a.tenant_id = 11 
@@ -176,6 +192,24 @@ def get_member_order2():
     return df
 
 
+# 老系统最近购买时间
+def get_member_new_time_old():
+    sql='''
+    SELECT
+        a.member_id,
+        max(ORDER_DATE) last_time_old
+    FROM
+        oldcrm_t_orders a 
+    WHERE
+        a.tenant_id = 11 
+    AND a.ORDER_STATE in ('已签收','已发货') 
+    and a.member_id>1
+    GROUP BY a.member_id
+    '''
+    df=hhx_sql.get_DataFrame_PD(sql)
+    return df
+
+
 # 客户最近购买时间
 def get_member_new_time():
     sql = '''
@@ -197,7 +231,7 @@ def get_member_new_time():
 
 def save_sql(df):
     sql = '''
-    INSERT INTO `t_member_level` 
+    INSERT INTO `t_member_level_middle` 
      (`member_id`,`wechat_name`,`wechat_number`,`user_name`,`nick_name`,
      `dept_name1`,`dept_name2`,`dept_name`,`member_level`,`order_nums`,
      `order_amounts`,`order_nums_2023`,`order_amounts_2023`,`last_time`
@@ -222,16 +256,25 @@ def main():
     # 客户所属部门
     df_hhx_user = get_hhx_user()
     df_hhx_member = df_hhx_member.merge(df_hhx_user, on=['dept_name'], how='left')
-    # 客户销售数据
+    # 客户新系统销售数据
     df_hhx_order = get_member_order()
     df_hhx_member = df_hhx_member.merge(df_hhx_order, on=['member_id'], how='left')
+    # 客户老系统销售数据
+    df_hhx_order_old=get_member_order_old()
+    df_hhx_member=df_hhx_member.merge(df_hhx_order_old,on=['member_id'],how='left')
+    # 销售金额累加
+    df_hhx_member=df_hhx_member.fillna(0)
+    df_hhx_member['order_nums'] = df_hhx_member['order_nums_new'] + df_hhx_member['order_nums_old']
+    df_hhx_member['order_amounts'] = df_hhx_member['order_amounts_new'] + df_hhx_member['order_amounts_old']
     # 客户销售数据2
     df_hhx_order2 = get_member_order2()
     df_hhx_member = df_hhx_member.merge(df_hhx_order2, on=['member_id'], how='left')
     # 增量更新，在之前的数据基础上加数据，需要把之前的数据减之后在加
-    # 客户最近购买时间
+    # 新客户最近购买时间
     df_hhx_order_time = get_member_new_time()
     df_hhx_member = df_hhx_member.merge(df_hhx_order_time, on=['member_id'], how='left')
+    # 老系统最近购买时间
+    df_hhx_order_time_old=get_member_new_time_old()
     # 光辉部
     df1 = df_hhx_member[df_hhx_member['dept_name2'] == '光辉部']
     df1['member_level'] = df1['order_amounts'].apply(lambda x: member_divide1(x))
@@ -260,15 +303,10 @@ def main():
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    # 开始时间，结束时间
-    # startTime = utils.get_time_args(sys.argv)
-    # time1 = startTime
-    # st = time1 - relativedelta(days=1)
-    # et = time1 - relativedelta(days=0)
-    # 时间转化
-    st = '2023-02-01'
-    et = '2023-03-01'
     main()
+
+
+
 
 
 

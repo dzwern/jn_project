@@ -118,3 +118,22 @@ def quoted_list_func(item_list):
     item_list = [str(x) for x in item_list]
     quoted_list_str = "'" + "','".join(item_list) + "'"
     return quoted_list_str
+
+
+def get_time_args(args):
+    '''获取程序传入参数，输出参数时间，手动输入参数格式： ‘2020-10-10 10:10:00’'''
+    if len(args) > 1:
+        time, = args[1:2]
+        if '+' in time:
+            # airflow传的参数
+            if '.' in time:
+                time = datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%f+08:00').replace(microsecond=0)
+            else:
+                time = datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S+08:00').replace(microsecond=0)
+        else:
+            # 在linux上手动执行传入的参数
+            time = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
+    else:
+        time = datetime.datetime.now()
+
+    return time

@@ -1,14 +1,15 @@
 # -*-conding:utf-8 -*-
 # !/usr/bin/env python3
 """
-# @Time    : 2023/3/31 14:06
+# @Time    : 2023/4/3 15:12
 # @Author  : diaozhiwei
-# @FileName: hhx_wechat_middle.py
-# @description: 微信基础设置
-# @update: 增量更新，每日更新
+# @FileName: hhx_wechat_middle_log.py
+# @description: 
+# @update:
 """
+import datetime
 
-# from modules.mysql import jnmtMySQL
+from modules.mysql import jnmtMySQL
 from modules.mysql import jnmtMySQL4
 import pandas as pd
 
@@ -82,18 +83,18 @@ def get_wechat_member():
 
 def save_sql(df):
     sql = '''
-    INSERT INTO `t_wechat_middle` 
+    INSERT INTO `t_wechat_log` 
      (`wechat_id`,`create_time`,`version`,`wechat_name`,`wecaht_number`,
      `phone`,`phone_code`,`sys_user_id`,`user_name`,`nick_name`,
      `dept_id`,`dept_name1`,`dept_name2`,`dept_name`,`valid_state`,
      `fans`,`project_out_total_debit`,`own_fans`,`reality_fans`,`member_trans`,
-     `oneway_fans`
+     `oneway_fans`,`current_time`
      ) 
      VALUES (%s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
-     %s
+     %s,%s
      )
      ON DUPLICATE KEY UPDATE
          `wechat_id`= VALUES(`wechat_id`),`create_time`= VALUES(`create_time`),`version`=VALUES(`version`),
@@ -102,7 +103,8 @@ def save_sql(df):
          `nick_name`=values(`nick_name`),`dept_id`=values(`dept_id`),`dept_name1`=values(`dept_name1`),
          `dept_name2`=values(`dept_name2`),`dept_name`=values(`dept_name`),`valid_state`=values(`valid_state`),
          `fans`=values(`fans`),`project_out_total_debit`=values(`project_out_total_debit`),`own_fans`=values(`own_fans`),
-         `reality_fans`=values(`reality_fans`),`member_trans`=values(`member_trans`),`oneway_fans`=values(`oneway_fans`)
+         `reality_fans`=values(`reality_fans`),`member_trans`=values(`member_trans`),`oneway_fans`=values(`oneway_fans`),
+         `current_time`=values(`current_time`)
          '''
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
@@ -121,20 +123,24 @@ def main():
     df_wechat['valid_state']=df_wechat['valid_state'].apply(lambda x: '正常' if x==1 else '维护')
     df_wechat['reality_fans']=df_wechat['fans']-df_wechat['project_out_total_debit']-df_wechat['own_fans']
     df_wechat=df_wechat.fillna(0)
+    df_wechat['current_time']=datetime.datetime.now()
+    df_wechat['current_time']=df_wechat['current_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+    df_wechat=df_wechat
+    print(df_wechat)
     df_wechat = df_wechat[['wechat_id', 'create_time', 'version', 'wechat_name', 'wecaht_number', 'phone', 'phone_code',
                            'sys_user_id', 'user_name', 'nick_name', 'dept_id', 'dept_name1', 'dept_name2', 'dept_name',
                            'valid_state', 'fans', 'project_out_total_debit', 'own_fans', 'reality_fans', 'member_trans',
-                           'oneway_fans']]
+                           'oneway_fans','current_time']]
     df_wechat=df_wechat.fillna(0)
     print(df_wechat)
     save_sql(df_wechat)
 
 
 if __name__ == '__main__':
-    # hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    # hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    hhx_sql = jnmtMySQL4.QunaMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2 = jnmtMySQL4.QunaMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
+    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    # hhx_sql = jnmtMySQL4.QunaMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    # hhx_sql2 = jnmtMySQL4.QunaMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
     # startTime = utils.get_time_args(sys.argv)
     # time1 = startTime
@@ -144,3 +150,14 @@ if __name__ == '__main__':
     st = '2023-02-01'
     et = '2023-03-01'
     main()
+
+
+
+
+
+
+
+
+
+
+
