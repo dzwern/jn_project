@@ -35,6 +35,7 @@ dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
 dbPort = 3306
 URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
 
+# mysql+pymysql://dzw:dsf#4oHGd@rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com:3306/
 
 class QunaMysql(object):
     # 初始化

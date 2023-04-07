@@ -8,9 +8,52 @@
 # @update: 增量更新，每日更新
 """
 
-from modules.mysql import jnmtMySQL
-from modules.mysql import jnmtMySQL4
+import datetime
 import pandas as pd
+from sqlalchemy import create_engine
+from urllib.parse import quote_plus as urlquote
+
+
+userName = 'dzw'
+password = 'dsf#4oHGd'
+dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
+dbPort = 3306
+URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
+schema = 'crm_tm_jnmt'
+schema2 = 'hhx_dx'
+engine = create_engine(URL + schema + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+engine2 = create_engine(URL + schema2 + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+
+
+# 加载数据到df
+def get_DataFrame_PD(sql='SELECT * FROM DUAL'):
+    conn = engine.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 加载数据到df
+def get_DataFrame_PD2(sql='SELECT * FROM DUAL'):
+    conn = engine2.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 批量执行更新sql语句
+def executeSqlManyByConn(sql, data):
+    conn = engine2.connect()
+    if len(data) > 0:
+        with conn as connection:
+            return connection.execute(sql, data)
+
+
+# 时间转化字符串
+def date2str(parameter, format='%Y-%m-%d'):
+    if isinstance(parameter, str):
+        return parameter
+    return parameter.strftime(format)
 
 
 # 微信基础设备
@@ -37,11 +80,11 @@ def get_wechat_base():
     FROM
         t_wechat a 
     LEFT JOIN sys_user b on a.sys_user_id=b.user_id
-    LEFT JOIN sys_dept c on b.dept_id=c.dept_id
+    LEFT JOIN sys_dept c on a.dept_id=c.dept_id
     WHERE
         a.tenant_id = 11
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -76,7 +119,7 @@ def get_wechat_member():
         a.tenant_id = 11
     GROUP BY a.wechat_id
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -104,7 +147,7 @@ def save_sql(df):
          `fans`=values(`fans`),`project_out_total_debit`=values(`project_out_total_debit`),`own_fans`=values(`own_fans`),
          `reality_fans`=values(`reality_fans`),`member_trans`=values(`member_trans`),`oneway_fans`=values(`oneway_fans`)
          '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    executeSqlManyByConn(sql, df.values.tolist())
 
 
 # 主函数
@@ -131,6 +174,4 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     main()

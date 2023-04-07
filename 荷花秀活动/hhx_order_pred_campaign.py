@@ -40,7 +40,7 @@ def get_member_category():
     sql = '''
     SELECT
         a.wechat_id,
-        a.reality_fans
+        a.fans reality_fans
     FROM
         t_wechat_middle a 
     WHERE
@@ -85,7 +85,7 @@ def get_member_level():
     return df
 
 
-# 客户成交金额,成交数，粉丝转换
+# 客户成交金额,成交数，粉丝转换，新进粉成交
 def get_member_strike():
     sql='''
     SELECT 
@@ -95,17 +95,18 @@ def get_member_strike():
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '2023-02-15' 
-    AND a.create_time < '2023-03-01'
-    and a.first_time>='2023-02-15'
-    and a.first_time<'2023-03-01'
+    WHERE a.create_time >= '{}' 
+    AND a.create_time < '{}'
+    and a.first_time>='{}'
+    and a.first_time<'{}'
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
     GROUP BY a.wechat_id
-    '''
+    '''.format(st2,et,st2,et)
     df=hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
+# 老粉成交
 def get_member_strike2():
     sql='''
     SELECT 
@@ -115,12 +116,12 @@ def get_member_strike2():
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '2023-02-15' 
-    AND a.create_time < '2023-03-01'
-    and a.first_time<'2022-12-21'
+    WHERE a.create_time >= '{}' 
+    AND a.create_time < '{}'
+    and a.first_time<'{}'
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
     GROUP BY a.wechat_id
-    '''
+    '''.format(st2,et,st)
     df=hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -134,13 +135,13 @@ def get_member_strike3():
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '2023-02-15' 
-    AND a.create_time < '2023-03-01'
-    and a.first_time>='2022-12-21'
-    and a.first_time<'2023-02-15'
+    WHERE a.create_time >= '{}' 
+    AND a.create_time < '{}'
+    and a.first_time>='{}'
+    and a.first_time<'{}'
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
     GROUP BY a.wechat_id
-    '''
+    '''.format(st2,et,st,et)
     df=hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -189,6 +190,14 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_pred_campaign_tmp;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 基础数据，正常设备信息
     df_wechat_pred = get_wechat_pred()
@@ -197,6 +206,7 @@ def main():
     df_member_category = get_member_category()
     # 新粉，新进粉
     df_wechat_fans_new = get_wechat_fans(st, et)
+    # 新进粉
     df_wechat_fans_new2 = get_wechat_fans(st2, et)
     # 客户分层
     df_member_level = get_member_level()
@@ -239,15 +249,16 @@ def main():
     df_wechat_pred=df_wechat_pred[['wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name',
                                    'dept_name1','dept_name2','dept_name','member_category','members','members_develop',
                                    'members_amount','member_rate','member_price','activity_name']]
+    print(df_wechat_pred)
+    # 删除数据
+    del_sql()
     save_sql(df_wechat_pred)
 
 
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    st = '2023-02-01'
+    st = '2022-12-20'
     st2 = '2023-02-15'
     et = '2023-03-01'
     main()
-
-

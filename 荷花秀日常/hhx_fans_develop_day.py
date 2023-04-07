@@ -66,7 +66,7 @@ def get_member_develop():
         min(a.time_diff) day,
         count(DISTINCT a.member_id) members
     FROM
-        hhx_t_orders_tmp a
+        t_orders_middle a
     where a.first_time>='{}'
     and a.first_time<'{}'
     GROUP BY a.dept_name,a.nick_name,a.wechat_number,left(a.first_time,10)

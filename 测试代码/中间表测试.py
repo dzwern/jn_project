@@ -9,8 +9,44 @@
 """
 import datetime
 import pandas as pd
-from modules.mysql import jnmtMySQL
-from modules.mysql import jnmtMySQL4
+from sqlalchemy import create_engine
+from urllib.parse import quote_plus as urlquote
+import sys
+from dateutil.relativedelta import relativedelta
+
+
+userName = 'dzw'
+password = 'dsf#4oHGd'
+dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
+dbPort = 3306
+URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
+schema = 'crm_tm_jnmt'
+schema2 = 'hhx_dx'
+engine = create_engine(URL + schema + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+engine2 = create_engine(URL + schema2 + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+
+
+# 加载数据到df
+def get_DataFrame_PD(sql='SELECT * FROM DUAL'):
+    conn = engine.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 批量执行更新sql语句
+def executeSqlManyByConn(sql, data):
+    conn = engine2.connect()
+    if len(data) > 0:
+        with conn as connection:
+            return connection.execute(sql, data)
+
+
+# 时间转化字符串
+def date2str(parameter, format='%Y-%m-%d'):
+    if isinstance(parameter, str):
+        return parameter
+    return parameter.strftime(format)
 
 
 # 订单基础信息
@@ -56,8 +92,8 @@ def get_hhx_orders():
         a.tenant_id = 11
     and a.create_time>='{}'
     and a.create_time<'{}'
-    '''.format(st1,et1)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    '''.format(st,et)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -188,8 +224,8 @@ def get_clinch_type():
     and b.is_repurchase=1
     )
     )t1
-    '''.format(st1,et1,st1,et1,st1,et1)
-    df=hhx_sql.get_DataFrame_PD(sql)
+    '''.format(st,et,st,et,st,et)
+    df=get_DataFrame_PD(sql)
     return df
 
 
@@ -225,8 +261,8 @@ def get_member_source():
     and a.create_time>='{}'
     and a.create_time<'{}'
     GROUP BY a.order_sn
-    '''.format(st1,et1)
-    df=hhx_sql.get_DataFrame_PD(sql)
+    '''.format(st,et)
+    df=get_DataFrame_PD(sql)
     return df
 
 # 客户来源枚举
@@ -271,7 +307,7 @@ def get_hhx_member():
     WHERE
         a.tenant_id = 11
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -289,8 +325,8 @@ def get_product_name():
     and a.create_time>='{}'
     and a.create_time<'{}'
     GROUP BY a.order_sn
-    '''.format(st1,et1)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    '''.format(st,et)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -510,10 +546,9 @@ def save_sql(df):
          `refund_state`=values(`refund_state`),`trade_time`=values(`trade_time`),`complate_date`=values(`complate_date`),
          `project_category_id`=values(`project_category_id`),`is_activity`=values(`is_activity`),`activity_name`=values(`activity_name`)
      '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    executeSqlManyByConn(sql, df.values.tolist())
 
 
-@utils.print_execute_time
 def main():
     # 基础数据表
     df_hhx_orders = get_hhx_orders()
@@ -572,22 +607,14 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     # 开始时间，结束时间
-    # startTime = utils.get_time_args(sys.argv)
-    # time1 = startTime
-    # st = time1 - relativedelta(days=1)
-    # et = time1 - relativedelta(days=0)
-    # 时间转化
-    st = '2023-01-01'
-    et = '2023-03-08'
-    st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
-    et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
+    time1 = datetime.datetime.now()
+    st = time1 - relativedelta(days=1)
+    et = time1 + relativedelta(days=1)
+    st = date2str(st)
+    et = date2str(et)
+    print(st,et)
     main()
-
-
-
 
 
 

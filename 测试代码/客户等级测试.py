@@ -11,12 +11,61 @@
 """
 
 
-from modules.mysql import jnmtMySQL
 import pandas as pd
 from datetime import  datetime
-from modules.func import utils
 import sys
 from dateutil.relativedelta import relativedelta
+from sqlalchemy import create_engine
+from urllib.parse import quote_plus as urlquote
+
+
+userName = 'dzw'
+password = 'dsf#4oHGd'
+dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
+dbPort = 3306
+URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
+schema = 'crm_tm_jnmt'
+schema2 = 'hhx_dx'
+engine = create_engine(URL + schema + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+engine2 = create_engine(URL + schema2 + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+
+
+# 加载数据到df
+def get_DataFrame_PD(sql='SELECT * FROM DUAL'):
+    conn = engine.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 加载数据到df
+def get_DataFrame_PD2(sql='SELECT * FROM DUAL'):
+    conn = engine2.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 批量执行更新sql语句
+def executeSqlManyByConn(sql, data):
+    conn = engine2.connect()
+    if len(data) > 0:
+        with conn as connection:
+            return connection.execute(sql, data)
+
+
+# 时间转化字符串
+def date2str(parameter, format='%Y-%m-%d'):
+    if isinstance(parameter, str):
+        return parameter
+    return parameter.strftime(format)
+
+
+# 执行sql
+def executeSqlByConn(sql='SELECT * FROM DUAL'):
+    conn = engine2.connect()
+    with conn as connection:
+        return connection.execute(sql)
 
 
 # 光辉部，蜜肤语项目
@@ -135,7 +184,7 @@ def get_member_base():
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     where a.tenant_id=11
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -157,7 +206,7 @@ def get_member_order(st,et):
     and a.create_time<'{}'
     GROUP BY a.member_id
     '''.format(st,et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -179,7 +228,7 @@ def get_member_order2(st,et):
     and a.create_time<'{}'
     GROUP BY a.member_id
     '''.format(st,et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -200,7 +249,7 @@ def get_member_new_time(st,et):
     and a.create_time<'{}'
     GROUP BY a.member_id
     '''.format(st,et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -224,7 +273,7 @@ def get_member_old():
     FROM
         t_member_level_middle a
     '''
-    df = hhx_sql2.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD2(sql)
     return df
 
 
@@ -240,7 +289,7 @@ def get_member_tmp():
     FROM
         t_member_level_tmp a
     '''
-    df = hhx_sql2.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD2(sql)
     return df
 
 
@@ -262,7 +311,7 @@ def save_sql(df):
          `order_nums`=values(`order_nums`),`order_amounts`=values(`order_amounts`),`order_nums_2023`=values(`order_nums_2023`),
          `order_amounts_2023`=values(`order_amounts_2023`),`last_time`=values(`last_time`)
          '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    executeSqlManyByConn(sql, df.values.tolist())
 
 
 # 中间表的储存
@@ -275,7 +324,7 @@ def save_sql2(df):
          `member_id`= VALUES(`member_id`),`order_nums`=values(`order_nums`),`order_amounts`=values(`order_amounts`),
          `order_nums_2023`=values(`order_nums_2023`),`order_amounts_2023`=values(`order_amounts_2023`)
          '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    executeSqlManyByConn(sql, df.values.tolist())
 
 
 # 中间表删除
@@ -283,7 +332,7 @@ def del_sql():
     sql = '''
     truncate table t_member_level_tmp
     '''
-    hhx_sql2.executeSqlByConn(sql)
+    executeSqlByConn(sql)
 
 
 def main():
@@ -363,14 +412,16 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     # 开始时间，结束时间
-    startTime = utils.get_time_args(sys.argv)
+    startTime = datetime.now()
     time1 = startTime
     st = time1 - relativedelta(days=7)
     et = time1 - relativedelta(days=0)
-    st = utils.date2str(st)
-    et = utils.date2str(et)
+    st = date2str(st)
+    et = date2str(et)
     print(st,et)
     main()
+
+
+
+

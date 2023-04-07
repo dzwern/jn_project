@@ -7,10 +7,54 @@
 # @description: 荷花秀客户基础信息数据，主要内容有：客户基础信息，客户时间，客户销售，客户所属等信息
 # @update: 增量更新，每日更新，需要注意客户销售情况，保证状态变更
 """
-
-from datetime import datetime
-from modules.mysql import jnmtMySQL
+import datetime
 import pandas as pd
+from sqlalchemy import create_engine
+from urllib.parse import quote_plus as urlquote
+import sys
+from dateutil.relativedelta import relativedelta
+
+
+userName = 'dzw'
+password = 'dsf#4oHGd'
+dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
+dbPort = 3306
+URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
+schema = 'crm_tm_jnmt'
+schema2 = 'hhx_dx'
+engine = create_engine(URL + schema + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+engine2 = create_engine(URL + schema2 + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+
+
+# 加载数据到df
+def get_DataFrame_PD(sql='SELECT * FROM DUAL'):
+    conn = engine.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 加载数据到df
+def get_DataFrame_PD2(sql='SELECT * FROM DUAL'):
+    conn = engine2.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 批量执行更新sql语句
+def executeSqlManyByConn(sql, data):
+    conn = engine2.connect()
+    if len(data) > 0:
+        with conn as connection:
+            return connection.execute(sql, data)
+
+
+# 时间转化字符串
+def date2str(parameter, format='%Y-%m-%d'):
+    if isinstance(parameter, str):
+        return parameter
+    return parameter.strftime(format)
 
 
 # 客户基础信息
@@ -43,7 +87,7 @@ def get_member_base():
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     where a.tenant_id=11
     '''
-    df=hhx_sql.get_DataFrame_PD(sql)
+    df=get_DataFrame_PD(sql)
     return df
 
 
@@ -77,7 +121,7 @@ def get_hhx_member():
     WHERE
         a.tenant_id = 11
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -96,7 +140,7 @@ def get_member_time():
     and a.refund_state not in (4)
     GROUP BY a.member_id
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -114,7 +158,7 @@ def get_member_order():
     FROM
         t_member_level_middle a
     '''
-    df = hhx_sql2.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD2(sql)
     return df
 
 
@@ -245,7 +289,7 @@ def save_sql(df):
          `order_amounts`=values(`order_amounts`),`order_nums_2023`=values(`order_nums_2023`),`order_amounts_2023`=values(`order_amounts_2023`),
          `last_time`=values(`last_time`),`last_time_diff`=values(`last_time_diff`)
          '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    executeSqlManyByConn(sql, df.values.tolist())
 
 
 def main():
@@ -273,7 +317,7 @@ def main():
     df_member['last_time'] = df_member['last_time'].fillna(0)
     df_member['last_time'] = df_member['last_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['last_time2'] = df_member['last_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
-    df_member['last_time_diff'] = ((pd.to_datetime(datetime.now()) - pd.to_datetime(df_member['last_time2'])) / pd.Timedelta(1,'D')).fillna(0).astype(int)
+    df_member['last_time_diff'] = ((pd.to_datetime(datetime.datetime.now()) - pd.to_datetime(df_member['last_time2'])) / pd.Timedelta(1,'D')).fillna(0).astype(int)
     df_member['id'] = df_member['member_id'].astype(str) + df_member['wechat_id'].astype(str)
     df_member=df_member.fillna(0)
     df_member['incoming_line_time'] = df_member['incoming_line_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
@@ -291,8 +335,6 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     main()
 
 

@@ -4,7 +4,7 @@
 # @Time    : 2023/3/30 10:51
 # @Author  : diaozhiwei
 # @FileName: hhx_member_level_middle.py
-# @description:首次全量更新
+# @description:首次全量更新,可以使用特定时间
 数据更新：
 """
 
@@ -145,8 +145,9 @@ def get_member_order_old():
         a.tenant_id = 11 
     AND a.ORDER_STATE in ('已签收','已发货') 
     and a.member_id>1
+    and a.ORDER_DATE<'{}'
     GROUP BY a.member_id
-    '''
+    '''.format(et)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -165,8 +166,9 @@ def get_member_order():
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
+    and a.create_time<'{}'
     GROUP BY a.member_id
-    '''
+    '''.format(et)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -303,9 +305,8 @@ def main():
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    et = '2023-04-01'
     main()
-
-
 
 
 
