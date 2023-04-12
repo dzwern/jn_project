@@ -40,9 +40,11 @@ def member_divide2(x, y):
         return 'V3'
     elif 5000 > x >= 2000:
         return 'V3'
-    elif x >= 5000 and y < 7:
+    elif 10000 > x >= 5000:
         return 'V4'
-    elif x >= 5000 and y >= 7:
+    elif x >= 10000 and y < 7:
+        return 'V4'
+    elif x >= 10000 and y >= 7:
         return 'V5'
     else:
         return 'V0'
@@ -94,19 +96,21 @@ def member_divide5(x, y):
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组', '光芒部二组', '光芒部六组', '光芒部三组',
-           '光芒部一组', '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组',
+    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
+           '光芒部二组', '光芒部六组', '光芒部三组','光芒部一组',
+           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组','光华部1组',
            '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端', '光芒部蜜梓源后端',
-           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光华部蜜梓源面膜进粉前端',
-           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉后端',
-           '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端', '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组',
-           '光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部', '光芒部', '光芒部', '光芒部', '光芒部', '光华部', '光华部', '光华部',
-           '光华部', '光华部', '光华部', '光源部', '光源部', '光源部', '光源部']
+    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
+           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
+           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端',
+           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部海参组']
+    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
+           '光芒部', '光芒部', '光芒部', '光芒部',
+           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部',
+           '光源部', '光源部', '光源部', '光源部']
     df = {"dept_name": df1,
-          'dept_name1': df2,
-          'dept_name2': df3}
+          'dept_name2': df2,
+          'dept_name1': df3}
     data = pd.DataFrame(df)
     return data
 
@@ -278,19 +282,19 @@ def main():
     # 老系统最近购买时间
     df_hhx_order_time_old=get_member_new_time_old()
     # 光辉部
-    df1 = df_hhx_member[df_hhx_member['dept_name2'] == '光辉部']
+    df1 = df_hhx_member[df_hhx_member['dept_name1'] == '光辉部']
     df1['member_level'] = df1['order_amounts'].apply(lambda x: member_divide1(x))
     # 光芒部
-    df2 = df_hhx_member[df_hhx_member['dept_name2'] == '光芒部']
+    df2 = df_hhx_member[df_hhx_member['dept_name1'] == '光芒部']
     df2['member_level'] = df2.apply(lambda x: member_divide2(x['order_amounts'], x['order_nums']), axis=1)
     # 光华部
-    df3 = df_hhx_member[df_hhx_member['dept_name2'] == '光华部']
+    df3 = df_hhx_member[df_hhx_member['dept_name1'] == '光华部']
     df3['member_level'] = df3.apply(lambda x: member_divide2(x['order_amounts'], x['order_nums']), axis=1)
     # 光源部蜂蜜
-    df4 = df_hhx_member[df_hhx_member['dept_name1'] == '光源部蜂蜜组']
+    df4 = df_hhx_member[df_hhx_member['dept_name2'] == '光源部蜂蜜组']
     df4['member_level'] = df4.apply(lambda x: member_divide4(x['order_amounts'], x['order_nums']), axis=1)
     # 光源部海参
-    df5 = df_hhx_member[df_hhx_member['dept_name1'] == '光源部海参组']
+    df5 = df_hhx_member[df_hhx_member['dept_name2'] == '光源部海参组']
     df5['member_level'] = df5.apply(lambda x: member_divide5(x['order_amounts'], x['order_nums']), axis=1)
     df_hhx_member = pd.concat([df1, df2, df3, df4, df5])
     df_hhx_member = df_hhx_member[['member_id', 'wechat_name', 'wechat_number', 'user_name', 'nick_name', 'dept_name1',
@@ -305,7 +309,7 @@ def main():
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    et = '2023-04-01'
+    et = '2023-04-05'
     main()
 
 

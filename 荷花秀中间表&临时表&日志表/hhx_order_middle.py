@@ -195,19 +195,21 @@ def get_clinch_type():
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组', '光芒部二组', '光芒部六组', '光芒部三组',
-           '光芒部一组', '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组',
+    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
+           '光芒部二组', '光芒部六组', '光芒部三组','光芒部一组',
+           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组','光华部1组',
            '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端', '光芒部蜜梓源后端',
-           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光华部蜜梓源面膜进粉前端',
-           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉后端',
-           '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端', '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组',
-           '光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部', '光芒部', '光芒部', '光芒部', '光芒部', '光华部', '光华部', '光华部',
-           '光华部', '光华部', '光华部', '光源部', '光源部', '光源部', '光源部']
+    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
+           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
+           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端',
+           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部海参组']
+    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
+           '光芒部', '光芒部', '光芒部', '光芒部',
+           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部',
+           '光源部', '光源部', '光源部', '光源部']
     df = {"dept_name": df1,
-          'dept_name1': df2,
-          'dept_name2': df3}
+          'dept_name2': df2,
+          'dept_name1': df3}
     data = pd.DataFrame(df)
     return data
 
@@ -441,36 +443,56 @@ def get_return_state(x):
         return '其它'
 
 
-# 活动信息
+# 活动信息-光源组
 def get_hhx_activity(x):
-    if datetime.datetime.strptime('2021-01-14','%Y-%m-%d') <= x < datetime.datetime.strptime('2021-01-21','%Y-%m-%d'):
-        return '2021年年货节活动'
-    elif datetime.datetime.strptime('2021-03-03','%Y-%m-%d') <= x < datetime.datetime.strptime('2021-03-11','%Y-%m-%d'):
-        return '2021年女神节活动'
-    elif datetime.datetime.strptime('2021-04-21','%Y-%m-%d') <= x < datetime.datetime.strptime('2021-04-28','%Y-%m-%d'):
-        return '2021年五一活动'
-    elif datetime.datetime.strptime('2021-05-31','%Y-%m-%d') <= x < datetime.datetime.strptime('2021-06-12','%Y-%m-%d'):
-        return '2021年618活动'
-    elif datetime.datetime.strptime('2021-08-09','%Y-%m-%d') <= x < datetime.datetime.strptime('2021-08-21','%Y-%m-%d'):
-        return '2021年11周年庆活动'
-    elif datetime.datetime.strptime('2021-10-26','%Y-%m-%d') <= x < datetime.datetime.strptime('2021-11-07','%Y-%m-%d'):
-        return '2021双十一活动'
-    elif datetime.datetime.strptime('2021-12-22','%Y-%m-%d') <= x < datetime.datetime.strptime('2022-01-04','%Y-%m-%d'):
-        return '2021年跨年活动'
-    elif datetime.datetime.strptime('2022-03-01','%Y-%m-%d') <= x < datetime.datetime.strptime('2022-03-11','%Y-%m-%d'):
-        return '2022女神节活动'
-    elif datetime.datetime.strptime('2022-04-19','%Y-%m-%d') <= x < datetime.datetime.strptime('2022-04-27','%Y-%m-%d'):
-        return '2022五一活动'
-    elif datetime.datetime.strptime('2022-06-08','%Y-%m-%d') <= x < datetime.datetime.strptime('2022-06-19','%Y-%m-%d'):
-        return '2022年618活动'
-    elif datetime.datetime.strptime('2022-08-02','%Y-%m-%d') <= x < datetime.datetime.strptime('2022-08-13','%Y-%m-%d'):
-        return '2022年12周年庆活动'
-    elif datetime.datetime.strptime('2022-10-18','%Y-%m-%d') <= x < datetime.datetime.strptime('2022-10-30','%Y-%m-%d'):
-        return '2022双十一活动'
-    elif datetime.datetime.strptime('2022-12-20','%Y-%m-%d') <= x < datetime.datetime.strptime('2022-12-31','%Y-%m-%d'):
-        return '2022年年货节活动'
-    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x < datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
-        return '2023年女神节活动'
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光芒组
+def get_hhx_activity2(x):
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光辉前端
+def get_hhx_activity3(x):
+    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-27','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-20','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光辉后端
+def get_hhx_activity4(x):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光华组前端
+def get_hhx_activity5(x):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-26','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
+        return '2023年38女神节活动'
+    elif datetime.datetime.strptime('2023-03-05','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光华组后端
+def get_hhx_activity6(x):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-26','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
+        return '2023年38女神节活动'
+    elif datetime.datetime.strptime('2023-03-03','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09','%Y-%m-%d'):
+        return '2023年38女神节活动'
 
 
 # 保存数据
@@ -513,7 +535,7 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
-@utils.print_execute_time
+# @utils.print_execute_time
 def main():
     # 基础数据表
     df_hhx_orders = get_hhx_orders()
@@ -553,7 +575,25 @@ def main():
     # 退货状态
     df_hhx_orders['refund_state'] = df_hhx_orders.apply(lambda x: get_return_state(x['return_state']), axis=1)
     # 活动信息
-    df_hhx_orders['activity_name'] = df_hhx_orders.apply(lambda x: get_hhx_activity(x['create_time']), axis=1)
+    # 光源部
+    df1 = df_hhx_orders[df_hhx_orders['dept_name1'] == '光源部']
+    df1['activity_name'] = df1.apply(lambda x: get_hhx_activity(x['create_time']), axis=1)
+    # 光芒部
+    df2 = df_hhx_orders[df_hhx_orders['dept_name1'] == '光芒部']
+    df2['activity_name'] = df2.apply(lambda x: get_hhx_activity2(x['create_time']), axis=1)
+    # 光辉部蜜肤语前端
+    df3 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光辉部蜜肤语前端']
+    df3['activity_name'] = df3.apply(lambda x: get_hhx_activity3(x['create_time']), axis=1)
+    # 光辉部蜜肤语后端
+    df4 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光辉部蜜肤语后端']
+    df4['activity_name'] = df4.apply(lambda x: get_hhx_activity4(x['create_time']), axis=1)
+    # 光华部蜜梓源面膜进粉前端
+    df5 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光华部蜜梓源面膜进粉前端']
+    df5['activity_name'] = df5.apply(lambda x: get_hhx_activity5(x['create_time']), axis=1)
+    # 光华部蜜梓源面膜进粉后端
+    df6 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光华部蜜梓源面膜进粉后端']
+    df6['activity_name'] = df6.apply(lambda x: get_hhx_activity6(x['create_time']), axis=1)
+    df_hhx_orders = pd.concat([df1, df2, df3, df4, df5, df6])
     # 是否活动
     df_hhx_orders['is_activity'] = df_hhx_orders.apply(lambda x: '否' if x['activity_name'] is None else '是', axis=1)
     df_hhx_orders['id'] = df_hhx_orders['order_sn'].astype(str) + df_hhx_orders['member_id'].astype(str)
@@ -581,7 +621,7 @@ if __name__ == '__main__':
     # et = time1 - relativedelta(days=0)
     # 时间转化
     st = '2023-01-01'
-    et = '2023-03-08'
+    et = '2023-04-13'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     main()

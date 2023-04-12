@@ -59,8 +59,8 @@ def get_hhx_user():
     df3 = ['光辉部', '光辉部', '光辉部', '光辉部', '光芒部', '光芒部', '光芒部', '光芒部', '光华部', '光华部', '光华部',
            '光华部', '光华部', '光华部', '光源部', '光源部', '光源部', '光源部']
     df = {"dept_name": df1,
-          'dept_name1': df2,
-          'dept_name2': df3}
+          'dept_name2': df2,
+          'dept_name1': df3}
     data = pd.DataFrame(df)
     return data
 

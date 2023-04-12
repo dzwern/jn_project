@@ -4,7 +4,7 @@
 # @Time    : 2023/3/15 9:31
 # @Author  : diaozhiwei
 # @FileName: hhx_order_pred_campaign.py
-# @description: 活动预估，之前数据
+# @description: 活动预估，之前数据,活动预测中间表
 # @update：更新时间在，活动之前更新
 """
 
@@ -30,6 +30,7 @@ def get_wechat_pred():
         t_wechat_middle a 
     WHERE
         a.valid_state = '正常'
+    and a.wechat_name not in ('玫瑰诗') 
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -67,6 +68,22 @@ def get_wechat_fans(st, et):
     '''.format(st, et)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
+
+
+# 38女神节活动时长
+def get_campaign_time():
+    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
+           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
+           '光华部二组', '光华部五组', '光华部1组', '光华部六组',
+           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
+    df2 = [9, 9, 12, 12,
+           14, 14, 14, 14,
+           11, 11, 13, 13,
+           14, 14, 14, 14]
+    df = {"dept_name": df1,
+          'activity_duration': df2}
+    data = pd.DataFrame(df)
+    return data
 
 
 # 客户类型，客户分层人数
@@ -170,20 +187,22 @@ def get_member_struck():
 def save_sql(df):
     sql = '''
     INSERT INTO `t_pred_campaign_tmp` 
-     (`wechat_id`,`wechat_name`,`wechat_number`,`sys_user_id`,`user_name`,
-     `nick_name`,`dept_name1`,`dept_name2`,`dept_name`,`member_category`,
+     (`id`,`wechat_id`,`wechat_name`,`wechat_number`,`sys_user_id`,`user_name`,
+     `nick_name`,`dept_name1`,`dept_name2`,`dept_name`,`member_category`,`activity_duration`,
      `members`,`members_develop`,`members_amount`,`member_rate`,`member_price`,
      `activity_name`
      ) 
      VALUES (%s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
-     %s,%s,%s,%s,%s,%s
+     %s,%s,%s,%s,%s,
+     %s,%s,%s
      )
      ON DUPLICATE KEY UPDATE
          `wechat_id`= VALUES(`wechat_id`),`wechat_name`= VALUES(`wechat_name`),`wechat_number`=VALUES(`wechat_number`),
          `sys_user_id`=values(`sys_user_id`),`user_name`=values(`user_name`),`nick_name`=values(`nick_name`),
          `dept_name1`=values(`dept_name1`), `dept_name2`=values(`dept_name2`),`dept_name`=values(`dept_name`),
-         `member_category`=values(`member_category`),`members`=values(`members`),`members_develop`=values(`members_develop`),
+         `member_category`=values(`member_category`),`activity_duration`=values(`activity_duration`),
+         `members`=values(`members`),`members_develop`=values(`members_develop`),
          `members_amount`=values(`members_amount`),`member_rate`=values(`member_rate`),`member_price`=values(`member_price`),
          `activity_name`=values(`activity_name`)
          '''
@@ -238,17 +257,21 @@ def main():
     df_member_strike=pd.concat([df_member_strike,df_member_strike2,df_member_strike3,df_member_struck])
     df_member_strike['wechat_id'] = df_member_strike['wechat_id'].astype(int)
     df_wechat_pred=df_wechat_pred.merge(df_member_strike,on=['wechat_id','member_category'],how='left')
-    df_wechat_pred=df_wechat_pred.fillna(0)
+    # 活动时长
+    df_campaign_time = get_campaign_time()
+    df_wechat_pred = df_wechat_pred.merge(df_campaign_time, on=['dept_name'], how='left')
+    df_wechat_pred = df_wechat_pred.fillna(0)
     # 转化率
     df_wechat_pred['member_rate']=df_wechat_pred['members_develop']/df_wechat_pred['members']
     # 客单价
     df_wechat_pred['member_price']=df_wechat_pred['members_amount']/df_wechat_pred['members_develop']
     df_wechat_pred['activity_name']='2023年女神节活动'
     df_wechat_pred = df_wechat_pred.replace([np.inf, -np.inf], np.nan)
+    df_wechat_pred['id']=df_wechat_pred['wechat_id'].astype(str) + df_wechat_pred['member_category'].astype(str)
     df_wechat_pred=df_wechat_pred.fillna(0)
-    df_wechat_pred=df_wechat_pred[['wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name',
-                                   'dept_name1','dept_name2','dept_name','member_category','members','members_develop',
-                                   'members_amount','member_rate','member_price','activity_name']]
+    df_wechat_pred=df_wechat_pred[['id','wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name',
+                                   'dept_name1','dept_name2','dept_name','member_category','activity_duration','members',
+                                   'members_develop','members_amount','member_rate','member_price','activity_name']]
     print(df_wechat_pred)
     # 删除数据
     del_sql()
