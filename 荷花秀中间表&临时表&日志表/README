@@ -1,21 +1,26 @@
 
 
 
+hhx_member_level_middle：客户等级中间表
 
+hhx_member_level_middle2：客户等级新加记录，实时更新
 
+hhx_member_level_middle_log：客户等级日志记录表
 
 hhx_member_middle：荷花秀客户中间表
+
+hhx_member_middle_log：荷花秀客户中间表日志记录。记录某个时间节点客户情况
+
+hhx_order_item_middle：荷花秀产品中间表
 
 hhx_order_middle：荷花秀订单中间表
 
 hhx_wechat_middle：荷花秀设备员工中间表
 
-hhx_member_order_middle：荷花秀客户订单中间表
+hhx_wechat_middle_log：荷花秀设备员工记录表，记录设备每日粉丝，用户数
 
 
-
-
-
+---------------------------------------------------------------------------
 
 
 

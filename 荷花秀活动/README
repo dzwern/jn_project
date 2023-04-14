@@ -1,25 +1,42 @@
 
 
-
 hhx_campaign：活动整体数据监控
 
 hhx_campaign_log；历史活动监控汇总
 
-hhx_order_perd_campaign：荷花秀活动订单预测
-
-
+hhx_city_campaign：荷花秀城市销售监控
 
 hhx_fans_member_campaign：荷花秀进粉情况监控
 
+hhx_oid_campaign：荷花秀订单监控
+
+hhx_order_campaign_51：51活动期间的订单
+
+hhx_order_perd_campaign：荷花秀活动订单预测
+
+hhx_order_perd_campaign_log：储存历史客户转化数据
+
+hhx_product_campaign：荷花秀产品监控
 
 hhx_user_campaign：荷花秀活动员工表现
 
+-----------------------------------------------------------------------------------------
 
-hhx_oid_campaign：荷花秀订单监控
+运行顺序
 
-hhx_city_campaign：荷花秀城市销售监控
+先客户等级——客户——历史转化——当前客户数——最终目标
 
-hhx_product_campaign：荷花秀产品监控
+hhx_middle_level_middle
+hhx_member_middle
+hhx_order_pred_campaign_log
+hhx_order_pred_campaign
+hhx_campaign
+
+
+-----------------------------
+
+
+
 
 
 
