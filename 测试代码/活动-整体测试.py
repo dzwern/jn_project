@@ -89,12 +89,10 @@ def get_order_campaign():
         sum(a.order_amount)  order_amounts
     FROM
         t_orders_middle a
-    where a.create_time>='{}'
-    and a.create_time<'{}'
-    # 状态
-    and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.activity_name='{}'
     GROUP BY a.dept_name1,a.dept_name2,a.dept_name
-    '''.format(st, et)
+    '''.format(activity_name)
     df = get_DataFrame_PD2(sql)
     return df
 
@@ -104,7 +102,7 @@ def get_pred_target():
     sql = '''
     SELECT
         a.dept_name,
-        sum(a.members_amount) amount_target 
+        sum(a.amount_pred) amount_target 
     FROM
         t_pred_campaign a
     GROUP BY a.dept_name
@@ -190,5 +188,8 @@ if __name__ == '__main__':
     time1 = datetime.now()
     st = time1 - relativedelta(days=5)
     et = time1 + relativedelta(days=1)
+    # 开始时间，结束时间
+    activity_name='2023年38女神节活动'
     print(st,et)
     main()
+

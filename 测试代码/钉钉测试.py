@@ -8,15 +8,6 @@
 # @update:
 """
 
-
-# -*-coding:utf-8 -*-
-"""
-File name : zs_user_sales_dingding.py
-Author : diaozhiwei
-Created date: 2022/11/7 17:17
-Description :
-"""
-
 from modules.dingtalk.DingTalk import DingTalk
 
 
@@ -41,6 +32,10 @@ def main():
 if __name__ == '__main__':
     access_token = '0555344754fdbdabb56ca53eb347e8fc150a2979c22a2c91e4860443bb449fa1'
     main()
+
+
+
+
 
 
 

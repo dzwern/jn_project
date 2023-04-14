@@ -63,6 +63,7 @@ def get_order_product():
         a.order_sn,
         a.create_time,
         d.dept_name,
+        b.id,
         b.order_id,
         b.product_name,
         b.sku_price,
@@ -87,16 +88,18 @@ def get_order_product():
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组', '光芒部二组', '光芒部六组', '光芒部三组',
-           '光芒部一组', '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组',
+    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
+           '光芒部二组', '光芒部六组', '光芒部三组','光芒部一组',
+           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组','光华部1组',
            '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端', '光芒部蜜梓源后端',
-           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光华部蜜梓源面膜进粉前端',
-           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉后端',
-           '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端', '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组',
-           '光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部', '光芒部', '光芒部', '光芒部', '光芒部', '光华部', '光华部', '光华部',
-           '光华部', '光华部', '光华部', '光源部', '光源部', '光源部', '光源部']
+    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
+           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
+           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端',
+           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部海参组']
+    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
+           '光芒部', '光芒部', '光芒部', '光芒部',
+           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部',
+           '光源部', '光源部', '光源部', '光源部']
     df = {"dept_name": df1,
           'dept_name2': df2,
           'dept_name1': df3}
@@ -104,19 +107,76 @@ def get_hhx_user():
     return data
 
 
+# 活动信息-光源组
+def get_hhx_activity(x):
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光芒组
+def get_hhx_activity2(x):
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光辉前端
+def get_hhx_activity3(x):
+    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-27','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-20','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光辉后端
+def get_hhx_activity4(x):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光华组前端
+def get_hhx_activity5(x):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-26','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
+        return '2023年38女神节活动'
+    elif datetime.datetime.strptime('2023-03-05','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息2-光华组后端
+def get_hhx_activity6(x):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-26','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
+        return '2023年38女神节活动'
+    elif datetime.datetime.strptime('2023-03-03','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
 def save_sql(df):
     sql = '''
     INSERT INTO `t_order_item_middle` 
-     (`id`,`order_sn`,`create_time`,`order_id`,`dept_name1`,`dept_name2`,`dept_name`,
-     `product_name`,`sku_price`,`real_price`,`quantity`
+     (`id`,`order_sn`,`create_time`,`order_id`,`dept_name1`,
+     `dept_name2`,`dept_name`,`product_name`,`sku_price`,`real_price`,
+     `quantity`,`activity_name`
      ) 
-     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+     VALUES (
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s,%s,
+     %s,%s
      )
      ON DUPLICATE KEY UPDATE
          `order_sn`= VALUES(`order_sn`),`create_time`= VALUES(`create_time`),`order_id`= VALUES(`order_id`),
          `dept_name1`= VALUES(`dept_name1`),`dept_name2`= VALUES(`dept_name2`),`dept_name`= VALUES(`dept_name`),
          `product_name`=VALUES(`product_name`),
-         `sku_price`=values(`sku_price`),`real_price`=values(`real_price`),`quantity`=values(`quantity`)
+         `sku_price`=values(`sku_price`),`real_price`=values(`real_price`),`quantity`=values(`quantity`),
+         `activity_name`=values(`activity_name`)
          '''
     executeSqlManyByConn(sql, df.values.tolist())
 
@@ -127,11 +187,31 @@ def main():
     # 订单所属
     df_order_dept = get_hhx_user()
     df_order_product = df_order_product.merge(df_order_dept, on=['dept_name'], how='left')
-    df_order_product['id'] = df_order_product['order_sn'].astype(str) + df_order_product['order_id'].astype(str)
     df_order_product = df_order_product.fillna(0)
+    # 活动信息
+    # 光源部
+    df1 = df_order_product[df_order_product['dept_name1'] == '光源部']
+    df1['activity_name'] = df1.apply(lambda x: get_hhx_activity(x['create_time']), axis=1)
+    # 光芒部
+    df2 = df_order_product[df_order_product['dept_name1'] == '光芒部']
+    df2['activity_name'] = df2.apply(lambda x: get_hhx_activity2(x['create_time']), axis=1)
+    # 光辉部蜜肤语前端
+    df3 = df_order_product[df_order_product['dept_name2'] == '光辉部蜜肤语前端']
+    df3['activity_name'] = df3.apply(lambda x: get_hhx_activity3(x['create_time']), axis=1)
+    # 光辉部蜜肤语后端
+    df4 = df_order_product[df_order_product['dept_name2'] == '光辉部蜜肤语后端']
+    df4['activity_name'] = df4.apply(lambda x: get_hhx_activity4(x['create_time']), axis=1)
+    # 光华部蜜梓源面膜进粉前端
+    df5 = df_order_product[df_order_product['dept_name2'] == '光华部蜜梓源面膜进粉前端']
+    df5['activity_name'] = df5.apply(lambda x: get_hhx_activity5(x['create_time']), axis=1)
+    # 光华部蜜梓源面膜进粉后端
+    df6 = df_order_product[df_order_product['dept_name2'] == '光华部蜜梓源面膜进粉后端']
+    df6['activity_name'] = df6.apply(lambda x: get_hhx_activity6(x['create_time']), axis=1)
+    df_order_product = pd.concat([df1, df2, df3, df4, df5, df6])
+    df_order_product['id'] = df_order_product['order_sn'].astype(str) + df_order_product['id'].astype(str)
     df_order_product = df_order_product[
         ['id', 'order_sn', 'create_time',  'order_id', 'dept_name1', 'dept_name2', 'dept_name', 'product_name',
-         'sku_price', 'real_price', 'quantity']]
+         'sku_price', 'real_price', 'quantity' , 'activity_name']]
     # 保存数据
     save_sql(df_order_product)
 

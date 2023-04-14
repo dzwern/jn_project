@@ -13,6 +13,7 @@ import pandas as pd
 
 # https://oapi.dingtalk.com/robot/send?access_token=0555344754fdbdabb56ca53eb347e8fc150a2979c22a2c91e4860443bb449fa1
 
+
 class DingTalk(object):
     def __init__(self, access_token='281e0e4342e38f6f54ae9f708c85d64da370dc500ee144caf0b8b0a11d80f2b4'):
         self.access_token = access_token
