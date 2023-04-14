@@ -59,14 +59,13 @@ def get_member_strike():
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
-    and a.first_time>='{}'
+    WHERE a.first_time>='{}'
     and a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.activity_name='2023年38女神节活动'
     GROUP BY a.sys_user_id
-    '''.format(st2, et, st2, et)
+    '''.format(st2, et)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -81,17 +80,17 @@ def get_member_strike2():
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
-    and a.first_time<'{}'
+    WHERE  a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.activity_name='2023年38女神节活动'
     GROUP BY a.sys_user_id
     '''.format(st2, et, st)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
+# 新粉成交
 def get_member_strike3():
     sql = '''
     SELECT 
@@ -101,12 +100,11 @@ def get_member_strike3():
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
-    and a.first_time>='{}'
+    WHERE a.first_time>='{}'
     and a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.activity_name='2023年38女神节活动'
     GROUP BY a.sys_user_id
     '''.format(st2, et, st, et)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -124,10 +122,9 @@ def get_member_struck():
     FROM 
     t_orders_middle a
     LEFT JOIN  t_member_middle b on a.member_id=b.member_id
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
-    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
+    where a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
     and a.clinch_type in ('复购日常成交','复购活动成交')
+    and a.activity_name='2023年38女神节活动'
     GROUP BY a.sys_user_id,b.member_level
     ORDER BY a.sys_user_id
     '''.format(st2, et)

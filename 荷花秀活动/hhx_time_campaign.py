@@ -44,46 +44,17 @@ def get_order_campaign():
         a.dept_name1,
         a.dept_name2,
         a.dept_name,
+        left()
         count(DISTINCT a.member_id) members,
         sum(a.order_amount)  order_amounts
     FROM
         t_orders_middle a
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
-    and a.activity_name='{}'
+    and a.activity_name='2023年38女神节活动'
     GROUP BY a.dept_name1,a.dept_name2,a.dept_name
-    '''.format(activity_name)
-    df = hhx_sql2.get_DataFrame_PD(sql)
-    return df
-
-
-# 预测目标
-def get_pred_target():
-    sql = '''
-    SELECT
-        a.dept_name,
-        sum(a.amount_pred) amount_target 
-    FROM
-        t_pred_campaign a
-    GROUP BY a.dept_name
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
-
-
-# 业务目标
-def get_work_target():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部1组', '光华部六组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = [160000, 160000, 1100000, 1100000,
-           900000, 900000, 800000, 900000,
-           155000, 145000, 340000, 540000,
-           330000, 330000, 340000, 800000]
-    df = {"dept_name": df1,
-          'amount_target2': df2}
-    data = pd.DataFrame(df)
-    return data
 
 
 def save_sql(df):
@@ -146,7 +117,10 @@ if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     # 开始时间，结束时间
-    activity_name='2023年38女神节活动'
+    time1 = datetime.now()
+    st = time1 - relativedelta(days=5)
+    et = time1 + relativedelta(days=1)
+    print(st,et)
     main()
 
 

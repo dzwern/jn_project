@@ -4,8 +4,8 @@
 # @Time    : 2023/3/29 17:02
 # @Author  : diaozhiwei
 # @FileName: hhx_member_middle.py
-# @description: 荷花秀客户基础信息数据，主要内容有：客户基础信息，客户时间，客户销售，客户所属等信息，储存的是当前客户状态
-# @update: 增量更新，每日更新，需要注意客户销售情况，保证状态变更
+# @description: 存储活动前，活动后客户的状态
+# @update:
 """
 
 from datetime import datetime
@@ -220,20 +220,20 @@ def get_member_source2(x):
 
 def save_sql(df):
     sql = '''
-    INSERT INTO `t_member_middle` 
+    INSERT INTO `t_member_middle_log` 
      (`id`,`member_id`,`balance`,`point`,`phone`,
      `user_name2`,`wechat_number2`,`member_identity`,`member_source`,`member_source_level2`,
      `incoming_line_time`,`add_wechat_time`,`first_time`,`create_time`,`wechat_id`,
      `wechat_name`,`wechat_number`,`sys_user_id`,`user_name`,`nick_name`,
      `dept_name1`,`dept_name2`,`dept_name`,`member_level`,`order_nums`,
-     `order_amounts`,`order_nums_2023`,`order_amounts_2023`,`last_time`,`last_time_diff`
+     `order_amounts`,`order_nums_2023`,`order_amounts_2023`,`last_time`,`last_time_diff`,`log_name`
      ) 
      VALUES (%s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
-     %s,%s,%s,%s,%s
+     %s,%s,%s,%s,%s,%s
      )
      ON DUPLICATE KEY UPDATE
          `member_id`= VALUES(`member_id`),`balance`= VALUES(`balance`),`point`=VALUES(`point`),
@@ -245,7 +245,7 @@ def save_sql(df):
          `nick_name`=values(`nick_name`),`dept_name1`=values(`dept_name1`),`dept_name2`=values(`dept_name2`),
          `dept_name`=values(`dept_name`),`member_level`=values(`member_level`),`order_nums`=values(`order_nums`),
          `order_amounts`=values(`order_amounts`),`order_nums_2023`=values(`order_nums_2023`),`order_amounts_2023`=values(`order_amounts_2023`),
-         `last_time`=values(`last_time`),`last_time_diff`=values(`last_time_diff`)
+         `last_time`=values(`last_time`),`last_time_diff`=values(`last_time_diff`),`log_name`=values(`log_name`)
          '''
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
@@ -276,18 +276,21 @@ def main():
     df_member['last_time'] = df_member['last_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['last_time2'] = df_member['last_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
     df_member['last_time_diff'] = ((pd.to_datetime(datetime.now()) - pd.to_datetime(df_member['last_time2'])) / pd.Timedelta(1,'D')).fillna(0).astype(int)
-    df_member['id'] = df_member['member_id'].astype(str) + df_member['wechat_id'].astype(str)
+    # 记录时间
+    df_member['date']='2023-03-01'
+    df_member['id'] = df_member['member_id'].astype(str) + df_member['wechat_id'].astype(str)+df_member['date']
     df_member=df_member.fillna(0)
     df_member['incoming_line_time'] = df_member['incoming_line_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['add_wechat_time'] = df_member['add_wechat_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['first_time'] = df_member['first_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['create_time'] = df_member['create_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
+    df_member['log_name'] = '2023年38女神节活动后'
     df_member = df_member[
         ['id', 'member_id', 'balance', 'point', 'phone', 'user_name2', 'wechat_number2', 'member_identity',
          'member_source', 'member_source_level2', 'incoming_line_time', 'add_wechat_time', 'first_time',
          'create_time', 'wechat_id', 'wechat_name', 'wechat_number', 'sys_user_id', 'user_name', 'nick_name',
          'dept_name1', 'dept_name2', 'dept_name', 'member_level', 'order_nums', 'order_amounts',
-         'order_nums_2023', 'order_amounts_2023', 'last_time', 'last_time_diff']]
+         'order_nums_2023', 'order_amounts_2023', 'last_time', 'last_time_diff', 'log_name']]
     print(df_member)
     save_sql(df_member)
 

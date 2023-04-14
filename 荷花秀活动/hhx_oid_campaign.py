@@ -45,8 +45,9 @@ def get_user_oid():
     FROM 
     t_orders_middle a
     LEFT JOIN  t_member_middle b on a.member_id=b.member_id
-    WHERE a.create_time >= '2023-04-01' 
-    AND a.create_time < '2023-04-10'
+    # 状态
+    where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.activity_name='2023年38女神节活动'
     GROUP BY a.sys_user_id,a.order_sn
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)

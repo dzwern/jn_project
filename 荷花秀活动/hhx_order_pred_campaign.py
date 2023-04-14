@@ -4,8 +4,8 @@
 # @Time    : 2023/3/15 9:31
 # @Author  : diaozhiwei
 # @FileName: hhx_order_pred_campaign.py
-# @description: 活动预估，之前数据,活动预测中间表
-# @update：更新时间在，活动之前更新
+# @description: 活动预估，使用预估的数据进行实时监控，实时监控表，到员工
+# @update：更新时间在，活动中监控
 """
 
 from modules.mysql import jnmtMySQL
@@ -13,24 +13,23 @@ import pandas as pd
 import numpy as np
 
 
-# 设备客户类型
-def get_wechat_pred():
+# 员工基础信息
+def get_user_base():
     sql = '''
     SELECT
-        a.wechat_id,
-        a.wechat_name,
-        a.wecaht_number,
         a.sys_user_id,
         a.user_name,
         a.nick_name,
         a.dept_name1,
         a.dept_name2,
-        a.dept_name 
+        a.dept_name,
+        count(DISTINCT a.wechat_id) wechat_nums
     FROM
         t_wechat_middle a 
     WHERE
         a.valid_state = '正常'
     and a.wechat_name not in ('玫瑰诗') 
+    GROUP BY a.sys_user_id
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -40,12 +39,13 @@ def get_wechat_pred():
 def get_member_category():
     sql = '''
     SELECT
-        a.wechat_id,
-        a.fans reality_fans
+        a.sys_user_id,
+        sum(a.fans) reality_fans
     FROM
         t_wechat_middle a 
     WHERE
         a.valid_state = '正常'
+    GROUP BY a.sys_user_id
         '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -55,7 +55,7 @@ def get_member_category():
 def get_wechat_fans(st, et):
     sql = '''
     SELECT 
-        a.wechat_id,
+        a.sys_user_id,
         sum(a.credit) new_fans
     FROM 
         t_wechat_fans_log a
@@ -64,39 +64,57 @@ def get_wechat_fans(st, et):
     AND a.new_sprint_time >= '{}' 
     AND a.new_sprint_time < '{}'
     and d.valid_state=1
-    GROUP BY a.wechat_id
+    GROUP BY a.sys_user_id
     '''.format(st, et)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
 
-# 38女神节活动时长
+# 客户类型，客户分层人数，要到38节期间的客户数
+def get_member_level():
+    sql = '''
+    SELECT
+        a.sys_user_id,
+        a.member_level,
+        count(1) level_members
+    FROM
+        t_member_middle a
+    GROUP BY a.sys_user_id,a.member_level
+    ORDER BY a.sys_user_id
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
+# 五一活动时长
 def get_campaign_time():
     df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
            '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
            '光华部二组', '光华部五组', '光华部1组', '光华部六组',
            '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = [9, 9, 12, 12,
-           14, 14, 14, 14,
-           11, 11, 13, 13,
-           14, 14, 14, 14]
+    df2 = [7, 7, 11, 11,
+           10, 10, 10, 10,
+           9, 9, 9, 9,
+           11, 11, 11, 11]
     df = {"dept_name": df1,
           'activity_duration': df2}
     data = pd.DataFrame(df)
     return data
 
 
-# 客户类型，客户分层人数
-def get_member_level():
+# 员工预测，以部门整体为准
+def get_user_pred():
     sql = '''
     SELECT
-        a.wechat_id,
-        a.member_level,
-        count(1) level_members
+        a.dept_name,
+        a.member_category,
+        avg(a.activity_duration) activity_duration2,
+        sum(a.members_develop)/sum(a.members) member_rate,
+        sum(a.members_amount)/sum(a.members_develop) member_price
     FROM
-        t_member_middle a
-    GROUP BY a.wechat_id,a.member_level
-    ORDER BY a.wechat_id
+        t_pred_campaign_log a
+    where a.activity_name='2023年女神节活动'
+    GROUP BY a.dept_name,member_category
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -104,184 +122,221 @@ def get_member_level():
 
 # 客户成交金额,成交数，粉丝转换，新进粉成交
 def get_member_strike():
-    sql='''
+    sql = '''
     SELECT 
-        a.wechat_id,
+        a.sys_user_id,
         'add_fans' member_category,
         count(DISTINCT a.member_id) members_develop,
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
-    and a.first_time>='{}'
+    where a.first_time>='{}'
     and a.first_time<'{}'
+    and a.activity_name='{}'
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
-    GROUP BY a.wechat_id
-    '''.format(st2,et,st2,et)
-    df=hhx_sql2.get_DataFrame_PD(sql)
+    GROUP BY a.sys_user_id
+    '''.format(st2, et, activity_name)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
 # 老粉成交
 def get_member_strike2():
-    sql='''
+    sql = '''
     SELECT 
-        a.wechat_id,
+        a.sys_user_id,
         'old_fans' member_category,
         count(DISTINCT a.member_id) members_develop,
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
-    and a.first_time<'{}'
+    WHERE a.first_time<'{}'
+    and a.activity_name='{}'
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
-    GROUP BY a.wechat_id
-    '''.format(st2,et,st)
-    df=hhx_sql2.get_DataFrame_PD(sql)
+    GROUP BY a.sys_user_id
+    '''.format(st,activity_name)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
+# 新粉转换
 def get_member_strike3():
-    sql='''
+    sql = '''
     SELECT 
-        a.wechat_id,
+        a.sys_user_id,
         'new_fans' member_category,
         count(DISTINCT a.member_id) members_develop,
         sum(a.order_amount) members_amount
     FROM 
     t_orders_middle a 
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
-    and a.first_time>='{}'
+    WHERE  a.first_time>='{}'
     and a.first_time<'{}'
+    and a.activity_name='{}'
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
-    GROUP BY a.wechat_id
-    '''.format(st2,et,st,et)
-    df=hhx_sql2.get_DataFrame_PD(sql)
+    GROUP BY a.sys_user_id
+    '''.format(st2, st, activity_name)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
 # 客户转换
 def get_member_struck():
-    sql='''
+    sql = '''
     SELECT 
-        a.wechat_id,
+        a.sys_user_id,
         b.member_level member_category,
         count(DISTINCT a.member_id) members_develop,
         sum(a.order_amount) members_amount
     FROM 
-    t_orders_middle a
+        t_orders_middle a
     LEFT JOIN  t_member_middle b on a.member_id=b.member_id
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
+    WHERE a.activity_name='{}'
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
     and a.clinch_type in ('复购日常成交','复购活动成交')
-    GROUP BY a.wechat_id,b.member_level
-    ORDER BY a.wechat_id
-    '''.format(st2,et)
-    df=hhx_sql2.get_DataFrame_PD(sql)
+    GROUP BY a.sys_user_id,b.member_level
+    ORDER BY a.sys_user_id
+    '''.format(st2, et, activity_name)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
-def save_sql(df):
+# 真实成交，完成率
+def get_user_order():
     sql = '''
-    INSERT INTO `t_pred_campaign_tmp` 
-     (`id`,`wechat_id`,`wechat_name`,`wechat_number`,`sys_user_id`,`user_name`,
-     `nick_name`,`dept_name1`,`dept_name2`,`dept_name`,`member_category`,`activity_duration`,
-     `members`,`members_develop`,`members_amount`,`member_rate`,`member_price`,
-     `activity_name`
-     ) 
-     VALUES (%s,%s,%s,%s,%s,
-     %s,%s,%s,%s,%s,
-     %s,%s,%s,%s,%s,
-     %s,%s,%s
-     )
-     ON DUPLICATE KEY UPDATE
-         `wechat_id`= VALUES(`wechat_id`),`wechat_name`= VALUES(`wechat_name`),`wechat_number`=VALUES(`wechat_number`),
-         `sys_user_id`=values(`sys_user_id`),`user_name`=values(`user_name`),`nick_name`=values(`nick_name`),
-         `dept_name1`=values(`dept_name1`), `dept_name2`=values(`dept_name2`),`dept_name`=values(`dept_name`),
-         `member_category`=values(`member_category`),`activity_duration`=values(`activity_duration`),
-         `members`=values(`members`),`members_develop`=values(`members_develop`),
-         `members_amount`=values(`members_amount`),`member_rate`=values(`member_rate`),`member_price`=values(`member_price`),
-         `activity_name`=values(`activity_name`)
-         '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    SELECT
+        a.sys_user_id,
+        count(DISTINCT a.member_id) members,
+        sum(a.order_amount) order_amounts
+    FROM
+        t_orders_middle a 
+    WHERE a.create_time>='{}'
+    and a.create_time<'{}'
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
+    GROUP BY a.sys_user_id
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 中间表删除
 def del_sql():
     sql = '''
-    truncate table t_pred_campaign_tmp;
+    truncate table t_pred_campaign;
     '''
     hhx_sql2.executeSqlByConn(sql)
 
 
+def save_sql(df):
+    sql = '''
+    INSERT INTO `t_pred_campaign` 
+     (`id`,`sys_user_id`,`user_name`,`nick_name`,`dept_name1`,
+     `dept_name2`,`dept_name`,`wechat_nums`,`member_category`,`members`,
+     `activity_duration`,`member_rate`,`member_pred`,`members_develop`,`member_price`,
+     `amount_pred`,`members_amount`,`completion_rate`,`activity_name`
+     ) 
+     VALUES (%s,%s,%s,%s,%s,
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s
+     )
+     ON DUPLICATE KEY UPDATE
+         `sys_user_id`=values(`sys_user_id`),`user_name`=values(`user_name`),`nick_name`=values(`nick_name`),
+         `dept_name1`=values(`dept_name1`), `dept_name2`=values(`dept_name2`),`dept_name`=values(`dept_name`),
+         `wechat_nums`=values(`wechat_nums`),`member_category`=values(`member_category`),`members`=values(`members`),
+         `activity_duration`=values(`activity_duration`),`member_rate`=values(`member_rate`),`member_pred`=values(`member_pred`),
+         `members_develop`=values(`members_develop`),`member_price`=values(`member_price`),`amount_pred`=values(`amount_pred`),
+         `members_amount`=values(`members_amount`),`completion_rate`=values(`completion_rate`),`activity_name`=values(`activity_name`)
+         '''
+    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+
+
 def main():
-    # 基础数据，正常设备信息
-    df_wechat_pred = get_wechat_pred()
+    # 员工基础信息
+    df_user_base = get_user_base()
+    # 员工粉丝客户情况
     # 活动前客户数据，总粉，老粉，新粉，新进粉，V1客户，V2客户，V3客户，V4客户，V5客户
     # 总粉丝
     df_member_category = get_member_category()
-    # 新粉，新进粉
+    # 新粉，新进粉品【38节新粉】
     df_wechat_fans_new = get_wechat_fans(st, et)
-    # 新进粉
+    # 新进粉【38节期间进粉数】
     df_wechat_fans_new2 = get_wechat_fans(st2, et)
     # 客户分层
     df_member_level = get_member_level()
     # 汇总
-    df_wechat_pred=df_wechat_pred.merge(df_member_category,on=['wechat_id'],how='left')
-    df_wechat_pred['wechat_id'] = df_wechat_pred['wechat_id'].astype(int)
-    df_wechat_pred=df_wechat_pred.merge(df_wechat_fans_new,on=['wechat_id'],how='left')
-    df_wechat_pred=df_wechat_pred.merge(df_wechat_fans_new2,on=['wechat_id'],how='left')
-    df_wechat_pred=df_wechat_pred.rename(columns={'new_fans_x':'new_fans','new_fans_y':'add_fans'})
+    df_user_base=df_user_base.merge(df_member_category,on=['sys_user_id'],how='left')
+    df_user_base['sys_user_id'] = df_user_base['sys_user_id'].astype(int)
+    df_user_base=df_user_base.merge(df_wechat_fans_new,on=['sys_user_id'],how='left')
+    df_user_base=df_user_base.merge(df_wechat_fans_new2,on=['sys_user_id'],how='left')
+    df_user_base=df_user_base.rename(columns={'new_fans_x':'new_fans','new_fans_y':'add_fans'})
     # 客户转换
-    df_member_level = df_member_level.groupby(["wechat_id", "member_level",])['level_members'].sum().reset_index()
-    df_member_level = df_member_level.set_index(["wechat_id", "member_level",])["level_members"]
+    df_member_level = df_member_level.groupby(["sys_user_id", "member_level",])['level_members'].sum().reset_index()
+    df_member_level = df_member_level.set_index(["sys_user_id", "member_level",])["level_members"]
     df_member_level = df_member_level.unstack().reset_index()
-    df_member_level['wechat_id'] = df_member_level['wechat_id'].astype(int)
-    df_wechat_pred = df_wechat_pred.merge(df_member_level,on=['wechat_id'],how='left')
-    df_wechat_pred=df_wechat_pred.fillna(0)
+    df_member_level['sys_user_id'] = df_member_level['sys_user_id'].astype(int)
+    df_user_base = df_user_base.merge(df_member_level,on=['sys_user_id'],how='left')
+    df_user_base=df_user_base.fillna(0)
     # 相差
-    df_wechat_pred['old_fans']=df_wechat_pred['reality_fans']-df_wechat_pred['new_fans']-df_wechat_pred['add_fans']-\
-                               df_wechat_pred['0']-df_wechat_pred['V1']-df_wechat_pred['V2']-df_wechat_pred['V3']-df_wechat_pred['V4']-df_wechat_pred['V5']
-    df_wechat_pred=df_wechat_pred[['wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name',
-                                   'dept_name1','dept_name2','dept_name','old_fans','new_fans','add_fans','V1','V2','V3','V4','V5']]
-    df_wechat_pred=pd.melt(df_wechat_pred,id_vars=['wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name','dept_name1','dept_name2','dept_name'])
-    df_wechat_pred=df_wechat_pred.rename(columns={'variable':'member_category','value':'members'})
-    # 客户成交转换
-    df_member_strike=get_member_strike()
-    df_member_strike2=get_member_strike2()
-    df_member_strike3=get_member_strike3()
-    df_member_struck=get_member_struck()
-    df_member_strike=pd.concat([df_member_strike,df_member_strike2,df_member_strike3,df_member_struck])
-    df_member_strike['wechat_id'] = df_member_strike['wechat_id'].astype(int)
-    df_wechat_pred=df_wechat_pred.merge(df_member_strike,on=['wechat_id','member_category'],how='left')
+    df_user_base['old_fans']=df_user_base['reality_fans']-df_user_base['new_fans']-df_user_base['add_fans']-\
+                               df_user_base['0']-df_user_base['V1']-df_user_base['V2']-df_user_base['V3']-df_user_base['V4']-df_user_base['V5']
+    df_user_base=df_user_base[['sys_user_id','user_name','nick_name','dept_name1','dept_name2','dept_name','wechat_nums','old_fans','new_fans','add_fans','V1','V2','V3','V4','V5']]
+    df_user_base=pd.melt(df_user_base,id_vars=['sys_user_id','user_name','nick_name','dept_name1','dept_name2','dept_name','wechat_nums'])
+    df_user_base=df_user_base.rename(columns={'variable':'member_category','value':'members'})
+    # 员工转化，预测情况
+    df_user_pred = get_user_pred()
+    df_user_base = df_user_base.merge(df_user_pred, on=['dept_name', 'member_category'], how='left')
     # 活动时长
     df_campaign_time = get_campaign_time()
-    df_wechat_pred = df_wechat_pred.merge(df_campaign_time, on=['dept_name'], how='left')
-    df_wechat_pred = df_wechat_pred.fillna(0)
-    # 转化率
-    df_wechat_pred['member_rate']=df_wechat_pred['members_develop']/df_wechat_pred['members']
-    # 客单价
-    df_wechat_pred['member_price']=df_wechat_pred['members_amount']/df_wechat_pred['members_develop']
-    df_wechat_pred['activity_name']='2023年女神节活动'
-    df_wechat_pred = df_wechat_pred.replace([np.inf, -np.inf], np.nan)
-    df_wechat_pred['id']=df_wechat_pred['wechat_id'].astype(str) + df_wechat_pred['member_category'].astype(str)
-    df_wechat_pred=df_wechat_pred.fillna(0)
-    df_wechat_pred=df_wechat_pred[['id','wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name',
-                                   'dept_name1','dept_name2','dept_name','member_category','activity_duration','members',
-                                   'members_develop','members_amount','member_rate','member_price','activity_name']]
-    print(df_wechat_pred)
-    # 删除数据
+    df_user_base = df_user_base.merge(df_campaign_time, on=['dept_name'], how='left')
+    # 员工真实消费情况
+    df_member_strike = get_member_strike()
+    df_member_strike2 = get_member_strike2()
+    df_member_strike3 = get_member_strike3()
+    df_member_struck = get_member_struck()
+    df_member_strike = pd.concat([df_member_strike, df_member_strike2, df_member_strike3, df_member_struck])
+    df_member_strike['sys_user_id'] = df_member_strike['sys_user_id'].astype(int)
+    df_user_base = df_user_base.merge(df_member_strike, on=['sys_user_id', 'member_category'], how='left')
+    df_user_base = df_user_base.fillna(0)
+    # 活动时长辅助列
+    df_user_base['activity_duration_fuzhu']=df_user_base['activity_duration']/df_user_base['activity_duration2']
+    df_user_base['member_rate'] = df_user_base['member_rate'] * df_user_base['activity_duration_fuzhu']
+    # 预估成交客户数
+    df_user_base['member_pred'] = df_user_base['member_rate'] * df_user_base['members']
+
+    df_user_base['member_price']=df_user_base['member_price'] * df_user_base['activity_duration_fuzhu']
+    # 预估成交金额
+    df_user_base['amount_pred'] = df_user_base['member_pred'] * df_user_base['member_price']
+    # 完成率
+    df_user_base['completion_rate'] = df_user_base['amount_pred'] / df_user_base['members_amount']
+    # 活动名称
+    df_user_base['activity_name'] = '2023年5.1活动'
+    df_user_base = df_user_base.replace([np.inf, -np.inf], np.nan)
+    df_user_base = df_user_base.fillna(0)
+    df_user_base['id'] = df_user_base['sys_user_id'].astype(str) + df_user_base['member_category'].astype(str)
+    df_user_base = df_user_base[['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
+                                 'wechat_nums', 'member_category', 'members', 'activity_duration', 'member_rate',
+                                 'member_pred', 'members_develop', 'member_price', 'amount_pred', 'members_amount',
+                                 'completion_rate', 'activity_name']]
+    df_user_base = df_user_base
     del_sql()
-    save_sql(df_wechat_pred)
+    save_sql(df_user_base)
 
 
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    st = '2022-12-20'
-    st2 = '2023-02-15'
-    et = '2023-03-01'
+    st = '2022-02-15'
+    st2 = '2023-04-18'
+    et = '2023-05-01'
+    activity_name = '2023年38女神节活动'
     main()
+
+
+
+
+
+
+

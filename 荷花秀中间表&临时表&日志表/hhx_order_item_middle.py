@@ -21,6 +21,7 @@ def get_order_product():
         a.order_sn,
         a.create_time,
         d.dept_name,
+        b.id,
         b.order_id,
         b.product_name,
         b.sku_price,
@@ -87,7 +88,7 @@ def main():
     # 订单所属
     df_order_dept = get_hhx_user()
     df_order_product = df_order_product.merge(df_order_dept, on=['dept_name'], how='left')
-    df_order_product['id'] = df_order_product['order_sn'].astype(str) + df_order_product['order_id'].astype(str)
+    df_order_product['id'] = df_order_product['order_sn'].astype(str) + df_order_product['id'].astype(str)
     df_order_product = df_order_product.fillna(0)
     df_order_product = df_order_product[
         ['id', 'order_sn', 'create_time',  'order_id', 'dept_name1', 'dept_name2', 'dept_name', 'product_name',

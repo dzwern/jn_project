@@ -22,9 +22,8 @@ def get_city_order():
         sum(a.order_amount) members_amount
     from 
         t_orders_middle a
-    where a.create_time>='2023-04-01'
-    and a.create_time<'2023-05-01'
-    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
+    where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.activity_name='2023年38女神节活动'
     GROUP BY a.dept_name,a.receiver_province,a.receiver_city
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)

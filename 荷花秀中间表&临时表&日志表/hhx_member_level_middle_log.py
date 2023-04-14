@@ -237,21 +237,22 @@ def get_member_new_time():
 
 def save_sql(df):
     sql = '''
-    INSERT INTO `t_member_level_middle` 
-     (`member_id`,`wechat_name`,`wechat_number`,`user_name`,`nick_name`,
+    INSERT INTO `t_member_level_middle_log` 
+     (`id`,`member_id`,`wechat_name`,`wechat_number`,`user_name`,`nick_name`,
      `dept_name1`,`dept_name2`,`dept_name`,`member_level`,`order_nums`,
-     `order_amounts`,`order_nums_2023`,`order_amounts_2023`,`last_time`
+     `order_amounts`,`order_nums_2023`,`order_amounts_2023`,`last_time`,`log_name`
      ) 
      VALUES (%s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
-     %s,%s,%s,%s
+     %s,%s,%s,%s,%s,%s
      )
      ON DUPLICATE KEY UPDATE
-         `member_id`= VALUES(`member_id`),`wechat_name`= VALUES(`wechat_name`),`wechat_number`=VALUES(`wechat_number`),
+         `id`= VALUES(`id`),`member_id`= VALUES(`member_id`),`wechat_name`= VALUES(`wechat_name`),
+         `wechat_number`=VALUES(`wechat_number`),
          `user_name`=values(`user_name`),`nick_name`=values(`nick_name`),`dept_name1`=values(`dept_name1`),
          `dept_name2`=values(`dept_name2`),`dept_name`=values(`dept_name`),`member_level`=values(`member_level`),
          `order_nums`=values(`order_nums`),`order_amounts`=values(`order_amounts`),`order_nums_2023`=values(`order_nums_2023`),
-         `order_amounts_2023`=values(`order_amounts_2023`),`last_time`=values(`last_time`)
+         `order_amounts_2023`=values(`order_amounts_2023`),`last_time`=values(`last_time`),`log_name`=values(`log_name`)
          '''
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
@@ -303,13 +304,19 @@ def main():
     df_hhx_member = df_hhx_member.fillna(0)
     print(df_hhx_member)
     df_hhx_member['last_time'] = df_hhx_member['last_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
+    df_hhx_member['date'] = et
+    df_hhx_member['log_name'] = '2023年38女神节活动后'
+    df_hhx_member['id'] = df_hhx_member['member_id'].astype(str) + df_hhx_member['date']
+    df_hhx_member = df_hhx_member[['id', 'member_id', 'wechat_name', 'wechat_number', 'user_name', 'nick_name',
+                                   'dept_name1', 'dept_name2', 'dept_name', 'member_level', 'order_nums',
+                                   'order_amounts', 'order_nums_2023', 'order_amounts_2023', 'last_time' ,'log_name']]
     save_sql(df_hhx_member)
 
 
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    et = '2023-04-07'
+    et = '2023-03-01'
     main()
 
 

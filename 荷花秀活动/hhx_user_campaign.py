@@ -42,7 +42,7 @@ def get_user_fans():
         a.sys_user_id,
         sum(a.members) fans
     FROM
-        t_pred_campaign_tmp a
+        t_pred_campaign a
     where a.member_category in ('add_fans','new_fans','old_fans')
     GROUP BY a.sys_user_id
     '''
@@ -57,7 +57,7 @@ def get_user_member():
     a.sys_user_id,
     sum(a.members) members
     FROM
-        t_pred_campaign_tmp a
+        t_pred_campaign a
     where a.member_category in ('V1','V2','V3','V4','V5')
     GROUP BY a.sys_user_id
     '''
@@ -69,12 +69,12 @@ def get_user_member():
 def get_user_fans_develop():
     sql = '''
     SELECT 
-    a.sys_user_id,
-    count(DISTINCT a.member_id) fans_develop
+        a.sys_user_id,
+        count(DISTINCT a.member_id) fans_develop
     FROM 
-    t_orders_middle a 
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
+        t_orders_middle a 
+    where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.activity_name='2023年38女神节活动'
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
     GROUP BY a.sys_user_id
     '''.format(st,et)
@@ -86,12 +86,12 @@ def get_user_fans_develop():
 def get_user_member_develop():
     sql = '''
     SELECT 
-    a.sys_user_id,
-    count(DISTINCT a.member_id) members_develop
+        a.sys_user_id,
+        count(DISTINCT a.member_id) members_develop
     FROM 
-    t_orders_middle a 
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
+        t_orders_middle a 
+    where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.activity_name='2023年38女神节活动'
     and a.clinch_type in ('复购日常成交','复购活动成交')
     GROUP BY a.sys_user_id
     '''.format(st,et)
@@ -106,10 +106,10 @@ def get_user_amount():
         a.sys_user_id,
         sum(a.order_amount) members_amount
     FROM 
-    t_orders_middle a
+        t_orders_middle a
     LEFT JOIN  t_member_middle b on a.member_id=b.member_id
-    WHERE a.create_time >= '{}' 
-    AND a.create_time < '{}'
+    where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.activity_name='2023年38女神节活动'
     GROUP BY a.sys_user_id
     '''.format(st,et)
     df = hhx_sql2.get_DataFrame_PD(sql)
