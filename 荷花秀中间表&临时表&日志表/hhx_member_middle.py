@@ -218,6 +218,14 @@ def get_member_source2(x):
         return '其他'
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_member_middle
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def save_sql(df):
     sql = '''
     INSERT INTO `t_member_middle` 
@@ -276,7 +284,7 @@ def main():
     df_member['last_time'] = df_member['last_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['last_time2'] = df_member['last_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
     df_member['last_time_diff'] = ((pd.to_datetime(datetime.now()) - pd.to_datetime(df_member['last_time2'])) / pd.Timedelta(1,'D')).fillna(0).astype(int)
-    df_member['id'] = df_member['member_id'].astype(str) + df_member['wechat_id'].astype(str)
+    df_member['id'] = df_member['member_id'].astype(str)
     df_member=df_member.fillna(0)
     df_member['incoming_line_time'] = df_member['incoming_line_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['add_wechat_time'] = df_member['add_wechat_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
@@ -289,6 +297,7 @@ def main():
          'dept_name1', 'dept_name2', 'dept_name', 'member_level', 'order_nums', 'order_amounts',
          'order_nums_2023', 'order_amounts_2023', 'last_time', 'last_time_diff']]
     print(df_member)
+    del_sql()
     save_sql(df_member)
 
 

@@ -24,6 +24,7 @@ def get_city_order():
         t_orders_middle a
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.activity_name='{}'
+    and a.order_amount>40
     GROUP BY a.dept_name,a.receiver_province,a.receiver_city
     '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -99,5 +100,5 @@ def main():
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    activity_name = '2023年38女神节活动'
+    activity_name = '2023年五一活动'
     main()

@@ -1,18 +1,68 @@
 # -*-conding:utf-8 -*-
 # !/usr/bin/env python3
 """
-# @Time    : 2023/4/13 9:03
+# @Time    : 2023/3/15 9:31
 # @Author  : diaozhiwei
-# @FileName: hhx_order_campaign_51.py
-# @description: 
-# @update:
+# @FileName: hhx_order_pred_campaign.py
+# @description: 活动预估，使用预估的数据进行实时监控，实时监控表，到员工
+# @update：更新时间在，活动中监控
 """
-from modules.mysql import jnmtMySQL
-from modules.mysql import jnmtMySQL4
+
 import pandas as pd
-from datetime import datetime, timedelta
-from modules.func import utils
+from datetime import  datetime,timedelta
+import sys
 from dateutil.relativedelta import relativedelta
+from sqlalchemy import create_engine
+from urllib.parse import quote_plus as urlquote
+import numpy as np
+
+userName = 'dzw'
+password = 'dsf#4oHGd'
+dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
+dbPort = 3306
+URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
+schema = 'crm_tm_jnmt'
+schema2 = 'hhx_dx'
+engine = create_engine(URL + schema + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+engine2 = create_engine(URL + schema2 + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+
+
+# 加载数据到df
+def get_DataFrame_PD(sql='SELECT * FROM DUAL'):
+    conn = engine.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 加载数据到df
+def get_DataFrame_PD2(sql='SELECT * FROM DUAL'):
+    conn = engine2.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 批量执行更新sql语句
+def executeSqlManyByConn(sql, data):
+    conn = engine2.connect()
+    if len(data) > 0:
+        with conn as connection:
+            return connection.execute(sql, data)
+
+
+# 时间转化字符串
+def date2str(parameter, format='%Y-%m-%d'):
+    if isinstance(parameter, str):
+        return parameter
+    return parameter.strftime(format)
+
+
+# 执行sql
+def executeSqlByConn(sql='SELECT * FROM DUAL', conn=None):
+    conn = engine2.connect()
+    with conn as connection:
+        return connection.execute(sql)
 
 
 def get_order_base():
@@ -23,9 +73,8 @@ def get_order_base():
         t_orders_middle a
     # 状态
     where a.activity_name='{}'
-    and a.order_amount>40
     '''.format(activity_name)
-    df = hhx_sql2.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD2(sql)
     return df
 
 
@@ -66,7 +115,7 @@ def save_sql(df):
          `refund_state`=values(`refund_state`),`trade_time`=values(`trade_time`),`complate_date`=values(`complate_date`),
          `project_category_id`=values(`project_category_id`),`is_activity`=values(`is_activity`),`activity_name`=values(`activity_name`)
      '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    executeSqlManyByConn(sql, df.values.tolist())
 
 
 def main():
@@ -84,7 +133,5 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     activity_name = '2023年五一活动'
     main()

@@ -28,7 +28,8 @@ def get_user_base():
         t_wechat_middle a 
     WHERE
         a.valid_state = '正常'
-    and a.wechat_name not in ('玫瑰诗') 
+    and a.wechat_name not in ('玫瑰诗')
+    and a.dept_name1 not in ('0')
     GROUP BY a.sys_user_id
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -48,6 +49,7 @@ def get_user_oid():
     # 状态
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.activity_name='{}'
+    and a.order_amount>40
     GROUP BY a.sys_user_id,a.order_sn
     '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -57,7 +59,7 @@ def get_user_oid():
 # 订单区间
 def get_order_divide(x):
     if 1000 > x >= 0:
-        return '1k以下'
+        return '0-1k'
     elif 2000 > x >= 1000:
         return '1-2k'
     elif 3000 > x >= 2000:
@@ -90,6 +92,14 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_oid_campaign;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 员工基础信息
     df_user_base = get_user_base()
@@ -105,11 +115,17 @@ def main():
         ['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
          'wechat_nums', 'order_sn', 'order_amount','order_interval','activity_name']]
     df_user_oid_base=df_user_oid_base
+    del_sql()
     save_sql(df_user_oid_base)
 
 
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    activity_name = '2023年38女神节活动'
+    activity_name = '2023年五一活动'
     main()
+
+
+
+
+

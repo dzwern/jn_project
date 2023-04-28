@@ -63,7 +63,7 @@ def main():
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    activity_name = '2023年38女神节活动'
+    activity_name = '2023年五一活动'
     main()
 
 

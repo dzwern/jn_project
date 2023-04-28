@@ -28,6 +28,7 @@ def get_user_base():
     WHERE
         a.valid_state = '正常'
     and a.wechat_name not in ('玫瑰诗') 
+    and a.dept_name1 not in ('0')
     GROUP BY a.sys_user_id
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -61,9 +62,10 @@ def get_member_strike():
     t_orders_middle a 
     WHERE a.first_time>='{}'
     and a.first_time<'{}'
-    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
     and a.activity_name='{}'
+    and a.order_amount>40
     GROUP BY a.sys_user_id
     '''.format(st2, et,activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -81,9 +83,10 @@ def get_member_strike2():
     FROM 
     t_orders_middle a 
     WHERE  a.first_time<'{}'
-    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
     and a.activity_name='{}'
+    and a.order_amount>40
     GROUP BY a.sys_user_id
     '''.format(st,activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -102,11 +105,36 @@ def get_member_strike3():
     t_orders_middle a 
     WHERE a.first_time>='{}'
     and a.first_time<'{}'
-    and a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
     and a.activity_name='{}'
+    and a.member_source not in ('主动裂变','公众号咨询')
+    and a.order_amount>40
     GROUP BY a.sys_user_id
-    '''.format(st2, et,activity_name)
+    '''.format(st, st2,activity_name)
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
+# 新粉成交
+def get_member_strike4():
+    sql = '''
+    SELECT 
+        a.sys_user_id,
+        'V1' member_category,
+        count(DISTINCT a.member_id) members_develop,
+        sum(a.order_amount) members_amount
+    FROM 
+        t_orders_middle a 
+    WHERE a.first_time>='{}'
+    and a.first_time<'{}'
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.activity_name='{}'
+    and a.member_source in ('主动裂变','公众号咨询')
+    and a.order_amount>40
+    GROUP BY a.sys_user_id
+    '''.format(st, st2,activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -122,14 +150,23 @@ def get_member_struck():
     FROM 
     t_orders_middle a
     LEFT JOIN  t_member_middle b on a.member_id=b.member_id
-    where a.order_state not in ('订单取消','订单驳回','拒收途中','拒收完结无异常','拒收完结有异常')
+    where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('复购日常成交','复购活动成交')
     and a.activity_name='{}'
+    and a.order_amount>40
     GROUP BY a.sys_user_id,b.member_level
     ORDER BY a.sys_user_id
     '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
+
+
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_fans_member_campaign;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
 
 
 def save_sql(df):
@@ -163,10 +200,17 @@ def main():
     df_member_strike = get_member_strike()
     df_member_strike2 = get_member_strike2()
     df_member_strike3 = get_member_strike3()
+    df_member_strike4 = get_member_strike4()
     df_member_struck = get_member_struck()
-    df_member_strike = pd.concat([df_member_strike, df_member_strike2, df_member_strike3, df_member_struck])
+    df_member_strike = pd.concat(
+        [df_member_strike, df_member_strike2, df_member_strike3, df_member_strike4, df_member_struck])
     df_user_base = df_user_base.merge(df_member_strike, on=['sys_user_id', 'member_category'], how='left')
     df_user_base = df_user_base.fillna(0)
+    # 分类汇总
+    df_user_base1 = df_user_base[['sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
+                                 'wechat_nums','member_category', 'fans']].drop_duplicates()
+    df_user_base2 = df_user_base.groupby(["sys_user_id", "member_category"])[['members_develop', 'members_amount']].sum().reset_index()
+    df_user_base=df_user_base1.merge(df_user_base2,on=['sys_user_id','member_category'],how='left')
     # 转化率
     df_user_base['member_rate']=df_user_base['members_develop']/df_user_base['fans']
     # 客单价
@@ -181,14 +225,18 @@ def main():
                                  'members_amount', 'member_price', 'activity_name']]
     df_user_base=df_user_base
     print(df_user_base)
+    del_sql()
     save_sql(df_user_base)
 
 
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    st = '2022-02-15'
+    st = '2023-02-15'
     st2 = '2023-04-18'
     et = '2023-04-29'
-    activity_name = '2023年38女神节活动'
+    activity_name = '2023年五一活动'
     main()
+
+
+

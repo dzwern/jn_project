@@ -3,7 +3,7 @@
 """
 # @Time    : 2023/3/29 17:02
 # @Author  : diaozhiwei
-# @FileName: hhx_member_middle.py
+# @FileName: hhx_member_middle_log.py
 # @description: 存储活动前，活动后客户的状态
 # @update:
 """
@@ -42,7 +42,8 @@ def get_member_base():
     LEFT JOIN sys_user c on a.sys_user_id=c.user_id
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     where a.tenant_id=11
-    '''
+    and a.add_wechat_time<'{}'
+    '''.format(st)
     df=hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -78,7 +79,8 @@ def get_hhx_member():
      t_member a
     WHERE
         a.tenant_id = 11
-    '''
+    and a.add_wechat_time<'{}'
+    '''.format(st)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -96,8 +98,9 @@ def get_member_time():
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
+    and a.create_time<'{}'
     GROUP BY a.member_id
-    '''
+    '''.format(st)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -114,8 +117,9 @@ def get_member_order():
         a.order_amounts_2023,
         a.last_time 
     FROM
-        t_member_level_middle a
-    '''
+        t_member_level_middle_log a
+    where a.log_name='{}'
+    '''.format(log_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -277,14 +281,14 @@ def main():
     df_member['last_time2'] = df_member['last_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
     df_member['last_time_diff'] = ((pd.to_datetime(datetime.now()) - pd.to_datetime(df_member['last_time2'])) / pd.Timedelta(1,'D')).fillna(0).astype(int)
     # 记录时间
-    df_member['date']='2023-03-01'
+    df_member['date']=st
     df_member['id'] = df_member['member_id'].astype(str) + df_member['wechat_id'].astype(str)+df_member['date']
     df_member=df_member.fillna(0)
     df_member['incoming_line_time'] = df_member['incoming_line_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['add_wechat_time'] = df_member['add_wechat_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['first_time'] = df_member['first_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['create_time'] = df_member['create_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
-    df_member['log_name'] = '2023年38女神节活动后'
+    df_member['log_name'] = log_name
     df_member = df_member[
         ['id', 'member_id', 'balance', 'point', 'phone', 'user_name2', 'wechat_number2', 'member_identity',
          'member_source', 'member_source_level2', 'incoming_line_time', 'add_wechat_time', 'first_time',
@@ -298,7 +302,15 @@ def main():
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    st = '2023-05-01'
+    # '2023年2月初客户等级',2023年38女神节活动前客户等级
+    log_name='2023年5月初客户等级'
     main()
+
+
+
+
+
 
 
 

@@ -29,6 +29,7 @@ def get_user_base():
     WHERE
         a.valid_state = '正常'
     and a.wechat_name not in ('玫瑰诗') 
+    and a.dept_name1 not in ('0')
     GROUP BY a.sys_user_id
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -75,6 +76,7 @@ def get_user_fans_develop():
         t_orders_middle a 
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.activity_name='{}'
+    and a.order_amount>40
     and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
     GROUP BY a.sys_user_id
     '''.format(activity_name)
@@ -92,6 +94,7 @@ def get_user_member_develop():
         t_orders_middle a 
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.activity_name='{}'
+    and a.order_amount>40
     and a.clinch_type in ('复购日常成交','复购活动成交')
     GROUP BY a.sys_user_id
     '''.format(activity_name)
@@ -110,6 +113,7 @@ def get_user_amount():
     LEFT JOIN  t_member_middle b on a.member_id=b.member_id
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.activity_name='{}'
+    and a.order_amount>40
     GROUP BY a.sys_user_id
     '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -131,6 +135,14 @@ def get_amount_divide(x):
         return '20-30W区间'
     elif x >= 300000:
         return '30W以上'
+
+
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_user_campaign;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
 
 
 def save_sql(df):
@@ -193,9 +205,9 @@ def main():
     df_user_base = df_user_base.replace([np.inf, -np.inf], np.nan)
     df_user_base = df_user_base.fillna(0)
     # 单产排名
-    df_user_base['member_price_rank'] = df_user_base.groupby(['dept_name1'])['member_price'].rank(method='dense')
+    df_user_base['member_price_rank'] = df_user_base.groupby(['dept_name2'])['member_price'].rank(method='dense',ascending=False)
     # 业绩排名
-    df_user_base['amount_develop_rank'] = df_user_base.groupby(['dept_name1'])['members_amount'].rank(method='dense')
+    df_user_base['amount_develop_rank'] = df_user_base.groupby(['dept_name2'])['members_amount'].rank(method='dense',ascending=False)
     df_user_base['id']=df_user_base['sys_user_id']
     df_user_base = df_user_base[['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
                                  'wechat_nums', 'fans', 'members', 'fans_develop',
@@ -203,11 +215,15 @@ def main():
                                  'amount_range', 'member_price', 'member_develop_price', 'member_price_rank',
                                  'amount_develop_rank', 'activity_name']]
     df_user_base=df_user_base
+    # 删除数据
+    del_sql()
     save_sql(df_user_base)
 
 
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    activity_name = '2023年38女神节活动'
+    activity_name = '2023年五一活动'
     main()
+
+

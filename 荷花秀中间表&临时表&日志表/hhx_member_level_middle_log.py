@@ -131,7 +131,8 @@ def get_member_base():
     LEFT JOIN sys_user c on a.sys_user_id=c.user_id
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     where a.tenant_id=11
-    '''
+    and a.add_wechat_time<'{}'
+    '''.format(st)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -151,7 +152,7 @@ def get_member_order_old():
     and a.member_id>1
     and a.ORDER_DATE<'{}'
     GROUP BY a.member_id
-    '''.format(et)
+    '''.format(st)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -172,7 +173,7 @@ def get_member_order():
     and a.refund_state not in (4)
     and a.create_time<'{}'
     GROUP BY a.member_id
-    '''.format(et)
+    '''.format(st)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -229,8 +230,9 @@ def get_member_new_time():
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
+    and a.create_time<'{}'
     GROUP BY a.member_id
-    '''
+    '''.format(st)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -304,8 +306,8 @@ def main():
     df_hhx_member = df_hhx_member.fillna(0)
     print(df_hhx_member)
     df_hhx_member['last_time'] = df_hhx_member['last_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
-    df_hhx_member['date'] = et
-    df_hhx_member['log_name'] = '2023年38女神节活动后'
+    df_hhx_member['date'] = st
+    df_hhx_member['log_name'] = log_name
     df_hhx_member['id'] = df_hhx_member['member_id'].astype(str) + df_hhx_member['date']
     df_hhx_member = df_hhx_member[['id', 'member_id', 'wechat_name', 'wechat_number', 'user_name', 'nick_name',
                                    'dept_name1', 'dept_name2', 'dept_name', 'member_level', 'order_nums',
@@ -316,7 +318,10 @@ def main():
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    et = '2023-03-01'
+    # 活动开始时间
+    st = '2023-05-01'
+    # '2023年2月初客户等级',2023年38女神节活动前客户等级
+    log_name='2023年5月初客户等级'
     main()
 
 
