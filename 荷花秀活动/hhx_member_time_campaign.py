@@ -37,10 +37,13 @@ def get_campaign_time():
         year(a.first_time) years,
         a.create_time,
         a.time_diff,
-        a.order_amount 
+        a.order_amount,
+        a.activity_name 
     FROM
         t_orders_middle a
-    WHERE a.activity_name='2023年五一活动'
+    WHERE a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
+    and a.order_amount>40
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -51,6 +54,14 @@ def get_time_level(x):
         return '增量'
     else:
         return '存量'
+
+
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_member_time_campaign;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
 
 
 def save_sql(df):
@@ -82,20 +93,22 @@ def save_sql(df):
 def main():
     # 基础数据
     df_member_time=get_campaign_time()
-    df_member_time['activity_name'] = '2023年5.1活动'
     # 存量，增量
     df_member_time['stock_increment'] = df_member_time.apply(lambda x: get_time_level(x['first_time']), axis=1)
     df_member_time=df_member_time[['id','order_sn','dept_name1','dept_name2','dept_name','sys_user_id','user_name',
                                    'nick_name','wechat_id','wechat_name','wechat_number','member_id','first_time',
                                    'stock_increment','year_months','years','create_time','time_diff','order_amount',
                                    'activity_name']]
+    del_sql()
     save_sql(df_member_time)
 
 
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    activity_name = '2023年五一活动'
     main()
+
 
 
 

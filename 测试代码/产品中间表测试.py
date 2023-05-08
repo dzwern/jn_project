@@ -81,6 +81,7 @@ def get_order_product():
     and a.refund_state not in (4)
     and a.create_time>='{}'
     and a.create_time<'{}'
+    and a.order_amount>40
     '''.format(st, et)
     df = get_DataFrame_PD(sql)
     return df
@@ -107,9 +108,14 @@ def get_hhx_user():
     return data
 
 
+'''
+注意事项，表中的时间为【时间1<=x<时间2】
+'''
+
+
 # 活动信息-光源组
 def get_hhx_activity(x):
-    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -117,7 +123,7 @@ def get_hhx_activity(x):
 
 # 活动信息2-光芒组
 def get_hhx_activity2(x):
-    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-05-01','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -125,7 +131,7 @@ def get_hhx_activity2(x):
 
 # 活动信息2-光辉前端
 def get_hhx_activity3(x):
-    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-27','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-20','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -133,7 +139,7 @@ def get_hhx_activity3(x):
 
 # 活动信息2-光辉后端
 def get_hhx_activity4(x):
-    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-05-01','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -141,7 +147,7 @@ def get_hhx_activity4(x):
 
 # 活动信息2-光华组前端
 def get_hhx_activity5(x):
-    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-26','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -151,12 +157,13 @@ def get_hhx_activity5(x):
 
 # 活动信息2-光华组后端
 def get_hhx_activity6(x):
-    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-26','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-24','%Y-%m-%d'):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-03-03','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09','%Y-%m-%d'):
         return '2023年38女神节活动'
+
 
 
 def save_sql(df):
@@ -179,6 +186,7 @@ def save_sql(df):
          `activity_name`=values(`activity_name`)
          '''
     executeSqlManyByConn(sql, df.values.tolist())
+
 
 
 def main():
@@ -207,7 +215,11 @@ def main():
     # 光华部蜜梓源面膜进粉后端
     df6 = df_order_product[df_order_product['dept_name2'] == '光华部蜜梓源面膜进粉后端']
     df6['activity_name'] = df6.apply(lambda x: get_hhx_activity6(x['create_time']), axis=1)
-    df_order_product = pd.concat([df1, df2, df3, df4, df5, df6])
+    df_order_product2 = pd.concat([df1, df2, df3, df4, df5, df6])
+    # 增加
+    df_order_product2 = df_order_product2[['order_sn', 'id', 'activity_name']]
+    df_order_product = df_order_product.merge(df_order_product2, on=['order_sn', 'id'], how='left')
+    df_order_product=df_order_product.fillna(0)
     df_order_product['id'] = df_order_product['order_sn'].astype(str) + df_order_product['id'].astype(str)
     df_order_product = df_order_product[
         ['id', 'order_sn', 'create_time',  'order_id', 'dept_name1', 'dept_name2', 'dept_name', 'product_name',
@@ -218,8 +230,8 @@ def main():
 
 if __name__ == '__main__':
     time1 = datetime.datetime.now()
-    st = time1 - relativedelta(days=3)
-    et = time1 + relativedelta(days=0)
+    st = time1 - relativedelta(days=5)
+    et = time1 + relativedelta(days=1)
     st = date2str(st)
     et = date2str(et)
     print(st, et)

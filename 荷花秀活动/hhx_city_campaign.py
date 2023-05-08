@@ -23,6 +23,7 @@ def get_city_order():
     from 
         t_orders_middle a
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
     and a.activity_name='{}'
     and a.order_amount>40
     GROUP BY a.dept_name,a.receiver_province,a.receiver_city
@@ -87,9 +88,9 @@ def main():
     # 价值
     df_city_order['members_value'] = df_city_order['members_amount'] / df_city_order['members']
     df_city_order = df_city_order.fillna(0)
-    df_city_order['activity_name'] = '2023年5.1活动'
+    df_city_order['activity_name'] = activity_name
     df_city_order['id'] = df_city_order['dept_name'] + df_city_order['receiver_province'] + df_city_order[
-        'receiver_city']
+        'receiver_city'] + df_city_order['activity_name']
     df_city_order = df_city_order[
         ['id', 'dept_name1', 'dept_name2', 'dept_name', 'receiver_province', 'receiver_city', 'members',
          'members_rate', 'members_amount', 'members_amount_rate', 'members_value', 'activity_name']]

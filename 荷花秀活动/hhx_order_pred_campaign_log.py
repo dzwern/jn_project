@@ -79,7 +79,7 @@ def get_member_level():
         count(1) level_members
     FROM
         t_member_middle_log a
-    where a.log_name='2023年38女神节活动前'
+    where a.log_name='2023年38女神节活动前客户等级'
     GROUP BY a.wechat_id,a.member_level
     ORDER BY a.wechat_id
     '''
@@ -116,7 +116,8 @@ def get_member_strike():
     WHERE a.first_time >= '{}' 
     AND a.first_time < '{}'
     and a.activity_name='{}'
-    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.order_amount>40
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     GROUP BY a.wechat_id
     '''.format(st2,et,activity_name)
     df=hhx_sql2.get_DataFrame_PD(sql)
@@ -135,7 +136,8 @@ def get_member_strike2():
     t_orders_middle a 
     where a.first_time<'{}'
     and a.activity_name='{}'
-    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.order_amount>40
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     GROUP BY a.wechat_id
     '''.format(st,activity_name)
     df=hhx_sql2.get_DataFrame_PD(sql)
@@ -154,7 +156,8 @@ def get_member_strike3():
     WHERE a.first_time >= '{}' 
     AND a.first_time < '{}'
     and a.activity_name='{}'
-    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.order_amount>40
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     GROUP BY a.wechat_id
     '''.format(st,et,activity_name)
     df=hhx_sql2.get_DataFrame_PD(sql)
@@ -171,9 +174,10 @@ def get_member_struck():
         sum(a.order_amount) members_amount
     FROM 
         t_orders_middle a
-    LEFT JOIN  t_member_middle b on a.member_id=b.member_id
+    LEFT JOIN  t_member_middle_log b on a.member_id=b.member_id and b.log_name='2023年38女神节活动前客户等级'
     where a.activity_name='{}'
     and a.clinch_type in ('复购日常成交','复购活动成交')
+    and a.order_amount>40
     GROUP BY a.wechat_id,b.member_level
     ORDER BY a.wechat_id
     '''.format(activity_name)

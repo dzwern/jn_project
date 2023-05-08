@@ -48,6 +48,7 @@ def get_user_oid():
     LEFT JOIN  t_member_middle b on a.member_id=b.member_id
     # 状态
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
     and a.activity_name='{}'
     and a.order_amount>40
     GROUP BY a.sys_user_id,a.order_sn
@@ -57,13 +58,115 @@ def get_user_oid():
 
 
 # 订单区间
+# 光辉前端
+
 def get_order_divide(x):
-    if 1000 > x >= 0:
-        return '0-1k'
+    if 700 > x >= 0:
+        return '0-700'
+    elif 1000 > x >= 700:
+        return '700-1k'
     elif 2000 > x >= 1000:
         return '1-2k'
+    elif x >= 2000:
+        return '2k以上'
+'''
+7000以上
+4000-7000
+3000-4000
+2000-3000
+900-2000
+900以下
+'''
+
+
+# 光辉后端
+def get_order_divide2(x):
+    if 900 > x >= 0:
+        return '0-900'
+    elif 2000 > x >= 900:
+        return '900-2k'
     elif 3000 > x >= 2000:
         return '2-3k'
+    elif 4000 > x >= 3000:
+        return '3-4k'
+    elif 7000 > x >= 4000:
+        return '4-7k'
+    elif x >= 7000:
+        return '7k以上'
+
+
+# 光华前端
+def get_order_divide3(x):
+    if 700 > x >= 0:
+        return '0-700'
+    elif 700 > x >= 1000:
+        return '700-1k'
+    elif 1000 > x >= 2000:
+        return '1-2k'
+    elif 4000 > x >= 3000:
+        return '3-4k'
+    elif 5000 > x >= 4000:
+        return '4-5k'
+    elif x >= 5000:
+        return '5k以上'
+
+
+# 光华后端
+def get_order_divide4(x):
+    if 700 > x >= 0:
+        return '0-700'
+    elif 700 > x >= 1000:
+        return '700-1k'
+    elif 1000 > x >= 2000:
+        return '1-2k'
+    elif 4000 > x >= 3000:
+        return '3-4k'
+    elif 5000 > x >= 4000:
+        return '4-5k'
+    elif x >= 5000:
+        return '5k以上'
+
+
+# 光芒
+def get_order_divide5(x):
+    if 700 > x >= 0:
+        return '0-700'
+    elif 700 > x >= 1000:
+        return '700-1k'
+    elif 1000 > x >= 2000:
+        return '1-2k'
+    elif 4000 > x >= 3000:
+        return '3-4k'
+    elif 5000 > x >= 4000:
+        return '4-5k'
+    elif x >= 5000:
+        return '5k以上'
+
+
+# 蜂蜜
+def get_order_divide6(x):
+    if 700 > x >= 0:
+        return '0-700'
+    elif 700 > x >= 1000:
+        return '700-1k'
+    elif 1000 > x >= 2000:
+        return '1-2k'
+    elif 4000 > x >= 3000:
+        return '3-4k'
+    elif 5000 > x >= 4000:
+        return '4-5k'
+    elif x >= 5000:
+        return '5k以上'
+
+
+# 海参
+def get_order_divide7(x):
+    if 700 > x >= 0:
+        return '0-700'
+    elif 700 > x >= 1000:
+        return '700-1k'
+    elif 1000 > x >= 2000:
+        return '1-2k'
     elif 4000 > x >= 3000:
         return '3-4k'
     elif 5000 > x >= 4000:

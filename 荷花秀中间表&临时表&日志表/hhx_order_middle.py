@@ -320,7 +320,6 @@ def get_member_source2(x):
         return '其他'
 
 
-
 # 客户信息,首次沟通时间
 def get_hhx_member():
     sql = '''
@@ -501,10 +500,14 @@ def get_return_state(x):
     else:
         return '其它'
 
+'''
+注意事项，表中的时间为【时间1<=x<时间2】
+'''
+
 
 # 活动信息-光源组
 def get_hhx_activity(x):
-    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -512,7 +515,7 @@ def get_hhx_activity(x):
 
 # 活动信息2-光芒组
 def get_hhx_activity2(x):
-    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-05-01','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -520,7 +523,7 @@ def get_hhx_activity2(x):
 
 # 活动信息2-光辉前端
 def get_hhx_activity3(x):
-    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-27','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-20','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -528,7 +531,7 @@ def get_hhx_activity3(x):
 
 # 活动信息2-光辉后端
 def get_hhx_activity4(x):
-    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-05-01','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -536,7 +539,7 @@ def get_hhx_activity4(x):
 
 # 活动信息2-光华组前端
 def get_hhx_activity5(x):
-    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -546,7 +549,7 @@ def get_hhx_activity5(x):
 
 # 活动信息2-光华组后端
 def get_hhx_activity6(x):
-    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
         return '2023年38女神节活动'
@@ -684,7 +687,7 @@ if __name__ == '__main__':
     # et = time1 - relativedelta(days=0)
     # 时间转化
     st = '2023-01-01'
-    et = '2023-04-26'
+    et = '2023-05-04'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     main()

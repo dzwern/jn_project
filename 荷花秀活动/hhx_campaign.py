@@ -49,6 +49,7 @@ def get_order_campaign():
     FROM
         t_orders_middle a
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
     and a.activity_name='{}'
     and a.order_amount>40
     GROUP BY a.dept_name1,a.dept_name2,a.dept_name
@@ -67,7 +68,7 @@ def get_order_campaign2():
     FROM
         t_orders_middle a
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
-    and a.clinch_type in ('复购日常成交','复购活动成交','后续首单活动成交')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
     and a.activity_name='{}'
     and a.order_amount>40
     GROUP BY a.dept_name
@@ -122,7 +123,8 @@ def save_sql(df):
      ON DUPLICATE KEY UPDATE
          `dept_name1`= VALUES(`dept_name1`),`dept_name2`= VALUES(`dept_name2`),`dept_name`=VALUES(`dept_name`),
          `group_users`=values(`group_users`),`group_wechats`=values(`group_wechats`),`members`=values(`members`),
-         `order_amounts`=values(`order_amounts`), `members_campaign`=values(`members_campaign`), `order_amounts_campaign`=values(`order_amounts_campaign`), 
+         `order_amounts`=values(`order_amounts`), `members_campaign`=values(`members_campaign`),
+         `order_amounts_campaign`=values(`order_amounts_campaign`), 
          `amount_target`=values(`amount_target`),`amount_target2`=values(`amount_target2`),
          `completion_rate`=values(`completion_rate`),`completion_rate2`=values(`completion_rate2`),
          `member_price`=values(`member_price`),`user_price`=values(`user_price`),
@@ -145,7 +147,7 @@ def main():
     # 销售数据
     df_order_campaign = get_order_campaign()
     # 活动业绩
-    df_order_campaign2=get_order_campaign2()
+    df_order_campaign2 = get_order_campaign2()
     # 预估目标
     df_pred_target = get_pred_target()
     # 业务目标
@@ -165,11 +167,11 @@ def main():
     # 目标
     df_campaign['completion_rate'] = df_campaign['order_amounts'] / df_campaign['amount_target']
     df_campaign['completion_rate2'] = df_campaign['order_amounts'] / df_campaign['amount_target2']
-    df_campaign['activity_name'] = '2023年五一活动'
-    df_campaign['id'] = df_campaign['dept_name'].astype(str)+df_campaign['activity_name'].astype(str)
+    df_campaign['activity_name'] = activity_name
+    df_campaign['id'] = df_campaign['dept_name'].astype(str) + df_campaign['activity_name'].astype(str)
     df_campaign = df_campaign[
         ['id', 'dept_name1', 'dept_name2', 'dept_name', 'group_users', 'group_wechats', 'members', 'order_amounts',
-         'members_campaign','order_amounts_campaign',
+         'members_campaign', 'order_amounts_campaign',
          'amount_target', 'amount_target2', 'completion_rate', 'completion_rate2', 'member_price', 'user_price',
          'activity_name']]
     print(df_campaign)
@@ -182,8 +184,7 @@ if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     # 开始时间，结束时间
-    activity_name='2023年五一活动'
+    activity_name = '2023年五一活动'
     main()
-
 
 

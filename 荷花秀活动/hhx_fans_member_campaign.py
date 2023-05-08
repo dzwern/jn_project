@@ -50,7 +50,7 @@ def get_user_fans():
     return df
 
 
-# 客户成交金额,成交数，粉丝转换，新进粉成交
+# 客户成交金额,成交数，粉丝转换，活动进粉
 def get_member_strike():
     sql = '''
     SELECT 
@@ -63,7 +63,7 @@ def get_member_strike():
     WHERE a.first_time>='{}'
     and a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
-    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     and a.activity_name='{}'
     and a.order_amount>40
     GROUP BY a.sys_user_id
@@ -84,7 +84,7 @@ def get_member_strike2():
     t_orders_middle a 
     WHERE  a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
-    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     and a.activity_name='{}'
     and a.order_amount>40
     GROUP BY a.sys_user_id
@@ -93,7 +93,7 @@ def get_member_strike2():
     return df
 
 
-# 新粉成交
+# 新粉成交，将主动裂变，公众号咨询转化为新粉
 def get_member_strike3():
     sql = '''
     SELECT 
@@ -102,11 +102,11 @@ def get_member_strike3():
         count(DISTINCT a.member_id) members_develop,
         sum(a.order_amount) members_amount
     FROM 
-    t_orders_middle a 
+        t_orders_middle a 
     WHERE a.first_time>='{}'
     and a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
-    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     and a.activity_name='{}'
     and a.member_source not in ('主动裂变','公众号咨询')
     and a.order_amount>40
@@ -116,7 +116,7 @@ def get_member_strike3():
     return df
 
 
-# 新粉成交
+# V1客户成交
 def get_member_strike4():
     sql = '''
     SELECT 
@@ -129,7 +129,7 @@ def get_member_strike4():
     WHERE a.first_time>='{}'
     and a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
-    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     and a.activity_name='{}'
     and a.member_source in ('主动裂变','公众号咨询')
     and a.order_amount>40
@@ -139,7 +139,7 @@ def get_member_strike4():
     return df
 
 
-# 客户转换
+# 各层级客户成交
 def get_member_struck():
     sql = '''
     SELECT 
@@ -148,8 +148,8 @@ def get_member_struck():
         count(DISTINCT a.member_id) members_develop,
         sum(a.order_amount) members_amount
     FROM 
-    t_orders_middle a
-    LEFT JOIN  t_member_middle b on a.member_id=b.member_id
+        t_orders_middle a
+    LEFT JOIN  t_member_middle_log b on a.member_id=b.member_id and b.log_name='2023年51活动前客户等级'
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('复购日常成交','复购活动成交')
     and a.activity_name='{}'
@@ -216,14 +216,15 @@ def main():
     # 客单价
     df_user_base['member_price']=df_user_base['members_amount']/df_user_base['members_develop']
     # 活动名称
-    df_user_base['activity_name'] = '2023年5.1活动'
+    df_user_base['activity_name'] = activity_name
     df_user_base = df_user_base.replace([np.inf, -np.inf], np.nan)
     df_user_base = df_user_base.fillna(0)
-    df_user_base['id'] = df_user_base['sys_user_id'].astype(str) + df_user_base['member_category'].astype(str)
+    df_user_base['id'] = df_user_base['sys_user_id'].astype(str) + df_user_base['member_category'].astype(str) + \
+                         df_user_base['activity_name']
     df_user_base = df_user_base[['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
                                  'wechat_nums', 'member_category', 'fans', 'members_develop', 'member_rate',
                                  'members_amount', 'member_price', 'activity_name']]
-    df_user_base=df_user_base
+    df_user_base = df_user_base
     print(df_user_base)
     del_sql()
     save_sql(df_user_base)
@@ -234,9 +235,10 @@ if __name__ == '__main__':
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     st = '2023-02-15'
     st2 = '2023-04-18'
-    et = '2023-04-29'
+    et = '2023-04-30'
     activity_name = '2023年五一活动'
     main()
+
 
 
 

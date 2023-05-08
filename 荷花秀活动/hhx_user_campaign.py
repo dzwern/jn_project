@@ -77,7 +77,7 @@ def get_user_fans_develop():
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.activity_name='{}'
     and a.order_amount>40
-    and a.clinch_type in ('当日首单日常成交','后续首单日常成交','后续首单活动成交','当日首单活动成交')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     GROUP BY a.sys_user_id
     '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -112,6 +112,7 @@ def get_user_amount():
         t_orders_middle a
     LEFT JOIN  t_member_middle b on a.member_id=b.member_id
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
     and a.activity_name='{}'
     and a.order_amount>40
     GROUP BY a.sys_user_id

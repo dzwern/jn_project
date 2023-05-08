@@ -24,6 +24,7 @@ def get_order_base():
     # 状态
     where a.activity_name='{}'
     and a.order_amount>40
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
     '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
