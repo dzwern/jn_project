@@ -69,14 +69,6 @@ def get_order_divide(x):
         return '1-2k'
     elif x >= 2000:
         return '2k以上'
-'''
-7000以上
-4000-7000
-3000-4000
-2000-3000
-900-2000
-900以下
-'''
 
 
 # 光辉后端
@@ -84,7 +76,7 @@ def get_order_divide2(x):
     if 900 > x >= 0:
         return '0-900'
     elif 2000 > x >= 900:
-        return '900-2k'
+        return '0.9-2k'
     elif 3000 > x >= 2000:
         return '2-3k'
     elif 4000 > x >= 3000:
@@ -97,28 +89,26 @@ def get_order_divide2(x):
 
 # 光华前端
 def get_order_divide3(x):
-    if 700 > x >= 0:
-        return '0-700'
-    elif 700 > x >= 1000:
-        return '700-1k'
-    elif 1000 > x >= 2000:
-        return '1-2k'
-    elif 4000 > x >= 3000:
-        return '3-4k'
-    elif 5000 > x >= 4000:
-        return '4-5k'
-    elif x >= 5000:
-        return '5k以上'
+    if 600 > x >= 0:
+        return '0-600'
+    elif 1000 > x >= 600:
+        return '600-1k'
+    elif 1500 > x >= 1000:
+        return '1-1.5k'
+    elif x >= 1500:
+        return '1.5k以上'
 
 
 # 光华后端
 def get_order_divide4(x):
-    if 700 > x >= 0:
-        return '0-700'
-    elif 700 > x >= 1000:
-        return '700-1k'
-    elif 1000 > x >= 2000:
+    if 600 > x >= 0:
+        return '0-600'
+    elif 1000 > x >= 600:
+        return '600-1k'
+    elif 2000 > x >= 1000:
         return '1-2k'
+    elif 3000 > x >= 2000:
+        return '2-3k'
     elif 4000 > x >= 3000:
         return '3-4k'
     elif 5000 > x >= 4000:
@@ -129,12 +119,14 @@ def get_order_divide4(x):
 
 # 光芒
 def get_order_divide5(x):
-    if 700 > x >= 0:
-        return '0-700'
-    elif 700 > x >= 1000:
-        return '700-1k'
-    elif 1000 > x >= 2000:
+    if 600 > x >= 0:
+        return '0-600'
+    elif 1000 > x >= 600:
+        return '600-1k'
+    elif 2000 > x >= 1000:
         return '1-2k'
+    elif 3000 > x >= 2000:
+        return '2-3k'
     elif 4000 > x >= 3000:
         return '3-4k'
     elif 5000 > x >= 4000:
@@ -145,34 +137,40 @@ def get_order_divide5(x):
 
 # 蜂蜜
 def get_order_divide6(x):
-    if 700 > x >= 0:
-        return '0-700'
-    elif 700 > x >= 1000:
-        return '700-1k'
-    elif 1000 > x >= 2000:
+    if 300 > x >= 0:
+        return '0-300'
+    elif 500 > x >= 300:
+        return '300-500'
+    elif 1000 > x >= 500:
+        return '500-1k'
+    elif 2000 > x >= 1000:
         return '1-2k'
+    elif 3000 > x >= 2000:
+        return '2-3k'
     elif 4000 > x >= 3000:
         return '3-4k'
-    elif 5000 > x >= 4000:
-        return '4-5k'
-    elif x >= 5000:
-        return '5k以上'
+    elif x >= 4000:
+        return '4k以上'
 
 
 # 海参
 def get_order_divide7(x):
-    if 700 > x >= 0:
-        return '0-700'
-    elif 700 > x >= 1000:
-        return '700-1k'
-    elif 1000 > x >= 2000:
-        return '1-2k'
-    elif 4000 > x >= 3000:
-        return '3-4k'
-    elif 5000 > x >= 4000:
-        return '4-5k'
-    elif x >= 5000:
-        return '5k以上'
+    if 1700 > x >= 0:
+        return '0-1700'
+    elif 3300 > x >= 1700:
+        return '1700-3300'
+    elif 6600 > x >= 3300:
+        return '3300-6600'
+    elif 9900 > x >= 6600:
+        return '6600-9900'
+    elif 13200 > x >= 9900:
+        return '9900-13200'
+    elif 16500 > x >= 13200:
+        return '13200-16500'
+    elif 33800 > x >= 16500:
+        return '16500-33800'
+    elif x >= 33800:
+        return '33800以上'
 
 
 def save_sql(df):
@@ -211,13 +209,28 @@ def main():
     df_user_oid_base = df_user_base.merge(df_user_oid, on=['sys_user_id'], how='left')
     df_user_oid_base = df_user_oid_base.fillna(0)
     # 订单区间
-    df_user_oid_base['order_interval'] = df_user_oid_base.apply(lambda x: get_order_divide(x['order_amount']), axis=1)
-    df_user_oid_base['activity_name'] = '2023年5.1活动'
-    df_user_oid_base['id']=df_user_oid_base['sys_user_id'].astype(str)+df_user_oid_base['order_sn'].astype(str)
+    # df_user_oid_base['order_interval'] = df_user_oid_base.apply(lambda x: get_order_divide(x['order_amount']), axis=1)
+    df1 = df_user_oid_base[df_user_oid_base['dept_name2'] == '光辉部蜜肤语前端']
+    df1['order_interval'] = df1['order_amount'].apply(lambda x: get_order_divide(x))
+    df2 = df_user_oid_base[df_user_oid_base['dept_name2'] == '光辉部蜜肤语后端']
+    df2['order_interval'] = df2['order_amount'].apply(lambda x: get_order_divide2(x))
+    df3 = df_user_oid_base[df_user_oid_base['dept_name2'] == '光华部蜜梓源面膜进粉前端']
+    df3['order_interval'] = df3['order_amount'].apply(lambda x: get_order_divide3(x))
+    df4 = df_user_oid_base[df_user_oid_base['dept_name2'] == '光华部蜜梓源面膜进粉后端']
+    df4['order_interval'] = df4['order_amount'].apply(lambda x: get_order_divide4(x))
+    df5 = df_user_oid_base[df_user_oid_base['dept_name2'] == '光芒部蜜梓源后端']
+    df5['order_interval'] = df5['order_amount'].apply(lambda x: get_order_divide5(x))
+    df6 = df_user_oid_base[df_user_oid_base['dept_name2'] == '光源部蜂蜜组']
+    df6['order_interval'] = df6['order_amount'].apply(lambda x: get_order_divide6(x))
+    df7 = df_user_oid_base[df_user_oid_base['dept_name2'] == '光源部海参组']
+    df7['order_interval'] = df7['order_amount'].apply(lambda x: get_order_divide7(x))
+    df_user_oid_base = pd.concat([df1, df2, df3, df4, df5, df6, df7])
+    df_user_oid_base['activity_name'] = activity_name
+    df_user_oid_base['id'] = df_user_oid_base['sys_user_id'].astype(str) + df_user_oid_base['order_sn'].astype(str)
     df_user_oid_base = df_user_oid_base[
         ['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
-         'wechat_nums', 'order_sn', 'order_amount','order_interval','activity_name']]
-    df_user_oid_base=df_user_oid_base
+         'wechat_nums', 'order_sn', 'order_amount', 'order_interval', 'activity_name']]
+    df_user_oid_base = df_user_oid_base
     del_sql()
     save_sql(df_user_oid_base)
 
@@ -227,8 +240,3 @@ if __name__ == '__main__':
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     activity_name = '2023年五一活动'
     main()
-
-
-
-
-

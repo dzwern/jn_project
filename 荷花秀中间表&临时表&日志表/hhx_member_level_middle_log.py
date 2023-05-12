@@ -4,7 +4,7 @@
 # @Time    : 2023/3/30 10:51
 # @Author  : diaozhiwei
 # @FileName: hhx_member_level_middle.py
-# @description:首次全量更新,可以使用特定时间
+# @description:首次全量更新,可以使用特定时间,，客户统计只统计所属部门的客户，不属于销售客服的客户不计入内
 数据更新：
 """
 
@@ -14,7 +14,9 @@ import pandas as pd
 
 # 光辉部，蜜肤语项目
 def member_divide1(x):
-    if x < 1000:
+    if x < 40:
+        return 'V0'
+    elif 40 <= x < 1000:
         return 'V1'
     elif 1000 <= x < 2000:
         return 'V2'
@@ -30,7 +32,9 @@ def member_divide1(x):
 
 # 光芒部，光华部，蜜梓源项目
 def member_divide2(x, y):
-    if x < 500:
+    if x < 40:
+        return 'V0'
+    elif 500 > x >= 40:
         return 'V1'
     elif 1000 > x >= 500:
         return 'V2'
@@ -52,7 +56,9 @@ def member_divide2(x, y):
 
 # 光源部蜂蜜
 def member_divide4(x, y):
-    if x < 500:
+    if x < 40:
+        return 'V0'
+    elif 500 > x >= 40:
         return 'V1'
     elif 500 <= x < 1000 and y < 5:
         return 'V1'
@@ -74,7 +80,9 @@ def member_divide4(x, y):
 
 # 海参
 def member_divide5(x, y):
-    if x < 2000:
+    if x < 40:
+        return 'V0'
+    elif 2000 > x >= 40:
         return 'V1'
     elif 2000 <= x < 5000 and y < 2:
         return 'V1'
@@ -189,12 +197,13 @@ def get_member_order2():
     WHERE
         a.tenant_id = 11 
     and a.create_time>='2023-01-01'
+    and a.create_time<'{}'
     # 订单状态
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
     GROUP BY a.member_id
-    '''
+    '''.format(st)
     df = hhx_sql.get_DataFrame_PD(sql)
     return df
 
@@ -319,9 +328,12 @@ if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
     # 活动开始时间
-    st = '2023-05-01'
-    # '2023年2月初客户等级',2023年38女神节活动前客户等级
-    log_name='2023年5月初客户等级'
+    st = '2023-05-02'
+    '''
+    2023年1月初客户等级，2023年2月初客户等级，2023年3月初客户等级，2023年4月初客户等级，2023年5月初客户等级
+    2023年38女神节活动前客户等级（2.15），2023年38女神节活动后客户等级（3.2），2023年51活动前客户等级（4.18），2023年51活动后客户等级（5.2）
+    '''
+    log_name='2023年51活动后客户等级'
     main()
 
 

@@ -123,6 +123,21 @@ def get_wechat_fans(st, et):
     return df
 
 
+# 老粉客户
+def get_wechat_old():
+    sql = '''
+    SELECT
+        a.sys_user_id,
+        sum(a.member_trans) old_fans2 
+    FROM
+        t_wechat_middle_tmp a
+	where a.sys_user_id is not null
+    GROUP BY a.sys_user_id
+    '''
+    df = get_DataFrame_PD2(sql)
+    return df
+
+
 # 客户类型，客户分层人数，要到38节期间的客户数
 def get_member_level():
     sql = '''
@@ -166,7 +181,7 @@ def get_user_pred():
         sum(a.members_amount)/sum(a.members_develop) member_price
     FROM
         t_pred_campaign_log a
-    where a.activity_name='2023年女神节活动'
+    where a.activity_name='2023年38女神节活动'
     GROUP BY a.dept_name,member_category
     '''
     df = get_DataFrame_PD2(sql)
@@ -336,10 +351,21 @@ def main():
     df_member_level['sys_user_id'] = df_member_level['sys_user_id'].astype(int)
     df_user_base = df_user_base.merge(df_member_level, on=['sys_user_id'], how='left')
     df_user_base = df_user_base.fillna(0)
-    # 相差
-    df_user_base['old_fans'] = df_user_base['reality_fans'] - df_user_base['new_fans'] - df_user_base['add_fans'] - \
-                               df_user_base['0'] - df_user_base['V1'] - df_user_base['V2'] - df_user_base['V3'] - \
-                               df_user_base['V4'] - df_user_base['V5']
+    # 老粉客户数
+    df_wechat_old = get_wechat_old()
+    df_wechat_old['sys_user_id'] = df_wechat_old['sys_user_id'].astype(int)
+    df_user_base=df_user_base.merge(df_wechat_old, on=['sys_user_id'], how='left')
+    df_user_base = df_user_base.fillna(0)
+    # 转换数值，条件赋值
+    df_user_base.loc[(df_user_base["old_fans2"] > 0), "reality_fans"] = df_user_base['old_fans2']
+    # 相差，光辉，光华老粉
+    df1 = df_user_base[(df_user_base['dept_name1'] == '光辉部') | (df_user_base['dept_name1'] == '光华部')]
+    df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans'] - df1['0'] - df1['V1'] - df1['V2'] - \
+                      df1['V3'] - df1['V4'] - df1['V5']
+    # 光芒，光源相差
+    df2 = df_user_base[(df_user_base['dept_name1'] == '光源部') | (df_user_base['dept_name1'] == '光芒部')]
+    df2['old_fans'] = df2['reality_fans'] - df2['0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2['V5']
+    df_user_base = pd.concat([df1, df2])
     df_user_base = df_user_base[[
         'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name', 'wechat_nums', 'old_fans',
         'new_fans', 'add_fans', 'V1', 'V2', 'V3', 'V4', 'V5']]
@@ -379,16 +405,17 @@ def main():
     # 预估成交客户数
     df_user_base['member_pred'] = df_user_base['member_rate'] * df_user_base['members']
     # 预估客单价
-    df_user_base['member_price'] = df_user_base['member_price'] * df_user_base['activity_duration_fuzhu']
+    df_user_base['member_price'] = df_user_base['member_price']
     # 预估成交金额
     df_user_base['amount_pred'] = df_user_base['member_pred'] * df_user_base['member_price']
     # 完成率
     df_user_base['completion_rate'] = df_user_base['members_amount'] / df_user_base['amount_pred']
     # 活动名称
-    df_user_base['activity_name'] = '2023年5.1活动'
+    df_user_base['activity_name'] = activity_name
     df_user_base = df_user_base.replace([np.inf, -np.inf], np.nan)
     df_user_base = df_user_base.fillna(0)
-    df_user_base['id'] = df_user_base['sys_user_id'].astype(str) + df_user_base['member_category'].astype(str)
+    df_user_base['id'] = df_user_base['sys_user_id'].astype(str) + df_user_base['member_category'].astype(str) + \
+                         df_user_base['activity_name']
     df_user_base = df_user_base[['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
                                  'wechat_nums', 'member_category', 'members', 'activity_duration', 'member_rate',
                                  'member_pred', 'members_develop', 'member_price', 'amount_pred', 'members_amount',

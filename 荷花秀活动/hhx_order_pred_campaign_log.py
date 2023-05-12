@@ -70,6 +70,21 @@ def get_wechat_fans(st, et):
     return df
 
 
+# 老粉客户
+def get_wechat_old():
+    sql = '''
+    SELECT
+        a.wecaht_number,
+        sum(a.member_trans) old_fans2 
+    FROM
+        t_wechat_middle_tmp a
+	where a.sys_user_id is not null
+    GROUP BY a.wecaht_number
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
 # 客户类型，客户分层人数，要到38节期间的客户数
 def get_member_level():
     sql = '''
@@ -243,11 +258,30 @@ def main():
     df_member_level['wechat_id'] = df_member_level['wechat_id'].astype(int)
     df_wechat_pred = df_wechat_pred.merge(df_member_level,on=['wechat_id'],how='left')
     df_wechat_pred=df_wechat_pred.fillna(0)
+    # 老粉客户数
+    df_wechat_old = get_wechat_old()
+    df_wechat_pred=df_wechat_pred.merge(df_wechat_old, on=['wecaht_number'], how='left')
+    df_wechat_pred = df_wechat_pred.fillna(0)
+    # 转换数值，条件赋值
+    df_wechat_pred.loc[(df_wechat_pred["old_fans2"] > 0), "reality_fans"] = df_wechat_pred['old_fans2']
+    # 相差，光辉，光华老粉
+    df1 = df_wechat_pred[(df_wechat_pred['dept_name1'] == '光辉部') | (df_wechat_pred['dept_name1'] == '光华部')]
+    df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans'] - df1['0'] - df1['V1'] - df1['V2'] - \
+                      df1['V3'] - df1['V4'] - df1['V5']
+    # 光芒，光源相差
+    df2 = df_wechat_pred[(df_wechat_pred['dept_name1'] == '光源部') | (df_wechat_pred['dept_name1'] == '光芒部')]
+    df2['old_fans'] = df2['reality_fans'] - df2['0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2['V5']
+    df_wechat_pred = pd.concat([df1, df2])
+    # df_wechat_pred = df_wechat_pred[[
+    #     'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name', 'wechat_nums', 'old_fans',
+    #     'new_fans', 'add_fans', 'V1', 'V2', 'V3', 'V4', 'V5']]
     # 相差
-    df_wechat_pred['old_fans']=df_wechat_pred['reality_fans']-df_wechat_pred['new_fans']-df_wechat_pred['add_fans']-\
-                               df_wechat_pred['0']-df_wechat_pred['V1']-df_wechat_pred['V2']-df_wechat_pred['V3']-df_wechat_pred['V4']-df_wechat_pred['V5']
+    # df_wechat_pred['old_fans']=df_wechat_pred['reality_fans']-df_wechat_pred['new_fans']-df_wechat_pred['add_fans']-\
+    #                            df_wechat_pred['0']-df_wechat_pred['V1']-df_wechat_pred['V2']-df_wechat_pred['V3']-
+    #                            df_wechat_pred['V4']-df_wechat_pred['V5']
     df_wechat_pred=df_wechat_pred[['wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name',
                                    'dept_name1','dept_name2','dept_name','old_fans','new_fans','add_fans','V1','V2','V3','V4','V5']]
+
     df_wechat_pred=pd.melt(df_wechat_pred,id_vars=['wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name','dept_name1','dept_name2','dept_name'])
     df_wechat_pred=df_wechat_pred.rename(columns={'variable':'member_category','value':'members'})
     # 客户成交转换
@@ -266,9 +300,9 @@ def main():
     df_wechat_pred['member_rate']=df_wechat_pred['members_develop']/df_wechat_pred['members']
     # 客单价
     df_wechat_pred['member_price']=df_wechat_pred['members_amount']/df_wechat_pred['members_develop']
-    df_wechat_pred['activity_name']='2023年女神节活动'
+    df_wechat_pred['activity_name']=activity_name
     df_wechat_pred = df_wechat_pred.replace([np.inf, -np.inf], np.nan)
-    df_wechat_pred['id']=df_wechat_pred['wechat_id'].astype(str) + df_wechat_pred['member_category'].astype(str)
+    df_wechat_pred['id']=df_wechat_pred['wechat_id'].astype(str) + df_wechat_pred['member_category'].astype(str)+df_wechat_pred['activity_name']
     df_wechat_pred=df_wechat_pred.fillna(0)
     df_wechat_pred=df_wechat_pred[['id','wechat_id','wechat_name','wecaht_number','sys_user_id','user_name','nick_name',
                                    'dept_name1','dept_name2','dept_name','member_category','activity_duration','members',

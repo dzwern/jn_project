@@ -81,7 +81,7 @@ def get_member_strike2():
         count(DISTINCT a.member_id) members_develop,
         sum(a.order_amount) members_amount
     FROM 
-    t_orders_middle a 
+        t_orders_middle a 
     WHERE  a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('后续首单日常成交','后续首单活动成交')

@@ -175,6 +175,7 @@ def main():
          'amount_target', 'amount_target2', 'completion_rate', 'completion_rate2', 'member_price', 'user_price',
          'activity_name']]
     print(df_campaign)
+    df_campaign = df_campaign.replace([np.inf, -np.inf], np.nan)
     df_campaign = df_campaign.fillna(0)
     del_sql()
     save_sql(df_campaign)

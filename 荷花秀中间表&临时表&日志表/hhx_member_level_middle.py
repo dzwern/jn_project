@@ -14,7 +14,9 @@ import pandas as pd
 
 # 光辉部，蜜肤语项目
 def member_divide1(x):
-    if x < 1000:
+    if x < 40:
+        return 'V0'
+    elif 40 <= x < 1000:
         return 'V1'
     elif 1000 <= x < 2000:
         return 'V2'
@@ -30,7 +32,9 @@ def member_divide1(x):
 
 # 光芒部，光华部，蜜梓源项目
 def member_divide2(x, y):
-    if x < 500:
+    if x < 40:
+        return 'V0'
+    elif 500 > x >= 40:
         return 'V1'
     elif 1000 > x >= 500:
         return 'V2'
@@ -52,7 +56,9 @@ def member_divide2(x, y):
 
 # 光源部蜂蜜
 def member_divide4(x, y):
-    if x < 500:
+    if x < 40:
+        return 'V0'
+    elif 500 > x >= 40:
         return 'V1'
     elif 500 <= x < 1000 and y < 5:
         return 'V1'
@@ -74,7 +80,9 @@ def member_divide4(x, y):
 
 # 海参
 def member_divide5(x, y):
-    if x < 2000:
+    if x < 40:
+        return 'V0'
+    elif 2000 > x >= 40:
         return 'V1'
     elif 2000 <= x < 5000 and y < 2:
         return 'V1'
@@ -102,7 +110,8 @@ def get_hhx_user():
            '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
     df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
            '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端',
+           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端',
+           '光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端',
            '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部海参组']
     df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
            '光芒部', '光芒部', '光芒部', '光芒部',
@@ -318,7 +327,7 @@ def main():
 if __name__ == '__main__':
     hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
     hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    et = '2023-04-17'
+    et = '2023-05-11'
     main()
 
 

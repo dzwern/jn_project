@@ -202,14 +202,14 @@ def main():
     df_user_base['member_price']=df_user_base['members_amount']/df_user_base['members']
     # 客单价
     df_user_base['member_develop_price']=df_user_base['members_amount']/(df_user_base['fans_develop']+df_user_base['members_develop'])
-    df_user_base['activity_name'] = '2023年5.1活动'
+    df_user_base['activity_name'] = activity_name
     df_user_base = df_user_base.replace([np.inf, -np.inf], np.nan)
     df_user_base = df_user_base.fillna(0)
     # 单产排名
     df_user_base['member_price_rank'] = df_user_base.groupby(['dept_name2'])['member_price'].rank(method='dense',ascending=False)
     # 业绩排名
     df_user_base['amount_develop_rank'] = df_user_base.groupby(['dept_name2'])['members_amount'].rank(method='dense',ascending=False)
-    df_user_base['id']=df_user_base['sys_user_id']
+    df_user_base['id']=df_user_base['sys_user_id']+df_user_base['activity_name']
     df_user_base = df_user_base[['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
                                  'wechat_nums', 'fans', 'members', 'fans_develop',
                                  'members_develop', 'fans_develop_rate', 'member_develop_rate', 'members_amount',

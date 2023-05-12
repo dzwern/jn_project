@@ -505,11 +505,19 @@ def get_return_state(x):
 '''
 
 
-# 活动信息-光源组
+# 活动信息-光源蜂蜜
 def get_hhx_activity(x):
     if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30','%Y-%m-%d'):
         return '2023年五一活动'
     elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+        return '2023年38女神节活动'
+
+
+# 活动信息-光源海参
+def get_hhx_activity1(x):
+    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30','%Y-%m-%d'):
+        return '2023年五一活动'
+    elif datetime.datetime.strptime('2023-03-01','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-11','%Y-%m-%d'):
         return '2023年38女神节活动'
 
 
@@ -639,9 +647,12 @@ def main():
     df_hhx_orders[['dept_name1', 'dept_name2']] = df_hhx_orders[['dept_name1', 'dept_name2']].fillna(0)
     df_hhx_orders=df_hhx_orders
     # 活动信息
-    # 光源部
-    df1 = df_hhx_orders[df_hhx_orders['dept_name1'] == '光源部']
-    df1['activity_name'] = df1.apply(lambda x: get_hhx_activity(x['create_time']), axis=1)
+    # 光源蜂蜜组
+    df0 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光源部蜂蜜组']
+    df0['activity_name'] = df0.apply(lambda x: get_hhx_activity(x['create_time']), axis=1)
+    # 光源部海参组
+    df1 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光源部海参组']
+    df1['activity_name'] = df1.apply(lambda x: get_hhx_activity1(x['create_time']), axis=1)
     # 光芒部
     df2 = df_hhx_orders[df_hhx_orders['dept_name1'] == '光芒部']
     df2['activity_name'] = df2.apply(lambda x: get_hhx_activity2(x['create_time']), axis=1)
@@ -657,13 +668,13 @@ def main():
     # 光华部蜜梓源面膜进粉后端
     df6 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光华部蜜梓源面膜进粉后端']
     df6['activity_name'] = df6.apply(lambda x: get_hhx_activity6(x['create_time']), axis=1)
-    df_hhx_orders2 = pd.concat([df1, df2, df3, df4, df5, df6])
+    df_hhx_orders2 = pd.concat([df0,df1, df2, df3, df4, df5, df6])
     df_hhx_orders2 = df_hhx_orders2[['order_sn', 'member_id', 'activity_name']]
     df_hhx_orders = df_hhx_orders.merge(df_hhx_orders2, on=['order_sn', 'member_id'], how='left')
     # 是否活动
-    df_hhx_orders['is_activity'] = df_hhx_orders.apply(lambda x: '否' if x['activity_name'] is None else '是', axis=1)
+    df_hhx_orders = df_hhx_orders.fillna(0)
+    df_hhx_orders['is_activity'] = df_hhx_orders.apply(lambda x: '否' if x['activity_name'] == 0 else '是', axis=1)
     df_hhx_orders['id'] = df_hhx_orders['order_sn'].astype(str) + df_hhx_orders['member_id'].astype(str)
-    df_hhx_orders=df_hhx_orders.fillna(0)
     df_hhx_orders['complate_date'] = df_hhx_orders['complate_date'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_hhx_orders = df_hhx_orders[
         ['id', 'order_sn', 'original_order_sn', 'order_type', 'no_performance_type', 'clinch_type',
@@ -687,7 +698,7 @@ if __name__ == '__main__':
     # et = time1 - relativedelta(days=0)
     # 时间转化
     st = '2023-01-01'
-    et = '2023-05-04'
+    et = '2023-05-10'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     main()

@@ -297,25 +297,25 @@ def main():
     # 客户所属部门
     df_hhx_user = get_hhx_user()
     df_hhx_member = df_hhx_member.merge(df_hhx_user, on=['dept_name'], how='left')
-    # 客户销售数据
+    # 客户销售数据，总计
     df_hhx_order = get_member_order(st,et)
     df_hhx_member = df_hhx_member.merge(df_hhx_order, on=['member_id'], how='left')
-    # 客户销售数据2
+    # 客户销售数据2，2023年
     df_hhx_order2 = get_member_order2(st,et)
     df_hhx_member = df_hhx_member.merge(df_hhx_order2, on=['member_id'], how='left')
-    # 临时表数据，历史之前的数据
+    # 临时表数据，历史之前的数据，存储前几天的数据
     df_member_tmp=get_member_tmp()
     '''历史销售数据，截至到昨日的数据'''
     df_member_old = get_member_old()
+    # 客户最近购买时间
+    df_hhx_order_time = get_member_new_time(st,et)
+    # 当前客户数据
+    df_hhx_member = df_hhx_member.merge(df_hhx_order_time, on=['member_id'], how='left')
     # 汇总-临时
     df_member_old=df_member_old.merge(df_member_tmp,on=['member_id'],how='left')
     df_member_old=df_member_old[['member_id','order_nums', 'order_amounts','order_nums_2023', 'order_amounts_2023',
                                  'last_time','order_nums_tmp','order_amounts_tmp','order_nums_2023_tmp',
                                  'order_amounts_2023_tmp']]
-    # 客户最近购买时间
-    df_hhx_order_time = get_member_new_time(st,et)
-    # 当前客户数据
-    df_hhx_member = df_hhx_member.merge(df_hhx_order_time, on=['member_id'], how='left')
     '''储存临时表，当前时间前2天-10天数据'''
     # 当前客户关联之前客户，更新数据
     df_member_old['member_id']=df_hhx_member['member_id'].astype(int)
@@ -372,7 +372,7 @@ if __name__ == '__main__':
     # 开始时间，结束时间
     startTime = utils.get_time_args(sys.argv)
     time1 = startTime
-    st = time1 - relativedelta(days=7)
+    st = time1 - relativedelta(days=10)
     et = time1 - relativedelta(days=0)
     st = utils.date2str(st)
     et = utils.date2str(et)
