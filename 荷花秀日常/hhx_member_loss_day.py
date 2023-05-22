@@ -9,7 +9,9 @@
 """
 
 import pandas as pd
-from modules.mysql import jnmtMySQL
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 
 
 # 客户最近购买时间，时间间隔
@@ -26,7 +28,7 @@ def get_member_jiange():
         a.tenant_id = 11
     GROUP BY a.member_id
     '''
-    df = jnmt_sql.get_DataFrame_PD(sql)
+    df = jnmt_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -59,7 +61,7 @@ def get_member_avenger():
     )t2
     GROUP BY 	t2.member_id
     '''
-    df = jnmt_sql.get_DataFrame_PD(sql)
+    df = jnmt_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -77,7 +79,7 @@ def get_member():
     WHERE a.tenant_id=11
     GROUP BY a.member_id
     '''
-    df = jnmt_sql.get_DataFrame_PD(sql)
+    df = jnmt_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -93,7 +95,7 @@ def get_dept_name():
     LEFT JOIN jnmt_sys_dept c on b.dept_id=c.dept_id
     where a.tenant_id=11
     '''
-    df = jnmt_sql.get_DataFrame_PD(sql)
+    df = jnmt_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -269,5 +271,6 @@ def main():
 
 
 if __name__ == '__main__':
-    jnmt_sql = jnmtMySQL.QunaMysql('jnmt_sql')
+    hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     main()

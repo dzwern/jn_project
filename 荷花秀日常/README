@@ -2,7 +2,17 @@
 
 
 
-hhx_day：
+hhx_day：日常数据表
+
+
+
+hhx_target_day：业绩总目标
+hhx_order_total_day:日常汇总
+hhx_order_type_day:日常营销类型汇总
+hhx_fans_develop_day:进粉开发
+hhx_fans_order_day:进粉产出
+
+
 
 
 

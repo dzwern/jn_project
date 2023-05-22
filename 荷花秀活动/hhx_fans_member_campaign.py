@@ -7,7 +7,9 @@
 # @description: 【不同客户在活动期间的表现】活动粉丝转化，分为活动进粉转化，活动期间新粉转化，活动期间老粉转化，实际粉丝数
 # @update:
 """
-from modules.mysql import jnmtMySQL
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 import pandas as pd
 import numpy as np
 
@@ -231,8 +233,8 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     st = '2023-02-15'
     st2 = '2023-04-18'
     et = '2023-04-30'

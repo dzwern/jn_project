@@ -15,54 +15,9 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import create_engine
 from urllib.parse import quote_plus as urlquote
 import numpy as np
-
-userName = 'dzw'
-password = 'dsf#4oHGd'
-dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
-dbPort = 3306
-URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
-schema = 'crm_tm_jnmt'
-schema2 = 'hhx_dx'
-engine = create_engine(URL + schema + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
-engine2 = create_engine(URL + schema2 + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
-
-
-# 加载数据到df
-def get_DataFrame_PD(sql='SELECT * FROM DUAL'):
-    conn = engine.connect()
-    with conn as connection:
-        dataFrame = pd.read_sql(sql, connection)
-        return dataFrame
-
-
-# 加载数据到df
-def get_DataFrame_PD2(sql='SELECT * FROM DUAL'):
-    conn = engine2.connect()
-    with conn as connection:
-        dataFrame = pd.read_sql(sql, connection)
-        return dataFrame
-
-
-# 批量执行更新sql语句
-def executeSqlManyByConn(sql, data):
-    conn = engine2.connect()
-    if len(data) > 0:
-        with conn as connection:
-            return connection.execute(sql, data)
-
-
-# 时间转化字符串
-def date2str(parameter, format='%Y-%m-%d'):
-    if isinstance(parameter, str):
-        return parameter
-    return parameter.strftime(format)
-
-
-# 执行sql
-def executeSqlByConn(sql='SELECT * FROM DUAL', conn=None):
-    conn = engine2.connect()
-    with conn as connection:
-        return connection.execute(sql)
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 
 
 # 员工基础信息
@@ -84,7 +39,7 @@ def get_user_base():
     and a.dept_name1 not in ('0')
     GROUP BY a.sys_user_id
     '''
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -100,7 +55,7 @@ def get_member_category():
         a.valid_state = '正常'
     GROUP BY a.sys_user_id
         '''
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -119,7 +74,7 @@ def get_wechat_fans(st, et):
     and d.valid_state=1
     GROUP BY a.sys_user_id
     '''.format(st, et)
-    df = get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -134,7 +89,7 @@ def get_wechat_old():
 	where a.sys_user_id is not null
     GROUP BY a.sys_user_id
     '''
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -150,7 +105,7 @@ def get_member_level():
     GROUP BY a.sys_user_id,a.member_level
     ORDER BY a.sys_user_id
     '''
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -184,7 +139,7 @@ def get_user_pred():
     where a.activity_name='2023年38女神节活动'
     GROUP BY a.dept_name,member_category
     '''
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -206,7 +161,7 @@ def get_member_strike():
     and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     GROUP BY a.sys_user_id
     '''.format(st2, et, activity_name)
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -227,7 +182,7 @@ def get_member_strike2():
     and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     GROUP BY a.sys_user_id
     '''.format(st, activity_name)
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -249,7 +204,7 @@ def get_member_strike3():
     and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
     GROUP BY a.sys_user_id
     '''.format(st, st2, activity_name)
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -271,7 +226,7 @@ def get_member_struck():
     GROUP BY a.sys_user_id,b.member_level
     ORDER BY a.sys_user_id
     '''.format(activity_name)
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -289,7 +244,7 @@ def get_user_order():
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     GROUP BY a.sys_user_id
     '''
-    df = get_DataFrame_PD2(sql)
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -298,7 +253,7 @@ def del_sql():
     sql = '''
     truncate table t_pred_campaign;
     '''
-    executeSqlByConn(sql)
+    hhx_sql2.executeSqlByConn(sql)
 
 
 def save_sql(df):
@@ -322,7 +277,7 @@ def save_sql(df):
          `members_develop`=values(`members_develop`),`member_price`=values(`member_price`),`amount_pred`=values(`amount_pred`),
          `members_amount`=values(`members_amount`),`completion_rate`=values(`completion_rate`),`activity_name`=values(`activity_name`)
          '''
-    executeSqlManyByConn(sql, df.values.tolist())
+    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
 def main():
@@ -421,11 +376,14 @@ def main():
                                  'member_pred', 'members_develop', 'member_price', 'amount_pred', 'members_amount',
                                  'completion_rate', 'activity_name']]
     df_user_base = df_user_base
+    print(df_user_base)
     del_sql()
     save_sql(df_user_base)
 
 
 if __name__ == '__main__':
+    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     st = '2023-02-15'
     st3 = '2023-03-01'
     st2 = '2023-04-18'

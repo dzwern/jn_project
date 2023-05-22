@@ -11,10 +11,11 @@
 """
 
 
-from modules.mysql import jnmtMySQL
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 import pandas as pd
 from datetime import  datetime
-from modules.func import utils
 import sys
 from dateutil.relativedelta import relativedelta
 
@@ -139,7 +140,7 @@ def get_member_base():
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     where a.tenant_id=11
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -161,7 +162,7 @@ def get_member_order(st,et):
     and a.create_time<'{}'
     GROUP BY a.member_id
     '''.format(st,et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -183,7 +184,7 @@ def get_member_order2(st,et):
     and a.create_time<'{}'
     GROUP BY a.member_id
     '''.format(st,et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -204,7 +205,7 @@ def get_member_new_time(st,et):
     and a.create_time<'{}'
     GROUP BY a.member_id
     '''.format(st,et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -367,8 +368,8 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
     startTime = utils.get_time_args(sys.argv)
     time1 = startTime

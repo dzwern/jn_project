@@ -8,7 +8,9 @@
 # @update:
 """
 
-from modules.mysql import jnmtMySQL
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 import pandas as pd
 import datetime
 import numpy as np
@@ -34,7 +36,7 @@ def get_member_credit():
     and a.credit>0
     GROUP BY f.dept_name,e.nick_name,d.wecaht_number,left(a.new_sprint_time,10)
     '''.format(st,et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -218,8 +220,8 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 时间转化
     st = '2022-01-01'
     et = '2023-05-10'

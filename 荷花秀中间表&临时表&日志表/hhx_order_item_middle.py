@@ -7,11 +7,13 @@
 # @description: 产品信息
 # @update:
 """
-from modules.mysql import jnmtMySQL
-from modules.mysql import jnmtMySQL4
+
+
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 import pandas as pd
 import datetime
-from modules.func import utils
 from dateutil.relativedelta import relativedelta
 
 
@@ -41,7 +43,7 @@ def get_order_product():
     and a.create_time<'{}'
     and a.order_amount>40
     '''.format(st, et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -180,12 +182,16 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    time1 = datetime.datetime.now()
-    st = time1 - relativedelta(days=5)
-    et = time1 + relativedelta(days=1)
-    st = utils.date2str(st)
-    et = utils.date2str(et)
+    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    # time1 = datetime.datetime.now()
+    # st = time1 - relativedelta(days=5)
+    # et = time1 + relativedelta(days=1)
+    # st = utils.date2str(st)
+    # et = utils.date2str(et)
+    st = '2023-01-01'
+    et = '2023-05-13'
+    st = datetime.datetime.strptime(st, "%Y-%m-%d")
+    et = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st, et)
     main()

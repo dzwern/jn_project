@@ -6,7 +6,9 @@
 # @FileName: hhx_member_day.py
 # @description: 荷花秀客户整体监控，主要内容：客户数，客户分层数，客户购买频次，客户购买金额
 """
-from modules.mysql import jnmtMySQL
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 import pandas as pd
 import datetime
 import numpy as np
@@ -60,6 +62,6 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     main()

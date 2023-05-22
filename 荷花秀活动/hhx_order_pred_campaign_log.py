@@ -8,7 +8,9 @@
 # @update：更新时间在，活动之前更新
 """
 
-from modules.mysql import jnmtMySQL
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 import pandas as pd
 import numpy as np
 
@@ -66,7 +68,7 @@ def get_wechat_fans(st, et):
     and d.valid_state=1
     GROUP BY a.wechat_id
     '''.format(st, et)
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -314,8 +316,8 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
+    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     st = '2022-12-20'
     st2 = '2023-02-15'
     et = '2023-03-01'

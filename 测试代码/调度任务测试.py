@@ -16,7 +16,7 @@
 # # See PyCharm help at https://www.jetbrains.com/help/pycharm/
 
 
-# from modules import jnmtMySQL2
+# from jn_modules import jnmtMySQL2
 #
 #
 # # 客户数据源

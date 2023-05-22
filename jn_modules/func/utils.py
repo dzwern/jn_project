@@ -8,14 +8,10 @@
 # @update:
 """
 import datetime
-import functools
 from functools import reduce, wraps
 import json
-import os
 import time
-import subprocess
 import pandas as pd
-from modules.dingtalk.DingTalk import DingTalk
 
 
 # 查看运行时间
@@ -93,15 +89,8 @@ def read_file_return_json(path):
         return data
 
 
-# 数据融合
-def reduce_merge(reduce_data_list, on_keys, how_type='left'):
-    '''利用reduce合并多个相同的DF, 第一个DF为保留结果'''
-    all_data = reduce(lambda left, right: pd.merge(left, right, how=how_type, on=on_keys), reduce_data_list)
-    return all_data
-
-
 # 数字转换为百分比
-def float2percentage(data, columns=[]):
+def float2percentage(data, columns):
     """将数字转成百分比"""
     # 如果是DataFrame， 将整列进行转换
     if isinstance(data, pd.DataFrame):
@@ -113,27 +102,9 @@ def float2percentage(data, columns=[]):
         return '%.2f%%' % (data * 100)
 
 
+# 列表转换为数据库in
 def quoted_list_func(item_list):
     '''当SQL语句中用 IN 的时候，把python list转为 IN 后面的内容'''
     item_list = [str(x) for x in item_list]
     quoted_list_str = "'" + "','".join(item_list) + "'"
     return quoted_list_str
-
-
-def get_time_args(args):
-    '''获取程序传入参数，输出参数时间，手动输入参数格式： ‘2020-10-10 10:10:00’'''
-    if len(args) > 1:
-        time, = args[1:2]
-        if '+' in time:
-            # airflow传的参数
-            if '.' in time:
-                time = datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%f+08:00').replace(microsecond=0)
-            else:
-                time = datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S+08:00').replace(microsecond=0)
-        else:
-            # 在linux上手动执行传入的参数
-            time = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
-    else:
-        time = datetime.datetime.now()
-
-    return time

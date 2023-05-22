@@ -3,18 +3,15 @@
 """
 # @Time    : 2023/4/1 9:18
 # @Author  : diaozhiwei
-# @FileName: jnmtMySQL4.py
+# @FileName: jnmtMySQL.py
 # @description: 
 # @update:
 """
 
 import logging
-import sys
 import traceback
-import decimal
 import pandas as pd
 from sqlalchemy import create_engine
-from itertools import cycle
 from urllib.parse import quote_plus as urlquote
 
 '''
@@ -23,7 +20,7 @@ from urllib.parse import quote_plus as urlquote
 '''
 
 
-class QunaMysql(object):
+class jnMysql(object):
     # 初始化
     def __init__(self, schema='', userName='', password='', dbHost='',dbPort=3306):
         self._engin = create_engine(
@@ -76,20 +73,14 @@ class QunaMysql(object):
         with conn as connection:
             pd.to_sql(table, connection, if_exists='append', index=False)
 
-    def get_list(self, sql='SELECT * FROM DUAL'):
-        '''返回结果为list'''
-        result = self._engin.execute(sql)
-        result_list = []
-        for i in result:
-            result_list.append(i[0])
-        return result_list
-
 
 if __name__ == '__main__':
     try:
-        qunaMysql = QunaMysql()
+        jnMysql = jnMysql()
     except:
         ex = traceback.format_exc()
         logging.error(ex)
     finally:
         pass
+
+

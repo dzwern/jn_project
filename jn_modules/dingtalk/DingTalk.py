@@ -9,9 +9,6 @@
 import requests
 import json
 import logging
-import pandas as pd
-
-# https://oapi.dingtalk.com/robot/send?access_token=0555344754fdbdabb56ca53eb347e8fc150a2979c22a2c91e4860443bb449fa1
 
 
 class DingTalk(object):
@@ -45,6 +42,7 @@ class DingTalk(object):
         else:
             logging.info("信息发送失败....")
 
+
     def send_DingTalk_link(self, text, title, picUrl=None, messageUrl=None):
         '''
         发送链接信息
@@ -69,6 +67,7 @@ class DingTalk(object):
             logging.info("信息发送成功....")
         else:
             logging.info("信息发送失败....")
+
 
     def send_DingTalk_markdown(self, text, title, mobile_list, isAtAll=False):
         '''

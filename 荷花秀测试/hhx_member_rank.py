@@ -7,7 +7,7 @@
 # @description: 查看客户排名
 """
 
-from modules.mysql import jnmtMySQL2
+from jn_modules.mysql import jnmtMySQL2
 
 
 def get_member():

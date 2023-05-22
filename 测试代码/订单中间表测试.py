@@ -9,13 +9,54 @@
 """
 import datetime
 import pandas as pd
-from jn_modules.dingtalk.DingTalk import DingTalk
-from jn_modules.mysql.jnmtMySQL import jnMysql
-from jn_modules.func import utils
+from sqlalchemy import create_engine
+from urllib.parse import quote_plus as urlquote
+import sys
+from dateutil.relativedelta import relativedelta
+
+userName = 'dzw'
+password = 'dsf#4oHGd'
+dbHost = 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com'
+dbPort = 3306
+URL = f'mysql+pymysql://{userName}:{urlquote(password)}@{dbHost}:{dbPort}/'
+schema = 'crm_tm_jnmt'
+schema2 = 'hhx_dx'
+engine = create_engine(URL + schema + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+engine2 = create_engine(URL + schema2 + '?charset=utf8', pool_pre_ping=True, pool_recycle=3600 * 4)
+
+
+# 加载数据到df
+def get_DataFrame_PD(sql='SELECT * FROM DUAL'):
+    conn = engine.connect()
+    with conn as connection:
+        dataFrame = pd.read_sql(sql, connection)
+        return dataFrame
+
+
+# 批量执行更新sql语句
+def executeSqlManyByConn(sql, data):
+    conn = engine2.connect()
+    if len(data) > 0:
+        with conn as connection:
+            return connection.execute(sql, data)
+
+
+def get_sql():
+    sql = '''
+    select * from sys_tenant
+    '''
+    df = get_DataFrame_PD(sql)
+    return df
+
+
+# 时间转化字符串
+def date2str(parameter, format='%Y-%m-%d'):
+    if isinstance(parameter, str):
+        return parameter
+    return parameter.strftime(format)
 
 
 # 订单基础信息
-
 def get_hhx_orders():
     sql = '''
     SELECT
@@ -54,8 +95,8 @@ def get_hhx_orders():
         a.tenant_id = 11
     and a.create_time>='{}'
     and a.create_time<'{}'
-    '''.format(st1,et1)
-    df = hhx_sql1.get_DataFrame_PD(sql)
+    '''.format(st, et)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -138,7 +179,7 @@ def get_no_performance_type(x):
 
 # 成交类型
 def get_clinch_type():
-    sql='''
+    sql = '''
     select * from
     (
     (
@@ -186,25 +227,27 @@ def get_clinch_type():
     and b.is_repurchase=1
     )
     )t1
-    '''.format(st1,et1,st1,et1,st1,et1)
-    df=hhx_sql1.get_DataFrame_PD(sql)
+    '''.format(st, et, st, et, st, et)
+    df = get_DataFrame_PD(sql)
     return df
 
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组', '光辉部二组', '光辉部五组', '光辉部六组','光辉部九组','光辉部前端四组',
+    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
            '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组', '光华部1组', '光华部一组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部蜂蜜八组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端','光辉部蜜肤语前端', '光辉部蜜肤语前端','光辉部蜜肤语前端', '光辉部蜜肤语前端','光辉部蜜肤语前端',
-           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端', '光华部蜜梓源面膜进粉前端',
-           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部蜂蜜组','光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部','光辉部', '光辉部', '光辉部', '光辉部','光辉部',
+           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组', '光华部1组',
+           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
+    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
+           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
+           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端',
+           '光华部蜜梓源面膜进粉后端', '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端',
+           '光华部蜜梓源面膜进粉后端',
+           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组', '光源部海参组']
+    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
            '光芒部', '光芒部', '光芒部', '光芒部',
-           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部','光华部',
-           '光源部', '光源部', '光源部', '光源部' , '光源部']
+           '光华部', '光华部', '光华部', '光华部', '光华部', '光华部', '光华部',
+           '光源部', '光源部', '光源部', '光源部']
     df = {"dept_name": df1,
           'dept_name2': df2,
           'dept_name1': df3}
@@ -214,7 +257,7 @@ def get_hhx_user():
 
 # 客户来源
 def get_member_source():
-    sql='''
+    sql = '''
     SELECT
         a.order_sn,
         b.member_source_level2 member_source
@@ -225,9 +268,10 @@ def get_member_source():
     and a.create_time>='{}'
     and a.create_time<'{}'
     GROUP BY a.order_sn
-    '''.format(st1,et1)
-    df=hhx_sql1.get_DataFrame_PD(sql)
+    '''.format(st, et)
+    df = get_DataFrame_PD(sql)
     return df
+
 
 # 客户来源枚举
 '''
@@ -239,25 +283,6 @@ def get_member_source():
 5线下获客
 6客户咨询
 '''
-
-
-def get_member_source1(x):
-    if x == 0:
-        return '小程序登录'
-    elif x == 1:
-        return '电商平台获取'
-    elif x == 2:
-        return '投流加微获取'
-    elif x == 3:
-        return '投流线索获取'
-    elif x == 4:
-        return '表单获取'
-    elif x == 5:
-        return '线下获客'
-    elif x == 6:
-        return '客户咨询'
-    else:
-        return '其他'
 
 
 # 客户二级来源
@@ -329,11 +354,12 @@ def get_hhx_member():
     WHERE
         a.tenant_id = 11
     '''
-    df = hhx_sql1.get_DataFrame_PD(sql)
+    df = get_DataFrame_PD(sql)
     return df
 
 
 # 商品信息
+
 def get_product_name():
     sql = '''
     SELECT 
@@ -346,8 +372,8 @@ def get_product_name():
     and a.create_time>='{}'
     and a.create_time<'{}'
     GROUP BY a.order_sn
-    '''.format(st1,et1)
-    df = hhx_sql1.get_DataFrame_PD(sql)
+    '''.format(st, et)
+    df = get_DataFrame_PD(sql)
     return df
 
 
@@ -497,68 +523,80 @@ def get_return_state(x):
     else:
         return '其它'
 
-'''
-注意事项，表中的时间为【时间1<=x<时间2】
-'''
-
 
 # 活动信息-光源蜂蜜
 def get_hhx_activity(x):
-    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-18', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30',
+                                                                                               '%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-02-15', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
 
 
 # 活动信息-光源海参
 def get_hhx_activity1(x):
-    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-18', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30',
+                                                                                               '%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-03-01','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-11','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-03-01', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-11',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
 
 
 # 活动信息2-光芒组
 def get_hhx_activity2(x):
-    if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-05-01','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-18', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-05-01',
+                                                                                               '%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-02-15', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
 
 
 # 活动信息2-光辉前端
 def get_hhx_activity3(x):
-    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-19', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-28',
+                                                                                               '%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-02-20','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-02-20', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
 
 
 # 活动信息2-光辉后端
 def get_hhx_activity4(x):
-    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-05-01','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-17', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-05-01',
+                                                                                               '%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-02-15', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-01',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
 
 
 # 活动信息2-光华组前端
 def get_hhx_activity5(x):
-    if datetime.datetime.strptime('2023-04-19','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-19', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29',
+                                                                                               '%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-02-15', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
-    elif datetime.datetime.strptime('2023-03-05','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-03-05', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
 
 
 # 活动信息2-光华组后端
 def get_hhx_activity6(x):
-    if datetime.datetime.strptime('2023-04-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29','%Y-%m-%d'):
+    if datetime.datetime.strptime('2023-04-17', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-29',
+                                                                                               '%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-02-15','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-02-15', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-02-23',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
-    elif datetime.datetime.strptime('2023-03-03','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-03-03', '%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-09',
+                                                                                                 '%Y-%m-%d'):
         return '2023年38女神节活动'
 
 
@@ -598,52 +636,52 @@ def save_sql(df):
          `refund_state`=values(`refund_state`),`trade_time`=values(`trade_time`),`complate_date`=values(`complate_date`),
          `project_category_id`=values(`project_category_id`),`is_activity`=values(`is_activity`),`activity_name`=values(`activity_name`)
      '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    executeSqlManyByConn(sql, df.values.tolist())
 
 
-# @utils.print_execute_time
 def main():
     # 基础数据表
     df_hhx_orders = get_hhx_orders()
     # 订单类型
     df_hhx_orders['order_type'] = df_hhx_orders.apply(lambda x: get_order_type(x['order_type']), axis=1)
     # 营销类型
-    df_hhx_orders['no_performance_type'] = df_hhx_orders.apply(lambda x: get_no_performance_type(x['no_performance_type']), axis=1)
+    df_hhx_orders['no_performance_type'] = df_hhx_orders.apply(
+        lambda x: get_no_performance_type(x['no_performance_type']), axis=1)
     # 成交类型
     df_clinch_type = get_clinch_type()
     df_hhx_orders = df_hhx_orders.merge(df_clinch_type, on=['order_sn'], how='left')
     # 员工信息
     df_hhx_user = get_hhx_user()
-    df_hhx_orders=df_hhx_orders.merge(df_hhx_user,on=['dept_name'],how='left')
+    df_hhx_orders = df_hhx_orders.merge(df_hhx_user, on=['dept_name'], how='left')
     # 客户信息
     df_hhx_member = get_hhx_member()
-    df_hhx_orders=df_hhx_orders.merge(df_hhx_member,on=['member_id'],how='left')
+    df_hhx_orders = df_hhx_orders.merge(df_hhx_member, on=['member_id'], how='left')
     # 客户来源
     df_member_source = get_member_source()
     df_hhx_orders = df_hhx_orders.merge(df_member_source, on=['order_sn'], how='left')
     df_hhx_orders['member_source'] = df_hhx_orders.apply(lambda x: get_member_source2(x['member_source']), axis=1)
     # 沟通时间差
-    df_hhx_orders['first_time']=df_hhx_orders.apply(lambda x: "2000-01-01" if x['first_time']<datetime.datetime.strptime('2000-01-01','%Y-%m-%d') else x['first_time'],axis=1)
+    df_hhx_orders['first_time'] = df_hhx_orders.apply(
+        lambda x: "2000-01-01" if pd.to_datetime(x['first_time']) < datetime.datetime(2000,1,1) else x['first_time'], axis=1)
     df_hhx_orders['ct'] = df_hhx_orders['create_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
     df_hhx_orders['ft'] = df_hhx_orders['first_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
-    df_hhx_orders['time_diff'] = ((pd.to_datetime(df_hhx_orders['ct']) - pd.to_datetime(df_hhx_orders['ft']))/pd.Timedelta(1, 'D')).fillna(0).astype(int)
+    df_hhx_orders['time_diff'] = ((pd.to_datetime(df_hhx_orders['ct']) - pd.to_datetime(df_hhx_orders['ft'])) / pd.Timedelta(1,'D')).fillna(0).astype(int)
     # 订单信息
-    df_product_name=get_product_name()
+    df_product_name = get_product_name()
     df_hhx_orders = df_hhx_orders.merge(df_product_name, on=['order_sn'], how='left')
     # 订单范围
     df_hhx_orders['order_interval'] = df_hhx_orders.apply(lambda x: get_order_range(x['order_amount']), axis=1)
     # 项目类型
-    df_hhx_orders['project_category_id'] = df_hhx_orders.apply(lambda x: get_project_category_id(x['project_category_id']), axis=1)
+    df_hhx_orders['project_category_id'] = df_hhx_orders.apply(
+        lambda x: get_project_category_id(x['project_category_id']), axis=1)
     # 订单状态
     df_hhx_orders['order_state'] = df_hhx_orders.apply(lambda x: get_order_state(x['order_state']), axis=1)
     # 审核状态
     df_hhx_orders['review_state'] = df_hhx_orders.apply(lambda x: get_review_state(x['review_state']), axis=1)
     # 退货状态
     df_hhx_orders['refund_state'] = df_hhx_orders.apply(lambda x: get_return_state(x['return_state']), axis=1)
-    df_hhx_orders[['dept_name1', 'dept_name2']] = df_hhx_orders[['dept_name1', 'dept_name2']].fillna(0)
-    df_hhx_orders=df_hhx_orders
     # 活动信息
-    # 光源蜂蜜组
+    # 光源部
     df0 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光源部蜂蜜组']
     df0['activity_name'] = df0.apply(lambda x: get_hhx_activity(x['create_time']), axis=1)
     # 光源部海参组
@@ -664,19 +702,20 @@ def main():
     # 光华部蜜梓源面膜进粉后端
     df6 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光华部蜜梓源面膜进粉后端']
     df6['activity_name'] = df6.apply(lambda x: get_hhx_activity6(x['create_time']), axis=1)
-    df_hhx_orders2 = pd.concat([df0,df1, df2, df3, df4, df5, df6])
+    df_hhx_orders2 = pd.concat([df0, df1, df2, df3, df4, df5, df6])
+    # 增加活动信息
     df_hhx_orders2 = df_hhx_orders2[['order_sn', 'member_id', 'activity_name']]
     df_hhx_orders = df_hhx_orders.merge(df_hhx_orders2, on=['order_sn', 'member_id'], how='left')
     # 是否活动
-    df_hhx_orders = df_hhx_orders.fillna(0)
-    df_hhx_orders['is_activity'] = df_hhx_orders.apply(lambda x: '否' if x['activity_name'] == 0 else '是', axis=1)
+    df_hhx_orders['is_activity'] = df_hhx_orders.apply(lambda x: '否' if x['activity_name'] is None else '是', axis=1)
     df_hhx_orders['id'] = df_hhx_orders['order_sn'].astype(str) + df_hhx_orders['member_id'].astype(str)
+    df_hhx_orders = df_hhx_orders.fillna(0)
     df_hhx_orders['complate_date'] = df_hhx_orders['complate_date'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_hhx_orders = df_hhx_orders[
         ['id', 'order_sn', 'original_order_sn', 'order_type', 'no_performance_type', 'clinch_type',
          'dept_name1', 'dept_name2', 'dept_name', 'sys_user_id', 'user_name', 'nick_name',
-         'wechat_id', 'wechat_name', 'wecaht_number','member_id', 'member_source', 'first_time',
-         'create_time', 'time_diff','receiver_province','receiver_city',  'product_name',
+         'wechat_id', 'wechat_name', 'wecaht_number', 'member_id', 'member_source', 'first_time',
+         'create_time', 'time_diff', 'receiver_province', 'receiver_city', 'product_name',
          'order_amount', 'amount_paid', 'refund_amount',
          'pay_type_name', 'order_interval', 'order_state', 'review_state', 'refund_state',
          'trade_time', 'complate_date', 'project_category_id', 'is_activity', 'activity_name']]
@@ -685,22 +724,14 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
-    # startTime = utils.get_time_args(sys.argv)
-    # time1 = startTime
-    # st = time1 - relativedelta(days=1)
-    # et = time1 - relativedelta(days=0)
-    # 时间转化
-    st = '2022-11-01'
-    et = '2023-01-15'
-    st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
-    et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
+    time1 = datetime.datetime.now()
+    st = time1 - relativedelta(days=5)
+    et = time1 + relativedelta(days=1)
+    st = date2str(st)
+    et = date2str(et)
+    print(st, et)
     main()
-
-
-
 
 
 

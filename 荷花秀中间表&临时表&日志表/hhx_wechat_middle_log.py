@@ -9,8 +9,9 @@
 """
 import datetime
 
-from modules.mysql import jnmtMySQL
-from modules.mysql import jnmtMySQL4
+from jn_modules.dingtalk.DingTalk import DingTalk
+from jn_modules.mysql.jnmtMySQL import jnMysql
+from jn_modules.func import utils
 import pandas as pd
 
 
@@ -42,7 +43,7 @@ def get_wechat_base():
     WHERE
         a.tenant_id = 11
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -77,7 +78,7 @@ def get_wechat_member():
         a.tenant_id = 11
     GROUP BY a.wechat_id
     '''
-    df = hhx_sql.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
@@ -137,10 +138,8 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql = jnmtMySQL.QunaMysql('crm_tm_jnmt')
-    hhx_sql2 = jnmtMySQL.QunaMysql('hhx_dx')
-    # hhx_sql = jnmtMySQL4.QunaMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    # hhx_sql2 = jnmtMySQL4.QunaMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
     # startTime = utils.get_time_args(sys.argv)
     # time1 = startTime
