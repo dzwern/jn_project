@@ -28,6 +28,7 @@ def get_campaign_member(activity_name, log_name):
     FROM
         t_member_middle_log a
     where a.log_name='{}'
+    and a.dept_name1 !='0'
     GROUP BY a.dept_name,a.member_level
     '''.format(activity_name, log_name)
     df = hhx_sql2.get_DataFrame_PD(sql)

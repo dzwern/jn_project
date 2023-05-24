@@ -49,16 +49,18 @@ def get_wechat_base():
 # 员工信息
 def get_hhx_user():
     df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组','光芒部一组',
-           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组','光华部1组',
+           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
+           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组', '光华部1组',
            '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
     df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
-           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端',
-           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部海参组']
+           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
+           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端',
+           '光华部蜜梓源面膜进粉后端', '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端',
+           '光华部蜜梓源面膜进粉后端',
+           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组', '光源部海参组']
     df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
            '光芒部', '光芒部', '光芒部', '光芒部',
-           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部',
+           '光华部', '光华部', '光华部', '光华部', '光华部', '光华部', '光华部',
            '光源部', '光源部', '光源部', '光源部']
     df = {"dept_name": df1,
           'dept_name2': df2,
@@ -121,19 +123,19 @@ def main():
     df_wechat_number = get_wechat_member()
     df_wechat = df_wechat.merge(df_wechat_number, on=['wechat_id'], how='left')
     # 有效状态
-    df_wechat['valid_state']=df_wechat['valid_state'].apply(lambda x: '正常' if x==1 else '维护')
-    df_wechat['reality_fans']=df_wechat['fans']-df_wechat['project_out_total_debit']-df_wechat['own_fans']
-    df_wechat=df_wechat.fillna(0)
+    df_wechat['valid_state'] = df_wechat['valid_state'].apply(lambda x: '正常' if x == 1 else '维护')
+    df_wechat['reality_fans'] = df_wechat['fans'] - df_wechat['project_out_total_debit'] - df_wechat['own_fans']
+    df_wechat = df_wechat.fillna(0)
     df_wechat = df_wechat[['wechat_id', 'create_time', 'version', 'wechat_name', 'wecaht_number', 'phone', 'phone_code',
                            'sys_user_id', 'user_name', 'nick_name', 'dept_id', 'dept_name1', 'dept_name2', 'dept_name',
                            'valid_state', 'fans', 'project_out_total_debit', 'own_fans', 'reality_fans', 'member_trans',
                            'oneway_fans']]
-    df_wechat=df_wechat.fillna(0)
+    df_wechat = df_wechat.fillna(0)
     print(df_wechat)
     save_sql(df_wechat)
 
 
 if __name__ == '__main__':
-    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     main()

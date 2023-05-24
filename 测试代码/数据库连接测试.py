@@ -25,7 +25,7 @@ def get_orders():
 # 保存SQL
 def save_sql(df):
     sql = '''
-    INSERT INTO `t_user_campaign` 
+    INSERT INTO `t_wechat` 
      (`id`,`sys_user_id`,`user_name`,`nick_name`,`dept_name1`
      ) 
      VALUES (%s,%s,%s,%s,%s
@@ -54,6 +54,7 @@ def send_dingTalk(access_token,mobile_list):
 def main():
     df_orders=get_orders()
     print(df_orders)
+    save_sql(df_orders)
     # 报警发送钉钉群
     send_dingTalk(access_token,[''])
 

@@ -12,10 +12,10 @@ import pandas as pd
 from jn_modules.dingtalk.DingTalk import DingTalk
 from jn_modules.mysql.jnmtMySQL import jnMysql
 from jn_modules.func import utils
+from dateutil.relativedelta import relativedelta
 
 
 # 订单基础信息
-
 def get_hhx_orders():
     sql = '''
     SELECT
@@ -664,7 +664,7 @@ def main():
     # 光华部蜜梓源面膜进粉后端
     df6 = df_hhx_orders[df_hhx_orders['dept_name2'] == '光华部蜜梓源面膜进粉后端']
     df6['activity_name'] = df6.apply(lambda x: get_hhx_activity6(x['create_time']), axis=1)
-    df_hhx_orders2 = pd.concat([df0,df1, df2, df3, df4, df5, df6])
+    df_hhx_orders2 = pd.concat([df0, df1, df2, df3, df4, df5, df6])
     df_hhx_orders2 = df_hhx_orders2[['order_sn', 'member_id', 'activity_name']]
     df_hhx_orders = df_hhx_orders.merge(df_hhx_orders2, on=['order_sn', 'member_id'], how='left')
     # 是否活动
@@ -688,15 +688,17 @@ if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
-    # startTime = utils.get_time_args(sys.argv)
-    # time1 = startTime
-    # st = time1 - relativedelta(days=1)
-    # et = time1 - relativedelta(days=0)
+    time1 = datetime.datetime.now()
+    st = time1 - relativedelta(days=10)
+    et = time1 + relativedelta(days=1)
+    st1 = utils.date2str(st)
+    et1 = utils.date2str(et)
+    print(st, et)
     # 时间转化
-    st = '2022-11-01'
-    et = '2023-01-15'
-    st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
-    et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
+    # st = '2022-11-01'
+    # et = '2023-01-15'
+    # st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
+    # et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     main()
 
 

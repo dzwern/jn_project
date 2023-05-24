@@ -6,13 +6,14 @@
 # @FileName: hhx_order_pred_campaign.py
 # @description: 活动预估，使用预估的数据进行实时监控，实时监控表，到员工
 # @update：更新时间在，活动中监控
+
+注意事项：光芒部，光源部的老粉客户以销售提供为准
 """
 
 import pandas as pd
 from datetime import datetime, timedelta
 import sys
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import create_engine
 from urllib.parse import quote_plus as urlquote
 import numpy as np
 from jn_modules.dingtalk.DingTalk import DingTalk

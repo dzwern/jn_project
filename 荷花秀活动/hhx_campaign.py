@@ -78,34 +78,18 @@ def get_order_campaign2():
     return df
 
 
-# 预测目标
-def get_pred_target():
+def get_work_target():
     sql = '''
     SELECT
         a.dept_name,
-        sum(a.amount_pred) amount_target 
+        a.amount_target
     FROM
-        t_pred_campaign a
-    GROUP BY a.dept_name
-    '''
+        t_campaign_target_log a 
+    WHERE
+        a.activity_name = '{}'
+    '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
-
-
-# 业务目标
-def get_work_target():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部1组', '光华部六组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = [160000, 160000, 1100000, 1100000,
-           900000, 900000, 800000, 900000,
-           155000, 145000, 540000, 340000,
-           330000, 330000, 340000, 700000]
-    df = {"dept_name": df1,
-          'amount_target2': df2}
-    data = pd.DataFrame(df)
-    return data
 
 
 def save_sql(df):
@@ -113,21 +97,18 @@ def save_sql(df):
     INSERT INTO `t_campaign` 
      (`id`,`dept_name1`,`dept_name2`,`dept_name`,`group_users`,`group_wechats`,
      `members`,`order_amounts`,`members_campaign`,`order_amounts_campaign`,
-     `amount_target`,`amount_target2`,`completion_rate`,
-     `completion_rate2`,`member_price`,`user_price`,`activity_name`
+     `amount_target`,`completion_rate`,`member_price`,`user_price`,`activity_name`
      ) 
      VALUES (%s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
-     %s,%s,%s,%s,%s,
-     %s,%s
+     %s,%s,%s,%s,%s
      )
      ON DUPLICATE KEY UPDATE
          `dept_name1`= VALUES(`dept_name1`),`dept_name2`= VALUES(`dept_name2`),`dept_name`=VALUES(`dept_name`),
          `group_users`=values(`group_users`),`group_wechats`=values(`group_wechats`),`members`=values(`members`),
          `order_amounts`=values(`order_amounts`), `members_campaign`=values(`members_campaign`),
          `order_amounts_campaign`=values(`order_amounts_campaign`), 
-         `amount_target`=values(`amount_target`),`amount_target2`=values(`amount_target2`),
-         `completion_rate`=values(`completion_rate`),`completion_rate2`=values(`completion_rate2`),
+         `amount_target`=values(`amount_target`),`completion_rate`=values(`completion_rate`),
          `member_price`=values(`member_price`),`user_price`=values(`user_price`),
          `activity_name`=values(`activity_name`)
          '''
@@ -149,32 +130,23 @@ def main():
     df_order_campaign = get_order_campaign()
     # 活动业绩
     df_order_campaign2 = get_order_campaign2()
-    # 预估目标
-    df_pred_target = get_pred_target()
     # 业务目标
     df_work_rarget = get_work_target()
     df_campaign = df_campaign.merge(df_order_campaign, on=['dept_name1', 'dept_name2', 'dept_name'], how='left')
     df_campaign = df_campaign.merge(df_order_campaign2, on=['dept_name'], how='left')
-    df_campaign = df_campaign.merge(df_pred_target, on=['dept_name'], how='left')
     df_campaign = df_campaign.merge(df_work_rarget, on=['dept_name'], how='left')
-    # 时间
-    # df_campaign['days']=(datetime.now()-datetime.strptime('2023-04-01', "%Y-%m-%d")+timedelta(days=1)).days
     # 客单价
     df_campaign['member_price'] = df_campaign['order_amounts'] / df_campaign['members']
     # 员工人效
     df_campaign['user_price'] = df_campaign['order_amounts'] / df_campaign['group_users']
-    # 日均价
-    # df_campaign['day_price']=df_campaign['order_amounts']/df_campaign['days']
     # 目标
     df_campaign['completion_rate'] = df_campaign['order_amounts'] / df_campaign['amount_target']
-    df_campaign['completion_rate2'] = df_campaign['order_amounts'] / df_campaign['amount_target2']
     df_campaign['activity_name'] = activity_name
     df_campaign['id'] = df_campaign['dept_name'].astype(str) + df_campaign['activity_name'].astype(str)
     df_campaign = df_campaign[
         ['id', 'dept_name1', 'dept_name2', 'dept_name', 'group_users', 'group_wechats', 'members', 'order_amounts',
          'members_campaign', 'order_amounts_campaign',
-         'amount_target', 'amount_target2', 'completion_rate', 'completion_rate2', 'member_price', 'user_price',
-         'activity_name']]
+         'amount_target', 'completion_rate', 'member_price', 'user_price','activity_name']]
     print(df_campaign)
     df_campaign = df_campaign.replace([np.inf, -np.inf], np.nan)
     df_campaign = df_campaign.fillna(0)
@@ -183,10 +155,8 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
     activity_name = '2023年五一活动'
     main()
-
-
