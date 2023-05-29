@@ -28,6 +28,7 @@ def get_member_level():
         sum(a.order_amounts) member_orders
     FROM
         t_member_middle a
+    where  a.dept_name1 !='0'
     GROUP BY a.wechat_number,a.member_level
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -52,12 +53,21 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_member_day;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 客户等级
     df_member_level = get_member_level()
     df_member_level['id'] = df_member_level['wechat_number'] + df_member_level['member_level']
     df_member_level = df_member_level[['id', 'dept_name1', 'dept_name2', 'dept_name', 'nick_name', 'wechat_id',
                                        'wechat_number', 'member_level', 'members', 'member_orders']]
+    del_sql()
     save_sql(df_member_level)
 
 

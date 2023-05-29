@@ -5,7 +5,7 @@
 # @Author  : diaozhiwei
 # @FileName: hhx_member_level_middle.py
 # @description:
-数据更新：首次全量更新,可以使用特定时间
+数据更新：首次全量更新,可以使用特定时间，数据更改，由25,26,27,28租户组合而成，对于基础数据进行数据融合之后去重去除
 """
 
 from jn_modules.dingtalk.DingTalk import DingTalk

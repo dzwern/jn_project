@@ -44,7 +44,8 @@ def get_member_base():
         a.order_amounts_2023 
     FROM
         t_member_middle a
-        '''
+    where a.dept_name1 !='0'
+    '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -54,9 +55,9 @@ def get_member_activity():
     sql = '''
     SELECT
         a.member_id,
-        '是'is_activity
+        '是' is_activity
     FROM
-            t_orders_middle a
+        t_orders_middle a
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.is_activity='是'
     and a.first_time>='2023-01-01'
@@ -71,9 +72,9 @@ def get_member_present():
     sql = '''
     SELECT
         a.member_id,
-        '是'is_present
+        '是' is_present
     FROM
-            t_orders_middle a
+        t_orders_middle a
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.order_amount<40
     GROUP BY a.member_id
@@ -90,7 +91,7 @@ def get_member_present2():
         count(1) present_nums,
         max(a.create_time) present_time
     FROM
-            t_orders_middle a
+        t_orders_middle a
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.order_amount<40
     GROUP BY a.member_id
@@ -154,6 +155,14 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_member_active_day;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 客户基础数据
     df_member_base = get_member_base()
@@ -167,8 +176,7 @@ def main():
     df_member_base = df_member_base.merge(df_member_present, on=['member_id'], how='left')
     df_member_base = df_member_base.merge(df_member_present2, on=['member_id'], how='left')
     df_member_base = df_member_base
-    df_member_base['member_active'] = df_member_base.apply(
-        lambda x: get_member_active(x['last_time_diff'], x['order_nums']), axis=1)
+    df_member_base['member_active'] = df_member_base.apply(lambda x: get_member_active(x['last_time_diff'], x['order_nums']), axis=1)
     df_member_base['decline_times'] = df_member_base['last_time_diff'] - 180
     df_member_base.loc[(df_member_base["decline_times"] < 0), "decline_times"] = 0
     df_member_base['loss_times'] = df_member_base['last_time_diff'] - 360
@@ -182,11 +190,14 @@ def main():
          'last_time_diff', 'order_nums', 'order_amounts', 'order_nums_2023', 'order_amounts_2023', 'is_activity',
          'is_present', 'present_time', 'present_nums', 'member_active', 'decline_times', 'loss_times']]
     df_member_base=df_member_base
+    del_sql()
     save_sql(df_member_base)
 
 
 if __name__ == '__main__':
-    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
     main()
+
+

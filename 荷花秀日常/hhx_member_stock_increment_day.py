@@ -30,6 +30,7 @@ def get_member_stock(monthly, st):
     FROM
         t_member_middle a
     where a.first_time<'{}'
+    and a.dept_name1 !='0'
     GROUP BY a.dept_name,a.member_level
     '''.format(monthly, st)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -52,6 +53,7 @@ def get_member_increment(monthly, st, et):
         t_member_middle a
     where a.first_time>='{}'
     and a.first_time<'{}'
+    and a.dept_name1 !='0'
     GROUP BY a.dept_name,a.member_level
     '''.format(monthly, st, et)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -78,6 +80,7 @@ def get_member_stock_order(monthly, log_name, st, et, st0, et0):
     and a.first_time<'{}'
     and a.create_time>='{}'
     and a.create_time<'{}'
+    and a.dept_name1 !='0'
     GROUP BY a.dept_name,b.member_level
     '''.format(monthly, log_name, st, et, st0, et0)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -103,6 +106,7 @@ def get_member_increment_order(monthly, log_name, st, st0, et0):
     and a.first_time<'{}'
     and a.create_time>='{}'
     and a.create_time<'{}'
+    and a.dept_name1 !='0'
     GROUP BY a.dept_name,b.member_level
     '''.format(monthly, log_name, st, st0, et0)
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -130,6 +134,14 @@ def save_sql(df):
          `member_rate`=values(`member_rate`),`member_price`=values(`member_price`),`member_develop_price`=values(`member_develop_price`)
      '''
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+
+
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_member_stock_increment_day;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
 
 
 def main():
@@ -193,6 +205,7 @@ def main():
     df_member = df_member[
         ['id', 'dept_name1', 'dept_name2', 'dept_name', 'years', 'monthly', 'stock_increment', 'member_level',
          'members', 'member_develop', 'member_order', 'member_rate', 'member_price', 'member_develop_price']]
+    del_sql()
     save_sql(df_member)
 
 

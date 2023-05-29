@@ -147,9 +147,11 @@ def main():
     save_sql(df_order_total)
 
 
+# 8.141.237.253
 if __name__ == '__main__':
-    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    # hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', '8.141.237.253')
+    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','8.141.237.253')
     # 开始时间，结束时间
     main()
 

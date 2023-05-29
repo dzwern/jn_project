@@ -5,7 +5,7 @@
 # @Author  : diaozhiwei
 # @FileName: hhx_campaign_day.py
 # @description: 活动数据汇总
-# @update:
+# @update:特定时间更新，每次活动之后
 """
 from datetime import datetime
 from jn_modules.dingtalk.DingTalk import DingTalk
@@ -35,7 +35,7 @@ def get_campaign_member(activity_name, log_name):
     return df
 
 
-# 活动销售
+# 活动销售，活动前的客户等级
 def get_campaign_order(activity_name, log_name):
     sql = '''
     SELECT 
@@ -80,6 +80,14 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_campaign_day;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 2023年38女神节活动，活动前客户
     df_campaign_member = get_campaign_member(activity_name1, log_name1)
@@ -99,22 +107,21 @@ def main():
     df_campaign['activity_price'] = df_campaign['activity_order'] / df_campaign['activity_develop_member']
     # 活动单产
     df_campaign['activity_member_price'] = df_campaign['activity_order'] / df_campaign['activity_member']
-    df_campaign['id'] = df_campaign['dept_name'] + df_campaign['years'] + df_campaign['activity_name']
+    df_campaign['id'] = df_campaign['dept_name'] + df_campaign['years'] + df_campaign['member_level']+df_campaign['activity_name']
     df_campaign = df_campaign.fillna(0)
     df_campaign = df_campaign[
         ['id', 'dept_name1', 'dept_name2', 'dept_name', 'years', 'activity_name', 'member_level', 'activity_member',
          'activity_develop_member', 'activity_order', 'activity_rate', 'activity_price', 'activity_member_price']]
     print(df_campaign)
+    del_sql()
     save_sql(df_campaign)
 
 
 if __name__ == '__main__':
-    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     log_name1 = '2023年38女神节活动前客户等级'
     log_name2 = '2023年51活动前客户等级'
     activity_name1 = '2023年38女神节活动'
     activity_name2 = '2023年五一活动'
     main()
-
-

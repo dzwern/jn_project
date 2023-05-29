@@ -42,19 +42,21 @@ def get_member_credit():
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组', '光芒部二组', '光芒部六组', '光芒部三组',
-           '光芒部一组', '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端', '光芒部蜜梓源后端',
-           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光华部蜜梓源面膜进粉前端',
-           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉后端',
-           '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端', '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组',
-           '光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部', '光芒部', '光芒部', '光芒部', '光芒部', '光华部', '光华部', '光华部',
-           '光华部', '光华部', '光华部', '光源部', '光源部', '光源部', '光源部']
+    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组', '光辉部二组', '光辉部五组', '光辉部六组','光辉部九组','光辉部前端四组',
+           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
+           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组', '光华部1组', '光华部一组',
+           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部蜂蜜八组', '光源部海参七组']
+    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端','光辉部蜜肤语前端', '光辉部蜜肤语前端','光辉部蜜肤语前端', '光辉部蜜肤语前端','光辉部蜜肤语前端',
+           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
+           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端', '光华部蜜梓源面膜进粉前端',
+           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部蜂蜜组','光源部海参组']
+    df3 = ['光辉部', '光辉部', '光辉部', '光辉部','光辉部', '光辉部', '光辉部', '光辉部','光辉部',
+           '光芒部', '光芒部', '光芒部', '光芒部',
+           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部','光华部',
+           '光源部', '光源部', '光源部', '光源部' , '光源部']
     df = {"dept_name": df1,
-          'dept_name1': df2,
-          'dept_name2': df3}
+          'dept_name2': df2,
+          'dept_name1': df3}
     data = pd.DataFrame(df)
     return data
 
@@ -183,6 +185,14 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_fans_order_day;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 设备进粉数
     df_credit = get_member_credit()
@@ -205,6 +215,8 @@ def main():
     df_fans_order=df_fans_order.merge(df_order_fg,on=['dept_name', 'wechat_number', 'first_time'], how='left')
     df_fans_order=df_fans_order.merge(df_order_campaign_fg,on=['dept_name', 'wechat_number', 'first_time'], how='left')
     df_fans_order=df_fans_order.fillna(0)
+    df_fans_order=df_fans_order.drop(index=df_fans_order.dept_name1[df_fans_order.dept_name1 == 0].index)
+    df_fans_order=df_fans_order.drop(index=df_fans_order.dept_name1[df_fans_order.dept_name1 == '0'].index)
     df_fans_order['id'] = df_fans_order['wechat_number'].astype(str) + df_fans_order['first_time']
     df_fans_order['first_time'] = pd.to_datetime(df_fans_order['first_time'], errors='coerce')
     df_fans_order['years'] = df_fans_order['first_time'].dt.year
@@ -216,6 +228,7 @@ def main():
         'order_member_campaign_hx', 'order_amount_campaign_hx', 'order_member_fg', 'order_amount_fg',
         'order_member_campaign_fg', 'order_amount_campaign_fg']]
     df_fans_order=df_fans_order
+    del_sql()
     save_sql(df_fans_order)
 
 
@@ -223,7 +236,7 @@ if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 时间转化
-    st = '2022-01-01'
+    st = '2023-01-01'
     et = '2023-05-10'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")

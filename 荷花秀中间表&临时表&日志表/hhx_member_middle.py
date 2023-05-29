@@ -158,6 +158,8 @@ def get_member_source(x):
         return '线下获客'
     elif x == 6:
         return '平台获取'
+    elif x == 7:
+        return '直播平台获取'
     else:
         return '其他'
 
