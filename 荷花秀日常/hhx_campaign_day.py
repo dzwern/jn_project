@@ -125,3 +125,8 @@ if __name__ == '__main__':
     activity_name1 = '2023年38女神节活动'
     activity_name2 = '2023年五一活动'
     main()
+
+
+
+
+

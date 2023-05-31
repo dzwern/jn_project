@@ -46,8 +46,9 @@ def get_user_fans():
         sum(a.members) fans
     FROM
         t_pred_campaign a
+    where a.activity_name='{}'
     GROUP BY a.sys_user_id,a.member_category
-    '''
+    '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -151,14 +152,14 @@ def get_member_struck():
         sum(a.order_amount) members_amount
     FROM 
         t_orders_middle a
-    LEFT JOIN  t_member_middle_log b on a.member_id=b.member_id and b.log_name='2023年51活动前客户等级'
+    LEFT JOIN  t_member_middle_log b on a.member_id=b.member_id and b.log_name='{}'
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('复购日常成交','复购活动成交')
     and a.activity_name='{}'
     and a.order_amount>40
     GROUP BY a.sys_user_id,b.member_level
     ORDER BY a.sys_user_id
-    '''.format(activity_name)
+    '''.format(log_name,activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -228,17 +229,19 @@ def main():
                                  'members_amount', 'member_price', 'activity_name']]
     df_user_base = df_user_base
     print(df_user_base)
-    del_sql()
+    # del_sql()
     save_sql(df_user_base)
 
 
 if __name__ == '__main__':
-    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2023-02-15'
-    st2 = '2023-04-18'
-    et = '2023-04-30'
-    activity_name = '2023年五一活动'
+    hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    st = '2023-04-18'
+    st2 = '2023-05-31'
+    et = '2023-06-15'
+    log_name = '2023年51活动前客户等级'
+    # 活动名称  2023年五一活动，2023年38女神节活动，2023年618活动
+    activity_name = '2023年618活动'
     main()
 
 

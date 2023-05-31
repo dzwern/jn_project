@@ -106,26 +106,21 @@ def member_divide5(x, y):
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组','光芒部一组',
-           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组','光华部1组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
-           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端',
-           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
-           '光芒部', '光芒部', '光芒部', '光芒部',
-           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部',
-           '光源部', '光源部', '光源部', '光源部']
-    df = {"dept_name": df1,
-          'dept_name2': df2,
-          'dept_name1': df3}
-    data = pd.DataFrame(df)
-    return data
+    sql = '''
+    SELECT
+        a.dept_name,
+        a.dept_name1,
+        a.dept_name2,
+        a.tenant_id tenant_id2
+    FROM
+        t_dept_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 客户基础数据
+@ utils.print_execute_time
 def get_member_base():
     sql = '''
     SELECT
@@ -134,13 +129,14 @@ def get_member_base():
         b.wecaht_number wechat_number,
         c.user_name,
         c.nick_name,
-        d.dept_name
+        d.dept_name,
+        a.tenant_id
     FROM
         t_member a
     LEFT JOIN t_wechat b on a.wechat_id=b.id
     LEFT JOIN sys_user c on a.sys_user_id=c.user_id
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
-    where a.tenant_id=11
+    where a.tenant_id in ('25','26','27','28')
     and a.add_wechat_time<'{}'
     '''.format(st)
     df = hhx_sql1.get_DataFrame_PD(sql)
@@ -168,6 +164,7 @@ def get_member_order_old():
 
 
 # 客户销售数据【新系统】
+@ utils.print_execute_time
 def get_member_order():
     sql = '''
     SELECT
@@ -176,7 +173,7 @@ def get_member_order():
         sum(a.order_amount) order_amounts_new
     FROM t_orders a
     WHERE
-        a.tenant_id = 11 
+        a.tenant_id in ('25','26','27','28')
     # 订单状态
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
@@ -189,6 +186,7 @@ def get_member_order():
 
 
 # 客户2023年销售数据
+@ utils.print_execute_time
 def get_member_order2():
     sql = '''
     SELECT
@@ -197,7 +195,7 @@ def get_member_order2():
         sum(a.order_amount) order_amounts_2023
     FROM t_orders a
     WHERE
-        a.tenant_id = 11 
+        a.tenant_id in ('25','26','27','28')
     and a.create_time>='2023-01-01'
     and a.create_time<'{}'
     # 订单状态
@@ -211,6 +209,7 @@ def get_member_order2():
 
 
 # 老系统最近购买时间
+@ utils.print_execute_time
 def get_member_new_time_old():
     sql='''
     SELECT
@@ -229,6 +228,7 @@ def get_member_new_time_old():
 
 
 # 客户最近购买时间
+@ utils.print_execute_time
 def get_member_new_time():
     sql = '''
     SELECT
@@ -236,7 +236,7 @@ def get_member_new_time():
         max(a.create_time) last_time
     FROM t_orders a
     WHERE
-        a.tenant_id = 11 
+        a.tenant_id in ('25','26','27','28')
     -- 订单状态
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
@@ -276,6 +276,10 @@ def main():
     # 客户所属部门
     df_hhx_user = get_hhx_user()
     df_hhx_member = df_hhx_member.merge(df_hhx_user, on=['dept_name'], how='left')
+    # 判断数据
+    df_hhx_member=df_hhx_member.fillna(0)
+    df_hhx_member['fuzhu']=df_hhx_member['tenant_id2']-df_hhx_member['tenant_id']
+    df_hhx_member=df_hhx_member.loc[df_hhx_member['fuzhu']==0,:]
     # 客户新系统销售数据
     df_hhx_order = get_member_order()
     df_hhx_member = df_hhx_member.merge(df_hhx_order, on=['member_id'], how='left')
@@ -330,13 +334,16 @@ if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 活动开始时间
-    st = '2023-05-02'
+    st = '2023-05-31'
     '''
-    2023年1月初客户等级，2023年2月初客户等级，2023年3月初客户等级，2023年4月初客户等级，2023年5月初客户等级
-    2023年38女神节活动前客户等级（2.15），2023年38女神节活动后客户等级（3.2），2023年51活动前客户等级（4.18），2023年51活动后客户等级（5.2）
+    2023年1月初客户等级，2023年2月初客户等级，2023年3月初客户等级，2023年4月初客户等级，2023年5月初客户等级，2023年6月初客户等级
+    2023年38女神节活动前客户等级（2.15），2023年38女神节活动后客户等级（3.2），2023年51活动前客户等级（4.18），2023年51活动后客户等级（5.2），2023年618活动前客户等级（5.31）
     '''
-    log_name='2023年51活动后客户等级'
+    log_name='2023年618活动前客户等级'
     main()
+
+
+
 
 
 

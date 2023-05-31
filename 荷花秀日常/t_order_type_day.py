@@ -52,19 +52,33 @@ def get_member_credit():
     SELECT
         f.dept_name,
         d.wecaht_number wechat_number,
+        a.tenant_id,
         left(a.new_sprint_time,10) create_time,
         sum(a.credit) fans 
     FROM t_wechat_fans_log a
     LEFT JOIN t_wechat d on d.id=a.wechat_id
     LEFT JOIN sys_user e on e.user_id=d.sys_user_id
     LEFT JOIN sys_dept f on e.dept_id=f.dept_id
-    where a.tenant_id=11
+    where a.tenant_id in ( '25', '26', '27', '28' ) 
     and a.new_sprint_time>='{}'
     and a.new_sprint_time<'{}'
     and a.credit>0
-    GROUP BY f.dept_name,e.nick_name,d.wecaht_number,left(a.new_sprint_time,10)
+    GROUP BY f.dept_name,e.nick_name,d.wecaht_number,a.tenant_id,left(a.new_sprint_time,10)
     '''.format(st,et)
     df = hhx_sql1.get_DataFrame_PD(sql)
+    return df
+
+
+# 员工信息
+def get_hhx_user():
+    sql = '''
+    SELECT
+        a.dept_name,
+        a.tenant_id tenant_id2
+    FROM
+        t_dept_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
@@ -158,18 +172,36 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_order_type_day;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 基础数据
     df_order_base=get_order_total()
     # 进粉数
     df_order_credit=get_member_credit()
+    df_order_base = df_order_base.merge(df_order_credit, on=['dept_name', 'wechat_number', 'create_time'], how='left')
+    # 部门
+    df_hhx_user = get_hhx_user()
+    df_order_base = df_order_base.merge(df_hhx_user, on=['dept_name'], how='left')
+
+    # 判断
+    df_order_base=df_order_base.fillna(0)
+    df_order_base['fuzhu']=df_order_base['tenant_id2']-df_order_base['tenant_id']
+    df_order_base=df_order_base.loc[df_order_base['fuzhu']==0,:]
+
     # js成交
     df_order_js=get_order_js()
     # hx成交
     df_order_hx=get_order_hx()
     # fg成交
     df_order_fg=get_order_fg()
-    df_order_base=df_order_base.merge(df_order_credit, on=['dept_name', 'wechat_number', 'create_time'], how='left')
+    # 融合
     df_order_base=df_order_base.merge(df_order_js, on=['dept_name', 'wechat_number', 'create_time'], how='left')
     df_order_base=df_order_base.merge(df_order_hx, on=['dept_name', 'wechat_number', 'create_time'], how='left')
     df_order_base=df_order_base.merge(df_order_fg, on=['dept_name', 'wechat_number', 'create_time'], how='left')
@@ -194,6 +226,8 @@ def main():
          'member_rate_js', 'order_member_hx', 'order_amount_hx', 'member_price_hx', 'order_member_fg',
          'order_amount_fg', 'member_price_fg', 'is_activity', 'activity_name']]
     df_order_base=df_order_base
+    print(df_order_base)
+    del_sql()
     save_sql(df_order_base)
 
 
@@ -202,9 +236,11 @@ if __name__ == '__main__':
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
     st = '2023-01-01'
-    et = '2023-05-10'
     st1 = datetime.strptime(st, "%Y-%m-%d")
-    et1 = datetime.strptime(et, "%Y-%m-%d")
+    time1 = datetime.now()
+    et = time1 + relativedelta(days=1)
+    et1 = utils.date2str(et)
+    print(st1,et1)
     main()
 
 

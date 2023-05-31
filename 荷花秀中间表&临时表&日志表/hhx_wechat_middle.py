@@ -4,7 +4,7 @@
 # @Time    : 2023/3/31 14:06
 # @Author  : diaozhiwei
 # @FileName: hhx_wechat_middle.py
-# @description: 微信基础设置
+# @description: 微信设备信息，主要字段微信所属员工，所属部门，以及粉丝客户情况
 # @update: 增量更新，每日更新
 """
 
@@ -34,13 +34,14 @@ def get_wechat_base():
         a.fans,
         a.project_out_total_debit,
         a.own_fans,
-        a.oneway_fans
+        a.oneway_fans,
+        a.tenant_id
     FROM
         t_wechat a 
     LEFT JOIN sys_user b on a.sys_user_id=b.user_id
     LEFT JOIN sys_dept c on b.dept_id=c.dept_id
     WHERE
-        a.tenant_id = 11
+       a.tenant_id  in ( '25', '26', '27', '28' ) 
     '''
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -48,25 +49,17 @@ def get_wechat_base():
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组', '光华部1组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
-           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端',
-           '光华部蜜梓源面膜进粉后端', '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端',
-           '光华部蜜梓源面膜进粉后端',
-           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组', '光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
-           '光芒部', '光芒部', '光芒部', '光芒部',
-           '光华部', '光华部', '光华部', '光华部', '光华部', '光华部', '光华部',
-           '光源部', '光源部', '光源部', '光源部']
-    df = {"dept_name": df1,
-          'dept_name2': df2,
-          'dept_name1': df3}
-    data = pd.DataFrame(df)
-    return data
+    sql = '''
+    SELECT
+        a.dept_name,
+        a.dept_name1,
+        a.dept_name2,
+        a.tenant_id tenant_id2
+    FROM
+        t_dept_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 系统客户数
@@ -78,7 +71,7 @@ def get_wechat_member():
     FROM
         t_member a 
     WHERE
-        a.tenant_id = 11
+        a.tenant_id  in ( '25', '26', '27', '28' ) 
     GROUP BY a.wechat_id
     '''
     df = hhx_sql1.get_DataFrame_PD(sql)
@@ -112,6 +105,14 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_wechat_middle;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 # 主函数
 def main():
     # 微信设备基础数据
@@ -119,6 +120,10 @@ def main():
     # 所属部门
     df_hhx_user = get_hhx_user()
     df_wechat = df_wechat.merge(df_hhx_user, on=['dept_name'], how='left')
+    # 判断数据，旧系统更新到新系统ID变更
+    df_wechat=df_wechat.fillna(0)
+    df_wechat['fuzhu']=df_wechat['tenant_id2']-df_wechat['tenant_id']
+    df_wechat=df_wechat.loc[df_wechat['fuzhu']==0,:]
     # 系统客户数
     df_wechat_number = get_wechat_member()
     df_wechat = df_wechat.merge(df_wechat_number, on=['wechat_id'], how='left')
@@ -132,6 +137,7 @@ def main():
                            'oneway_fans']]
     df_wechat = df_wechat.fillna(0)
     print(df_wechat)
+    del_sql()
     save_sql(df_wechat)
 
 

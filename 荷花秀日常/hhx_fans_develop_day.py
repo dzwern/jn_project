@@ -26,17 +26,18 @@ def get_member_credit():
         e.nick_name,
         d.id wechat_id,
         d.wecaht_number wechat_number,
+        a.tenant_id,
         left(a.new_sprint_time,10) first_time,
         sum(a.credit) fans 
     FROM t_wechat_fans_log a
     LEFT JOIN t_wechat d on d.id=a.wechat_id
     LEFT JOIN sys_user e on e.user_id=d.sys_user_id
     LEFT JOIN sys_dept f on e.dept_id=f.dept_id
-    where a.tenant_id=11
+    where a.tenant_id in ( '25', '26', '27', '28' ) 
     and a.new_sprint_time>='{}'
     and a.new_sprint_time<'{}'
     and a.credit>0
-    GROUP BY f.dept_name,e.nick_name,d.wecaht_number,left(a.new_sprint_time,10)
+    GROUP BY f.dept_name,e.nick_name,d.wecaht_number,a.tenant_id,left(a.new_sprint_time,10)
     '''.format(st1,et1)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -44,23 +45,17 @@ def get_member_credit():
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组', '光辉部二组', '光辉部五组', '光辉部六组','光辉部九组','光辉部前端四组',
-           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组', '光华部1组', '光华部一组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部蜂蜜八组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端','光辉部蜜肤语前端', '光辉部蜜肤语前端','光辉部蜜肤语前端', '光辉部蜜肤语前端','光辉部蜜肤语前端',
-           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端', '光华部蜜梓源面膜进粉前端',
-           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部蜂蜜组','光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部','光辉部', '光辉部', '光辉部', '光辉部','光辉部',
-           '光芒部', '光芒部', '光芒部', '光芒部',
-           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部','光华部',
-           '光源部', '光源部', '光源部', '光源部' , '光源部']
-    df = {"dept_name": df1,
-          'dept_name2': df2,
-          'dept_name1': df3}
-    data = pd.DataFrame(df)
-    return data
+    sql = '''
+    SELECT
+        a.dept_name,
+        a.dept_name1,
+        a.dept_name2,
+        a.tenant_id tenant_id2
+    FROM
+        t_dept_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 开发客户数
@@ -148,12 +143,18 @@ def del_sql():
 def main():
     # 设备进粉数
     df_credit = get_member_credit()
-    # 产出
-    df_develop = get_member_develop()
-    df_develop['day2'] = df_develop.apply(lambda x: get_develop(x['day']), axis=1)
     # 部门
     df_hhx_user = get_hhx_user()
     df_credit = df_credit.merge(df_hhx_user, on=['dept_name'], how='left')
+    # 判断
+
+    df_credit=df_credit.fillna(0)
+    df_credit['fuzhu']=df_credit['tenant_id2']-df_credit['tenant_id']
+    df_credit=df_credit.loc[df_credit['fuzhu']==0,:]
+
+    # 产出
+    df_develop = get_member_develop()
+    df_develop['day2'] = df_develop.apply(lambda x: get_develop(x['day']), axis=1)
     # 分组
     df_develop1 = df_develop.groupby(["dept_name", "nick_name", "wechat_number", "first_time", "day2"])['order_member'].sum().reset_index()
     df_develop2 = df_develop.groupby(["dept_name", "nick_name", "wechat_number", "first_time", "day2"])['order_amount'].sum().reset_index()
@@ -226,16 +227,13 @@ if __name__ == '__main__':
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 时间转化
     time1 = datetime.datetime.now()
-    # st = time1 - relativedelta(days=10)
     et = time1 + relativedelta(days=1)
-    # st1 = utils.date2str(st)
     et1 = utils.date2str(et)
     st = '2023-01-01'
-    # et = '2023-05-10'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
-    # et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st1,et1)
     main()
+
 
 
 

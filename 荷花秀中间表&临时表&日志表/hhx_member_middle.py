@@ -16,8 +16,9 @@ import pandas as pd
 
 
 # 客户基础信息
+@ utils.print_execute_time
 def get_member_base():
-    sql='''
+    sql = '''
     SELECT
         a.id member_id,
         a.balance,
@@ -37,40 +38,36 @@ def get_member_base():
         a.sys_user_id,
         c.user_name,
         c.nick_name,
-        d.dept_name
+        d.dept_name,
+        a.tenant_id
     FROM
         t_member a
     LEFT JOIN t_wechat b on a.wechat_id=b.id
     LEFT JOIN sys_user c on a.sys_user_id=c.user_id
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
-    where a.tenant_id=11
+    where a.tenant_id  in ( '25', '26', '27', '28' ) 
     '''
-    df=hhx_sql1.get_DataFrame_PD(sql)
+    df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组','光芒部一组',
-           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组','光华部1组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
-           '光芒部蜜梓源后端','光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端','光华部蜜梓源面膜进粉后端','光华部蜜梓源面膜老粉前端','光华部蜜梓源面膜老粉后端','光华部蜜梓源面膜进粉后端',
-           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组','光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
-           '光芒部', '光芒部', '光芒部', '光芒部',
-           '光华部', '光华部', '光华部', '光华部', '光华部','光华部','光华部',
-           '光源部', '光源部', '光源部', '光源部']
-    df = {"dept_name": df1,
-          'dept_name2': df2,
-          'dept_name1': df3}
-    data = pd.DataFrame(df)
-    return data
+    sql = '''
+    SELECT
+        a.dept_name,
+        a.dept_name1,
+        a.dept_name2,
+        a.tenant_id tenant_id2
+    FROM
+        t_dept_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 客户首次沟通时间
+@ utils.print_execute_time
 def get_hhx_member():
     sql = '''
     select 
@@ -79,13 +76,14 @@ def get_hhx_member():
     from 
      t_member a
     WHERE
-        a.tenant_id = 11
+        a.tenant_id in ( '25', '26', '27', '28' ) 
     '''
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
 
 # 客户首次购买时间
+@ utils.print_execute_time
 def get_member_time():
     sql = '''
     SELECT
@@ -93,7 +91,7 @@ def get_member_time():
         min(a.create_time) create_time
     FROM t_orders a
     WHERE
-    a.tenant_id = 11
+    a.tenant_id in ( '25', '26', '27', '28' ) 
     -- 订单状态
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
@@ -268,6 +266,10 @@ def main():
     # 客户所属
     df_member_user = get_hhx_user()
     df_member = df_member.merge(df_member_user, on=['dept_name'], how='left')
+    # 判断数据
+    df_member=df_member.fillna(0)
+    df_member['fuzhu']=df_member['tenant_id2']-df_member['tenant_id']
+    df_member=df_member.loc[df_member['fuzhu']==0,:]
     # 客户首次沟通时间
     df_hhx_member = get_hhx_member()
     df_member = df_member.merge(df_hhx_member, on=['member_id'], how='left')
@@ -279,17 +281,24 @@ def main():
     df_member_order['member_id'] = df_member_order['member_id'].astype(int)
     df_member = df_member.merge(df_member_order, on=['member_id'], how='left')
     # 客户身份
-    df_member['member_identity']=df_member.apply(lambda x:get_member_identity(x['member_identity']),axis=1)
+    df_member['member_identity'] = df_member.apply(lambda x: get_member_identity(x['member_identity']), axis=1)
     # 客户来源
-    df_member['member_source']=df_member.apply(lambda x:get_member_source(x['member_source']),axis=1)
+    df_member['member_source'] = df_member.apply(lambda x: get_member_source(x['member_source']), axis=1)
     # 客户二级来源
-    df_member['member_source_level2']=df_member.apply(lambda x:get_member_source2(x['member_source_level2']),axis=1)
+    df_member['member_source_level2'] = df_member.apply(lambda x: get_member_source2(x['member_source_level2']), axis=1)
+    df_member['last_time'] = df_member['last_time'].astype(str).replace('NaT', None)
     df_member['last_time'] = df_member['last_time'].fillna(0)
+    # df_member['last_time'] = df_member['last_time'].apply(lambda x: None if x == 0 else x)
+    # df_member['last_time'] = df_member['last_time'].astype(str).replace('NaT', None)
     df_member['last_time'] = df_member['last_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
-    df_member['last_time2'] = df_member['last_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
-    df_member['last_time_diff'] = ((pd.to_datetime(datetime.now()) - pd.to_datetime(df_member['last_time2'])) / pd.Timedelta(1,'D')).fillna(0).astype(int)
+    # df_member['last_time2'] = df_member['last_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+    df_member['last_time_diff'] = (
+                (pd.to_datetime(datetime.now()) - pd.to_datetime(df_member['last_time'])) / pd.Timedelta(1,
+                                                                                                          'D')).fillna(
+        0).astype(int)
     df_member['id'] = df_member['member_id'].astype(str)
-    df_member=df_member.fillna(0)
+    df_member['create_time'] = df_member['create_time'].astype(str).replace('NaT', None)
+    df_member = df_member.fillna(0)
     df_member['incoming_line_time'] = df_member['incoming_line_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['add_wechat_time'] = df_member['add_wechat_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_member['first_time'] = df_member['first_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
@@ -306,12 +315,9 @@ def main():
 
 
 if __name__ == '__main__':
-    hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     main()
-
-
-
 
 
 

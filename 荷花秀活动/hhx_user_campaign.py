@@ -57,13 +57,14 @@ def get_user_fans():
 def get_user_member():
     sql = '''
     SELECT
-    a.sys_user_id,
-    sum(a.members) members
+        a.sys_user_id,
+        sum(a.members) members
     FROM
         t_pred_campaign a
-    where a.member_category in ('V1','V2','V3','V4','V5')
+    where a.member_category in ('V0','V1','V2','V3','V4','V5')
+    and a.activity_name='{}'
     GROUP BY a.sys_user_id
-    '''
+    '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -219,12 +220,16 @@ def main():
                                  'amount_develop_rank', 'activity_name']]
     df_user_base=df_user_base
     # 删除数据
-    del_sql()
+    # del_sql()
     save_sql(df_user_base)
 
 
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    activity_name = '2023年五一活动'
+    # 2023年618活动,2023年五一活动
+    activity_name = '2023年618活动'
     main()
+
+
+

@@ -59,14 +59,15 @@ def main():
     df_product_order['id'] = df_product_order['dept_name'].astype(str) + df_product_order['product_name'].astype(str) + \
                              df_product_order['activity_name']
     df_product_order=df_product_order[['id','dept_name1','dept_name2','dept_name','product_name','quantitys','activity_name']]
-    del_sql()
+    # del_sql()
+    print(df_product_order)
     save_sql(df_product_order)
 
 
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    activity_name = '2023年五一活动'
+    activity_name = '2023年618活动'
     main()
 
 

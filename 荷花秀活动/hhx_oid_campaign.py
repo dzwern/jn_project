@@ -233,12 +233,12 @@ def main():
         ['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
          'wechat_nums', 'order_sn', 'order_amount', 'order_interval', 'activity_name']]
     df_user_oid_base = df_user_oid_base
-    del_sql()
+    # del_sql()
     save_sql(df_user_oid_base)
 
 
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    activity_name = '2023年五一活动'
+    activity_name = '2023年618活动'
     main()

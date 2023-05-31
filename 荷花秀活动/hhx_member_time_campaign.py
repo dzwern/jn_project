@@ -44,8 +44,9 @@ def get_campaign_time():
         t_orders_middle a
     WHERE a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
+    and a.activity_name='{}'
     and a.order_amount>40
-    '''
+    '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -100,14 +101,14 @@ def main():
                                    'nick_name','wechat_id','wechat_name','wechat_number','member_id','first_time',
                                    'stock_increment','year_months','years','create_time','time_diff','order_amount',
                                    'activity_name']]
-    del_sql()
+    # del_sql()
     save_sql(df_member_time)
 
 
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    activity_name = '2023年五一活动'
+    activity_name = '2023年618活动'
     main()
 
 

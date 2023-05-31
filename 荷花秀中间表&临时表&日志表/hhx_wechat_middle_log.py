@@ -4,7 +4,7 @@
 # @Time    : 2023/4/3 15:12
 # @Author  : diaozhiwei
 # @FileName: hhx_wechat_middle_log.py
-# @description: 
+# @description: 设备日志，每个星期记录一次
 # @update:
 """
 import datetime

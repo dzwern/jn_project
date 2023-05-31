@@ -109,25 +109,17 @@ def member_divide5(x, y):
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组', '光华部1组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
-           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端',
-           '光华部蜜梓源面膜进粉后端',
-           '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端', '光华部蜜梓源面膜进粉后端',
-           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组', '光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
-           '光芒部', '光芒部', '光芒部', '光芒部',
-           '光华部', '光华部', '光华部', '光华部', '光华部', '光华部', '光华部',
-           '光源部', '光源部', '光源部', '光源部']
-    df = {"dept_name": df1,
-          'dept_name2': df2,
-          'dept_name1': df3}
-    data = pd.DataFrame(df)
-    return data
+    sql = '''
+    SELECT
+        a.dept_name,
+        a.dept_name1,
+        a.dept_name2,
+        a.tenant_id tenant_id2
+    FROM
+        t_dept_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 客户基础数据
@@ -135,17 +127,19 @@ def get_member_base():
     sql = '''
     SELECT
         a.id member_id,
+        a.second_primary_id,
         b.wechat_name,
         b.wecaht_number wechat_number,
         c.user_name,
         c.nick_name,
-        d.dept_name
+        d.dept_name,
+        a.tenant_id
     FROM
         t_member a
     LEFT JOIN t_wechat b on a.wechat_id=b.id
     LEFT JOIN sys_user c on a.sys_user_id=c.user_id
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
-    where a.tenant_id=11
+    where a.tenant_id in ('25','26','27','28')
     '''
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -155,7 +149,7 @@ def get_member_base():
 def get_member_order_old():
     sql = '''
     SELECT
-        a.member_id,
+        a.member_id second_primary_id,
         count(DISTINCT LEFT(a.ORDER_DATE,10)) order_nums_old,
         sum(a.ORDER_MONEY) order_amounts_old
     FROM
@@ -180,7 +174,7 @@ def get_member_order():
         sum(a.order_amount) order_amounts_new
     FROM t_orders a
     WHERE
-        a.tenant_id = 11 
+        a.tenant_id in ('25','26','27','28')
     # 订单状态
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
@@ -201,7 +195,7 @@ def get_member_order2():
         sum(a.order_amount) order_amounts_2023
     FROM t_orders a
     WHERE
-        a.tenant_id = 11 
+        a.tenant_id  in ('25','26','27','28')
     and a.create_time>='2023-01-01'
     # 订单状态
     and a.order_state NOT IN (6,8,10,11)
@@ -217,7 +211,7 @@ def get_member_order2():
 def get_member_new_time_old():
     sql = '''
     SELECT
-        a.member_id,
+        a.member_id second_primary_id,
         max(ORDER_DATE) last_time_old
     FROM
         oldcrm_t_orders a 
@@ -240,7 +234,7 @@ def get_member_new_time():
     FROM 
         t_orders a
     WHERE
-        a.tenant_id = 11 
+        a.tenant_id  in ('25','26','27','28') 
     -- 订单状态
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
@@ -286,12 +280,16 @@ def main():
     # 客户所属部门
     df_hhx_user = get_hhx_user()
     df_hhx_member = df_hhx_member.merge(df_hhx_user, on=['dept_name'], how='left')
+    # 判断数据
+    df_hhx_member=df_hhx_member.fillna(0)
+    df_hhx_member['fuzhu']=df_hhx_member['tenant_id2']-df_hhx_member['tenant_id']
+    df_hhx_member=df_hhx_member.loc[df_hhx_member['fuzhu']==0,:]
     # 客户新系统销售数据
     df_hhx_order = get_member_order()
     df_hhx_member = df_hhx_member.merge(df_hhx_order, on=['member_id'], how='left')
     # 客户老系统销售数据
     df_hhx_order_old = get_member_order_old()
-    df_hhx_member = df_hhx_member.merge(df_hhx_order_old, on=['member_id'], how='left')
+    df_hhx_member = df_hhx_member.merge(df_hhx_order_old, on=['second_primary_id'], how='left')
     # 销售金额累加
     df_hhx_member = df_hhx_member.fillna(0)
     df_hhx_member['order_nums'] = df_hhx_member['order_nums_new'] + df_hhx_member['order_nums_old']

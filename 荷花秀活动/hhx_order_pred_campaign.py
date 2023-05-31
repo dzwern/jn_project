@@ -7,7 +7,7 @@
 # @description: 活动预估，使用预估的数据进行实时监控，实时监控表，到员工
 # @update：更新时间在，活动中监控
 
-注意事项：光芒部，光源部的老粉客户以销售提供为准
+注意事项：光芒部，光源部的老粉客户以销售提供为准，预测维度为销售
 """
 
 import pandas as pd
@@ -61,6 +61,7 @@ def get_member_category():
 
 
 # 客户类型，新粉和活动期间新进粉丝
+@utils.print_execute_time
 def get_wechat_fans(st, et):
     sql = '''
     SELECT 
@@ -69,7 +70,7 @@ def get_wechat_fans(st, et):
     FROM 
         t_wechat_fans_log a
     LEFT JOIN t_wechat d on a.wechat_id=d.id
-    WHERE a.tenant_id = 11 
+    WHERE a.tenant_id in ( '25', '26', '27', '28' ) 
     AND a.new_sprint_time >= '{}' 
     AND a.new_sprint_time < '{}'
     and d.valid_state=1
@@ -87,7 +88,7 @@ def get_wechat_old():
         sum(a.member_trans) old_fans2 
     FROM
         t_wechat_middle_tmp a
-	where a.sys_user_id is not null
+    where a.sys_user_id is not null
     GROUP BY a.sys_user_id
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -105,7 +106,7 @@ def get_member_level():
         t_member_middle a
     GROUP BY a.sys_user_id,a.member_level
     ORDER BY a.sys_user_id
-    '''
+    '''.format(log_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -116,10 +117,10 @@ def get_campaign_time():
            '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
            '光华部二组', '光华部五组', '光华部1组', '光华部六组',
            '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = [7, 7, 10, 10,
-           10, 10, 10, 10,
-           9, 9, 9, 9,
-           11, 11, 11, 11]
+    df2 = [8, 8, 13, 13,
+           13, 13, 13, 13,
+           7, 7, 12, 12,
+           13, 13, 13, 13]
     df = {"dept_name": df1,
           'activity_duration': df2}
     data = pd.DataFrame(df)
@@ -137,7 +138,6 @@ def get_user_pred():
         sum(a.members_amount)/sum(a.members_develop) member_price
     FROM
         t_pred_campaign_log a
-    where a.activity_name='2023年38女神节活动'
     GROUP BY a.dept_name,member_category
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -316,15 +316,14 @@ def main():
     df_user_base.loc[(df_user_base["old_fans2"] > 0), "reality_fans"] = df_user_base['old_fans2']
     # 相差，光辉，光华老粉
     df1 = df_user_base[(df_user_base['dept_name1'] == '光辉部') | (df_user_base['dept_name1'] == '光华部')]
-    df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans'] - df1['0'] - df1['V1'] - df1['V2'] - \
-                      df1['V3'] - df1['V4'] - df1['V5']
+    df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans']  - df1['V0'] - df1['V1'] - df1['V2'] - df1['V3'] - df1['V4'] - df1['V5']
     # 光芒，光源相差
     df2 = df_user_base[(df_user_base['dept_name1'] == '光源部') | (df_user_base['dept_name1'] == '光芒部')]
-    df2['old_fans'] = df2['reality_fans'] - df2['0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2['V5']
+    df2['old_fans'] = df2['reality_fans']  - df1['V0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2['V5']
     df_user_base = pd.concat([df1, df2])
     df_user_base = df_user_base[[
         'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name', 'wechat_nums', 'old_fans',
-        'new_fans', 'add_fans', 'V1', 'V2', 'V3', 'V4', 'V5']]
+        'new_fans', 'add_fans', 'V0','V1', 'V2', 'V3', 'V4', 'V5']]
     # 转换，重命名
     df_user_base = pd.melt(df_user_base,
                            id_vars=['sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
@@ -378,19 +377,20 @@ def main():
                                  'completion_rate', 'activity_name']]
     df_user_base = df_user_base
     print(df_user_base)
-    del_sql()
     save_sql(df_user_base)
 
 
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2023-02-15'
-    st3 = '2023-03-01'
-    st2 = '2023-04-18'
-    et = '2023-04-29'
-    activity_name = '2023年五一活动'
+    st = '2023-04-18'
+    st2 = '2023-05-31'
+    et = '2023-06-15'
+    log_name='2023年618活动前客户等级'
+    # 活动名称  2023年五一活动，2023年38女神节活动，2023年618活动
+    activity_name = '2023年618活动'
     main()
+
 
 
 

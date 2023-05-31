@@ -122,8 +122,8 @@ def get_dept_target():
         a.member_price 
     FROM
         t_campaign_target_log2 a
-    where a.activity_name='2023年五一活动'
-    '''
+    where a.activity_name='{}'
+    '''.format(activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -333,10 +333,11 @@ def main():
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    st = '2023-04-18'
+    st2 = '2023-05-31'
+    et = '2023-06-15'
     log_name = '2023年51活动前客户等级'
-    st = '2023-02-15'
-    st3 = '2023-03-01'
-    st2 = '2023-04-18'
-    et = '2023-04-29'
-    activity_name = '2023年五一活动'
+    activity_name = '2023年618活动'
     main()
+
+

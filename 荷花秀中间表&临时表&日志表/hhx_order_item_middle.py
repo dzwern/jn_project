@@ -4,7 +4,7 @@
 # @Time    : 2023/4/6 14:28
 # @Author  : diaozhiwei
 # @FileName: hhx_order_item_middle.py
-# @description: 产品信息
+# @description: 产品信息,订单表。由于订单表的特殊情况，需要在5.17号之前运行单个租户，在5.18之后运行4个租户
 # @update:
 """
 
@@ -30,11 +30,41 @@ def get_order_product():
         b.quantity
     FROM
         t_orders a
-        left join t_order_item b on a.id=b.order_id
-        LEFT JOIN sys_user c ON a.sys_user_id=c.user_id
-        LEFT JOIN sys_dept d on c.dept_id=d.dept_id
+    left join t_order_item b on a.id=b.order_id
+    LEFT JOIN sys_user c ON a.sys_user_id=c.user_id
+    LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     WHERE
-        a.tenant_id = 11
+        a.tenant_id = 25
+    and a.order_state NOT IN (6,8,10,11)
+    # 退款状态
+    and a.refund_state not in (4)
+    and a.create_time>='{}'
+    and a.create_time<'{}'
+    and a.order_amount>40
+    '''.format(st, et)
+    df = hhx_sql1.get_DataFrame_PD(sql)
+    return df
+
+
+def get_order_product2():
+    sql = '''
+    SELECT
+        a.order_sn,
+        a.create_time,
+        d.dept_name,
+        b.id,
+        b.order_id,
+        b.product_name,
+        b.sku_price,
+        b.real_price,
+        b.quantity
+    FROM
+        t_orders a
+    left join t_order_item b on a.id=b.order_id
+    LEFT JOIN sys_user c ON a.sys_user_id=c.user_id
+    LEFT JOIN sys_dept d on c.dept_id=d.dept_id
+    WHERE
+        a.tenant_id in ('25','26','27','28')
     and a.order_state NOT IN (6,8,10,11)
     # 退款状态
     and a.refund_state not in (4)
@@ -48,25 +78,17 @@ def get_order_product():
 
 # 员工信息
 def get_hhx_user():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部一组1', '光华部六组', '光华部三组', '光华部七组', '光华部1组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = ['光辉部蜜肤语前端', '光辉部蜜肤语前端', '光辉部蜜肤语后端', '光辉部蜜肤语后端',
-           '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端', '光芒部蜜梓源后端',
-           '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端', '光华部蜜梓源面膜进粉前端',
-           '光华部蜜梓源面膜进粉后端', '光华部蜜梓源面膜老粉前端', '光华部蜜梓源面膜老粉后端',
-           '光华部蜜梓源面膜进粉后端',
-           '光源部蜂蜜组', '光源部蜂蜜组', '光源部蜂蜜组', '光源部海参组']
-    df3 = ['光辉部', '光辉部', '光辉部', '光辉部',
-           '光芒部', '光芒部', '光芒部', '光芒部',
-           '光华部', '光华部', '光华部', '光华部', '光华部', '光华部', '光华部',
-           '光源部', '光源部', '光源部', '光源部']
-    df = {"dept_name": df1,
-          'dept_name2': df2,
-          'dept_name1': df3}
-    data = pd.DataFrame(df)
-    return data
+    sql = '''
+    SELECT
+        a.dept_name,
+        a.dept_name1,
+        a.dept_name2,
+        a.tenant_id tenant_id2
+    FROM
+        t_dept_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 活动信息-光源蜂蜜
@@ -169,7 +191,7 @@ def save_sql(df):
 
 def main():
     # 产品信息数据
-    df_order_product = get_order_product()
+    df_order_product = get_order_product2()
     # 订单所属
     df_order_dept = get_hhx_user()
     df_order_product = df_order_product.merge(df_order_dept, on=['dept_name'], how='left')
@@ -217,5 +239,16 @@ if __name__ == '__main__':
     et = time1 + relativedelta(days=1)
     st = utils.date2str(st)
     et = utils.date2str(et)
+    # 时间转化
+    # st = '2023-05-18'
+    # et = '2023-06-01'
+    # st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
+    # et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st, et)
     main()
+
+
+
+
+
+
