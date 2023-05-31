@@ -234,6 +234,7 @@ def main():
          'wechat_nums', 'order_sn', 'order_amount', 'order_interval', 'activity_name']]
     df_user_oid_base = df_user_oid_base
     # del_sql()
+    print(df_user_oid_base)
     save_sql(df_user_oid_base)
 
 

@@ -102,6 +102,7 @@ def main():
                                    'stock_increment','year_months','years','create_time','time_diff','order_amount',
                                    'activity_name']]
     # del_sql()
+    print(df_member_time)
     save_sql(df_member_time)
 
 
