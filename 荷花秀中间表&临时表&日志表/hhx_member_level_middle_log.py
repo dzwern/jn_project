@@ -125,6 +125,7 @@ def get_member_base():
     sql = '''
     SELECT
         a.id member_id,
+        a.second_primary_id,
         b.wechat_name,
         b.wecaht_number wechat_number,
         c.user_name,
@@ -147,7 +148,7 @@ def get_member_base():
 def get_member_order_old():
     sql='''
     SELECT
-        a.member_id,
+        a.member_id second_primary_id,
         count(DISTINCT LEFT(a.ORDER_DATE,10)) order_nums_old,
         sum(a.ORDER_MONEY) order_amounts_old
     FROM
@@ -284,8 +285,8 @@ def main():
     df_hhx_order = get_member_order()
     df_hhx_member = df_hhx_member.merge(df_hhx_order, on=['member_id'], how='left')
     # 客户老系统销售数据
-    df_hhx_order_old=get_member_order_old()
-    df_hhx_member=df_hhx_member.merge(df_hhx_order_old,on=['member_id'],how='left')
+    df_hhx_order_old = get_member_order_old()
+    df_hhx_member = df_hhx_member.merge(df_hhx_order_old, on=['second_primary_id'], how='left')
     # 销售金额累加
     df_hhx_member=df_hhx_member.fillna(0)
     df_hhx_member['order_nums'] = df_hhx_member['order_nums_new'] + df_hhx_member['order_nums_old']
@@ -334,12 +335,12 @@ if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 活动开始时间
-    st = '2023-05-31'
+    st = '2023-02-15'
     '''
     2023年1月初客户等级，2023年2月初客户等级，2023年3月初客户等级，2023年4月初客户等级，2023年5月初客户等级，2023年6月初客户等级
     2023年38女神节活动前客户等级（2.15），2023年38女神节活动后客户等级（3.2），2023年51活动前客户等级（4.18），2023年51活动后客户等级（5.2），2023年618活动前客户等级（5.31）
     '''
-    log_name='2023年618活动前客户等级'
+    log_name='2023年38女神节活动前客户等级'
     main()
 
 

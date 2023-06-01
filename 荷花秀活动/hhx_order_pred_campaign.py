@@ -111,20 +111,18 @@ def get_member_level():
     return df
 
 
-# 五一活动时长
+# 活动时长
 def get_campaign_time():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部1组', '光华部六组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = [8, 8, 13, 13,
-           13, 13, 13, 13,
-           7, 7, 12, 12,
-           13, 13, 13, 13]
-    df = {"dept_name": df1,
-          'activity_duration': df2}
-    data = pd.DataFrame(df)
-    return data
+    sql='''
+    SELECT
+        a.dept_name,
+        a.activity_duration
+    FROM
+        t_campaign_target_log a
+    WHERE a.activity_name='{}'
+    '''.format(activity_name)
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 员工预测，以部门整体为准
@@ -319,7 +317,7 @@ def main():
     df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans']  - df1['V0'] - df1['V1'] - df1['V2'] - df1['V3'] - df1['V4'] - df1['V5']
     # 光芒，光源相差
     df2 = df_user_base[(df_user_base['dept_name1'] == '光源部') | (df_user_base['dept_name1'] == '光芒部')]
-    df2['old_fans'] = df2['reality_fans']  - df1['V0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2['V5']
+    df2['old_fans'] =  df1['V0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2['V5']- df1['reality_fans']
     df_user_base = pd.concat([df1, df2])
     df_user_base = df_user_base[[
         'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name', 'wechat_nums', 'old_fans',
@@ -377,6 +375,7 @@ def main():
                                  'completion_rate', 'activity_name']]
     df_user_base = df_user_base
     print(df_user_base)
+    del_sql()
     save_sql(df_user_base)
 
 

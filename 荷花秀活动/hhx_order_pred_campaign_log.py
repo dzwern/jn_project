@@ -6,6 +6,13 @@
 # @FileName: hhx_order_pred_campaign_log.py
 # @description: 活动预估，之前数据,活动预测中间表，到设备
 # @update：更新时间在，活动之前更新，预测维度为微信设备
+
+主要事项：
+
+hhx_order_pred_campaign_log：记录的是活动期间，设备的转化情况以及销售情况
+hhx_order_pred_campaign：表示的是预估的结果以及实时方法的销售对比
+hhx_order_pred_target_campaign：当前预估转化以及历史转化，实时转化之间的对比
+
 """
 
 from jn_modules.dingtalk.DingTalk import DingTalk
@@ -80,7 +87,7 @@ def get_wechat_old():
         sum(a.member_trans) old_fans2 
     FROM
         t_wechat_middle_tmp a
-	where a.sys_user_id is not null
+    where a.sys_user_id is not null
     GROUP BY a.wecaht_number
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -271,11 +278,11 @@ def main():
     df_wechat_pred.loc[(df_wechat_pred["old_fans2"] > 0), "reality_fans"] = df_wechat_pred['old_fans2']
     # 相差，光辉，光华老粉
     df1 = df_wechat_pred[(df_wechat_pred['dept_name1'] == '光辉部') | (df_wechat_pred['dept_name1'] == '光华部')]
-    df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans'] - df1['0'] - df1['V0'] - df1['V1'] - df1[
+    df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans']  - df1['V0'] - df1['V1'] - df1[
         'V2'] - df1['V3'] - df1['V4'] - df1['V5']
     # 光芒，光源相差
     df2 = df_wechat_pred[(df_wechat_pred['dept_name1'] == '光源部') | (df_wechat_pred['dept_name1'] == '光芒部')]
-    df2['old_fans'] = df2['reality_fans'] - df2['0'] - df1['V0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2[
+    df2['old_fans'] = df2['reality_fans']  - df1['V0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2[
         'V5']
     df_wechat_pred = pd.concat([df1, df2])
     # df_wechat_pred = df_wechat_pred[[
@@ -321,11 +328,11 @@ def main():
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2023-02-15'
-    st2 = '2023-04-18'
-    et = '2023-05-01'
-    log_name = '2023年51活动前客户等级'
-    activity_name = '2023年五一活动'
+    st = '2022-12-15'
+    st2 = '2023-02-15'
+    et = '2023-03-01'
+    log_name = '2023年38女神节活动前客户等级'
+    activity_name = '2023年38女神节活动'
     main()
 
 

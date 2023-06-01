@@ -287,14 +287,14 @@ def main():
     df_member_base.loc[(df_member_base["old_fans2"] > 0), "reality_fans"] = df_member_base['old_fans2']
     # 相差，光辉，光华老粉
     df1 = df_member_base[(df_member_base['dept_name1'] == '光辉部') | (df_member_base['dept_name1'] == '光华部')]
-    df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans'] - df1['0'] - df1['V1'] - df1['V2'] - \
+    df1['old_fans'] = df1['reality_fans'] - df1['new_fans'] - df1['add_fans'] - df1['V0'] - df1['V1'] - df1['V2'] - \
                       df1['V3'] - df1['V4'] - df1['V5']
     # 光芒，光源相差
     df2 = df_member_base[(df_member_base['dept_name1'] == '光源部') | (df_member_base['dept_name1'] == '光芒部')]
-    df2['old_fans'] = df2['reality_fans'] - df2['0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2['V5']
+    df2['old_fans'] = df2['reality_fans'] - df2['V0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2['V5']
     df_member_base = pd.concat([df1, df2])
     df_member_base = df_member_base[[
-        'dept_name1', 'dept_name2', 'dept_name', 'wechat_nums', 'old_fans','new_fans', 'add_fans', 'V1', 'V2', 'V3', 'V4', 'V5']]
+        'dept_name1', 'dept_name2', 'dept_name', 'wechat_nums', 'old_fans','new_fans', 'add_fans', 'V0','V1', 'V2', 'V3', 'V4', 'V5']]
     df_member_base=df_member_base
     # 转换，重命名
     df_member_base = pd.melt(df_member_base,id_vars=['dept_name1', 'dept_name2', 'dept_name','wechat_nums'])
@@ -336,7 +336,7 @@ if __name__ == '__main__':
     st = '2023-04-18'
     st2 = '2023-05-31'
     et = '2023-06-15'
-    log_name = '2023年51活动前客户等级'
+    log_name = '2023年618活动前客户等级'
     activity_name = '2023年618活动'
     main()
 
