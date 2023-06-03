@@ -760,8 +760,8 @@ if __name__ == '__main__':
     # st1 = utils.date2str(st)
     # et1 = utils.date2str(et)
     # 时间转化
-    st = '2023-01-01'
-    et = '2023-06-01'
+    st = '2023-05-18'
+    et = '2023-06-18'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st, et)

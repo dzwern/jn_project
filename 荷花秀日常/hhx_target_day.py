@@ -23,6 +23,7 @@ def get_stock_target():
     SELECT
         a.id,
         a.dept_name1,
+        a.dept_name2,
         years,
         monthly,
         a.stock_increment,
@@ -39,6 +40,7 @@ def get_member_stock_order(monthly, st, et, st0, et0):
     sql = '''
     SELECT 
         a.dept_name1,
+        a.dept_name2,
         '2023' years,
         '{}' monthly,
         '增量' stock_increment,
@@ -51,7 +53,7 @@ def get_member_stock_order(monthly, st, et, st0, et0):
     and a.first_time<'{}'
     and a.create_time>='{}'
     and a.create_time<'{}'
-    GROUP BY a.dept_name1,years,monthly,stock_increment
+    GROUP BY a.dept_name1,dept_name2,years,monthly,stock_increment
     '''.format(monthly, st, et, st0, et0)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -62,6 +64,7 @@ def get_member_increment_order(monthly, st, st0, et0):
     sql = '''
     SELECT 
         a.dept_name1,
+        a.dept_name2,
         '2023' years,
         '{}' monthly,
         '存量' stock_increment,
@@ -73,7 +76,7 @@ def get_member_increment_order(monthly, st, st0, et0):
     and a.first_time<'{}'
     and a.create_time>='{}'
     and a.create_time<'{}'
-    GROUP BY a.dept_name1,years,monthly,stock_increment
+    GROUP BY a.dept_name1,dept_name2,years,monthly,stock_increment
     '''.format(monthly, st, st0, et0)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -82,19 +85,27 @@ def get_member_increment_order(monthly, st, st0, et0):
 def save_sql(df):
     sql = '''
      INSERT INTO `t_target_day` 
-     (`id`,`dept_name1`,`years`,`monthly`,`stock_increment`,
+     (`id`,`dept_name1`,`dept_name2`,`years`,`monthly`,`stock_increment`,
      `target_amount`,`complate_amount`,`amount_rate`
      )
      VALUES (
      %s,%s,%s,%s,%s,
-     %s,%s,%s
+     %s,%s,%s,%s
      )
      ON DUPLICATE KEY UPDATE
-         `dept_name1`= VALUES(`dept_name1`),`years`= VALUES(`years`),`monthly`= VALUES(`monthly`),
+         `dept_name1`= VALUES(`dept_name1`),`dept_name2`= VALUES(`dept_name2`),`years`= VALUES(`years`),`monthly`= VALUES(`monthly`),
          `stock_increment`=VALUES(`stock_increment`),`target_amount`=VALUES(`target_amount`),`complate_amount`=values(`complate_amount`),
          `amount_rate`=values(`amount_rate`)
      '''
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+
+
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_target_day;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
 
 
 def main():
@@ -136,14 +147,17 @@ def main():
         df_member_increment_order12
     ])
     df_member_order = pd.concat([df_member_stock_order, df_member_increment_order])
-    df_stock_increment_target = df_stock_increment_target.merge(df_member_order, on=['dept_name1', 'years', 'monthly',
+    df_stock_increment_target = df_stock_increment_target.merge(df_member_order, on=['dept_name1', 'dept_name2','years', 'monthly',
                                                                                      'stock_increment'], how='left')
     df_stock_increment_target = df_stock_increment_target.fillna(0)
     df_stock_increment_target['amount_rate'] = df_stock_increment_target['complate_amount'] / df_stock_increment_target[
         'target_amount']
     df_stock_increment_target = df_stock_increment_target[
-        ['id', 'dept_name1', 'years', 'monthly', 'stock_increment', 'target_amount', 'complate_amount', 'amount_rate']]
-    df_stock_increment_target = df_stock_increment_target
+        ['id', 'dept_name1','dept_name2', 'years', 'monthly', 'stock_increment', 'target_amount', 'complate_amount', 'amount_rate']]
+    df_stock_increment_target = df_stock_increment_target.replace([np.inf, -np.inf], np.nan)
+    df_stock_increment_target = df_stock_increment_target.fillna(0)
+    print(df_stock_increment_target)
+    del_sql()
     save_sql(df_stock_increment_target)
 
 

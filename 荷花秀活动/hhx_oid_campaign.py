@@ -78,7 +78,7 @@ def get_order_divide2(x):
     if 900 > x >= 0:
         return '0-900'
     elif 2000 > x >= 900:
-        return '0.9-2k'
+        return '900-2k'
     elif 3000 > x >= 2000:
         return '2-3k'
     elif 4000 > x >= 3000:

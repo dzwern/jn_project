@@ -189,10 +189,9 @@ def main():
         [df_member_increment_order1, df_member_increment_order2, df_member_increment_order3, df_member_increment_order4,
          df_member_increment_order5])
     df_member_order = pd.concat([df_member_stock_order, df_member_increment_order])
-    df_member_order = df_member_order
+    df_member_order = df_member_order['years'].astype(str)
     df_member_order = df_member_order.fillna(0)
-    df_member = df_member.merge(df_member_order,
-                                on=['dept_name', 'years', 'monthly', 'stock_increment', 'member_level'], how='left')
+    df_member = df_member.merge(df_member_order,on=['dept_name', 'years', 'monthly', 'stock_increment', 'member_level'], how='left')
     # 转化率
     df_member['member_rate'] = df_member['member_develop'] / df_member['members']
     # 客单价
