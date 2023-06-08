@@ -16,7 +16,7 @@ import pandas as pd
 
 
 # 存量客户
-def get_member_stock(monthly, st):
+def get_member_stock(monthly,st,log_name):
     sql = '''
     SELECT
         a.dept_name1,
@@ -28,11 +28,12 @@ def get_member_stock(monthly, st):
         a.member_level,
         count(DISTINCT a.member_id) members
     FROM
-        t_member_middle a
+        t_member_middle_log a
     where a.first_time<'{}'
+    and a.log_name='{}'
     and a.dept_name1 !='0'
     GROUP BY a.dept_name,a.member_level
-    '''.format(monthly, st)
+    '''.format(monthly,st,log_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -146,12 +147,12 @@ def del_sql():
 
 def main():
     # 存量客户
-    df_member_stock1 = get_member_stock(monthly1, st1)
-    df_member_stock2 = get_member_stock(monthly2, st1)
-    df_member_stock3 = get_member_stock(monthly3, st1)
-    df_member_stock4 = get_member_stock(monthly4, st1)
-    df_member_stock5 = get_member_stock(monthly5, st1)
-    # df_member_stock6 = get_member_stock(monthly6, st1)
+    df_member_stock1 = get_member_stock(monthly1, st1, log_name1)
+    df_member_stock2 = get_member_stock(monthly2, st1, log_name2)
+    df_member_stock3 = get_member_stock(monthly3, st1, log_name3)
+    df_member_stock4 = get_member_stock(monthly4, st1, log_name4)
+    df_member_stock5 = get_member_stock(monthly5, st1, log_name5)
+    df_member_stock6 = get_member_stock(monthly6, st1, log_name6)
     # 增量客户
     df_member_increment1 = get_member_increment(monthly1, st1, st2)
     df_member_increment2 = get_member_increment(monthly2, st1, st3)
@@ -167,19 +168,19 @@ def main():
     df_member = pd.concat([df_member_stock, df_member_increment])
     df_member = df_member.fillna(0)
     # 增量销售
-    df_member_stock_order1 = get_member_stock_order(monthly1, log_name1, st1, st2, st1, st2)
-    df_member_stock_order2 = get_member_stock_order(monthly2, log_name2, st1, st3, st2, st3)
-    df_member_stock_order3 = get_member_stock_order(monthly3, log_name3, st1, st4, st3, st4)
-    df_member_stock_order4 = get_member_stock_order(monthly4, log_name4, st1, st5, st4, st5)
-    df_member_stock_order5 = get_member_stock_order(monthly5, log_name5, st1, st6, st5, st6)
+    df_member_stock_order1 = get_member_stock_order(monthly1, log_name2, st1, st2, st1, st2)
+    df_member_stock_order2 = get_member_stock_order(monthly2, log_name3, st1, st3, st2, st3)
+    df_member_stock_order3 = get_member_stock_order(monthly3, log_name4, st1, st4, st3, st4)
+    df_member_stock_order4 = get_member_stock_order(monthly4, log_name5, st1, st5, st4, st5)
+    df_member_stock_order5 = get_member_stock_order(monthly5, log_name6, st1, st6, st5, st6)
     # df_member_stock_order6 = get_member_stock_order(monthly6, log_name6, st1, st7, st6, st7)
     # df_member_stock_order7 = get_member_stock_order(monthly7, log_name7, st1, st8, st7, st8)
     # 存量销售
-    df_member_increment_order1 = get_member_increment_order(monthly1, log_name1, st1, st1, st2)
-    df_member_increment_order2 = get_member_increment_order(monthly2, log_name2, st1, st2, st3)
-    df_member_increment_order3 = get_member_increment_order(monthly3, log_name3, st1, st3, st4)
-    df_member_increment_order4 = get_member_increment_order(monthly4, log_name4, st1, st4, st5)
-    df_member_increment_order5 = get_member_increment_order(monthly5, log_name5, st1, st5, st6)
+    df_member_increment_order1 = get_member_increment_order(monthly1, log_name2, st1, st1, st2)
+    df_member_increment_order2 = get_member_increment_order(monthly2, log_name3, st1, st2, st3)
+    df_member_increment_order3 = get_member_increment_order(monthly3, log_name4, st1, st3, st4)
+    df_member_increment_order4 = get_member_increment_order(monthly4, log_name5, st1, st4, st5)
+    df_member_increment_order5 = get_member_increment_order(monthly5, log_name6, st1, st5, st6)
     # df_member_increment_order6 = get_member_increment_order(monthly6, log_name1, st1, st6, st7)
     # df_member_increment_order7 = get_member_increment_order(monthly7, log_name1, st1, st7, st8)
     df_member_stock_order = pd.concat(
@@ -189,7 +190,7 @@ def main():
         [df_member_increment_order1, df_member_increment_order2, df_member_increment_order3, df_member_increment_order4,
          df_member_increment_order5])
     df_member_order = pd.concat([df_member_stock_order, df_member_increment_order])
-    df_member_order = df_member_order['years'].astype(str)
+    df_member_order['years'] = df_member_order['years'].astype(str)
     df_member_order = df_member_order.fillna(0)
     df_member = df_member.merge(df_member_order,on=['dept_name', 'years', 'monthly', 'stock_increment', 'member_level'], how='left')
     # 转化率
@@ -248,3 +249,7 @@ if __name__ == '__main__':
     log_name11 = '2023年11月初客户等级'
     log_name12 = '2023年12月初客户等级'
     main()
+
+
+
+

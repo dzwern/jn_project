@@ -57,22 +57,36 @@ def get_member_category():
     return df
 
 
+# 员工信息
+def get_hhx_user():
+    sql = '''
+    SELECT
+        a.dept_name,
+        a.tenant_id tenant_id2
+    FROM
+        t_dept_tmp a
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
 # 客户类型，新粉和活动期间新进粉丝
 def get_wechat_fans(st, et):
     sql = '''
     SELECT 
         f.dept_name,
+        a.tenant_id,
         sum(a.credit) new_fans
     FROM 
         t_wechat_fans_log a
     LEFT JOIN t_wechat d on a.wechat_id=d.id
     LEFT JOIN sys_user e on a.sys_user_id=e.user_id
     LEFT JOIN sys_dept f on e.dept_id=f.dept_id 
-    WHERE a.tenant_id = 11 
+    WHERE a.tenant_id in ( '25', '26', '27', '28' ) 
     and d.valid_state=1
     AND a.new_sprint_time >= '{}' 
     AND a.new_sprint_time < '{}'
-    GROUP BY f.dept_name
+    GROUP BY f.dept_name,a.tenant_id
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -187,7 +201,7 @@ def get_member_strike2():
     return df
 
 
-# 新粉转换
+# 新粉成交，将主动裂变，公众号咨询转化为新粉
 def get_member_strike3():
     sql = '''
     SELECT 
@@ -196,15 +210,39 @@ def get_member_strike3():
         count(DISTINCT a.member_id) members_develop,
         sum(a.order_amount) members_amount
     FROM 
-    t_orders_middle a 
-    WHERE  a.first_time>='{}'
+        t_orders_middle a 
+    WHERE a.first_time>='{}'
     and a.first_time<'{}'
-    and a.activity_name='{}'
-    and a.order_amount>40
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
+    and a.activity_name='{}'
+    and a.member_source not in ('主动裂变','公众号咨询')
+    and a.order_amount>40
     GROUP BY a.dept_name
-    '''.format(st, st2, activity_name)
+    '''.format(st, st2,activity_name)
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
+# V1客户成交
+def get_member_strike4():
+    sql = '''
+    SELECT 
+        a.dept_name,
+        'V1' member_category,
+        count(DISTINCT a.member_id) members_develop,
+        sum(a.order_amount) members_amount
+    FROM 
+        t_orders_middle a 
+    WHERE a.first_time>='{}'
+    and a.first_time<'{}'
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
+    and a.activity_name='{}'
+    and a.member_source in ('主动裂变','公众号咨询')
+    and a.order_amount>40
+    GROUP BY a.dept_name
+    '''.format(st, st2,activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -219,14 +257,14 @@ def get_member_struck():
         sum(a.order_amount) members_amount
     FROM 
         t_orders_middle a
-    LEFT JOIN  t_member_middle b on a.member_id=b.member_id
+    LEFT JOIN  t_member_middle_log b on a.member_id=b.member_id and b.log_name='{}'
     WHERE a.activity_name='{}'
     and a.order_amount>40
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('复购日常成交','复购活动成交')
     GROUP BY a.dept_name,b.member_level
     ORDER BY a.dept_name
-    '''.format(activity_name)
+    '''.format(log_name,activity_name)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -257,15 +295,34 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_pred_target_campaign;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 当前客户数
     df_member_base = get_member_base()
     # 总粉丝数
     df_member_category = get_member_category()
+    df_hhx_user = get_hhx_user()
     # 新粉
     df_member_new = get_wechat_fans(st, st2)
+    df_member_new = df_member_new.merge(df_hhx_user, on=['dept_name'], how='left')
     # 新进粉
     df_member_new2 = get_wechat_fans(st2, et)
+    df_member_new2 = df_member_new2.merge(df_hhx_user, on=['dept_name'], how='left')
+    # 筛选判断
+    df_member_new=df_member_new.fillna(0)
+    df_member_new['fuzhu']=df_member_new['tenant_id2']-df_member_new['tenant_id']
+    df_member_new=df_member_new.loc[df_member_new['fuzhu']==0,:]
+    df_member_new2=df_member_new2.fillna(0)
+    df_member_new2['fuzhu']=df_member_new2['tenant_id2']-df_member_new2['tenant_id']
+    df_member_new2=df_member_new2.loc[df_member_new2['fuzhu']==0,:]
+
     # 老粉数
     df_old_fans=get_wechat_old()
     # 客户数
@@ -309,8 +366,12 @@ def main():
     df_member_strike = get_member_strike()
     df_member_strike2 = get_member_strike2()
     df_member_strike3 = get_member_strike3()
+    df_member_strike4 = get_member_strike4()
     df_member_struck = get_member_struck()
-    df_member_strike = pd.concat([df_member_strike, df_member_strike2, df_member_strike3, df_member_struck])
+    df_member_strike = pd.concat(
+        [df_member_strike, df_member_strike2, df_member_strike3, df_member_strike4, df_member_struck])
+    df_member_strike = df_member_strike.fillna(0)
+    df_member_strike=df_member_strike.groupby(['dept_name','member_category'])[['members_develop','members_amount']].sum().reset_index()
     df_member_base = df_member_base.merge(df_member_strike, on=['dept_name', 'member_category'], how='left')
     df_member_base = df_member_base.fillna(0)
     # 当前转化率
@@ -327,6 +388,7 @@ def main():
         ['id','dept_name1', 'dept_name2', 'dept_name', 'member_category', 'members', 'amount_target', 'member_rate',
          'member_price', 'member_history_rate', 'member_history_price', 'member_current_rate', 'member_current_price',
          'members_develop', 'members_amount', 'completion_rate', 'activity_name']]
+    del_sql()
     save_sql(df_member_base)
 
 

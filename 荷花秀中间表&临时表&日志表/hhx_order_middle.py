@@ -43,7 +43,8 @@ def get_hhx_orders():
         a.pay_type_name,
         a.project_category_id,
         a.receiver_province,
-        a.receiver_city
+        a.receiver_city,
+        a.tenant_id
     FROM
         t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
@@ -51,9 +52,9 @@ def get_hhx_orders():
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     LEFT JOIN t_wechat e on a.wechat_id=e.id 
     WHERE
-        a.tenant_id = 25
-    and a.create_time>='{}'
-    and a.create_time<'{}'
+        a.tenant_id in ('25','26','27','28')
+    # and a.create_time>='{}'
+    # and a.create_time<'{}'
     '''.format(st1,et1)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -87,7 +88,8 @@ def get_hhx_orders2():
         a.pay_type_name,
         a.project_category_id,
         a.receiver_province,
-        a.receiver_city
+        a.receiver_city,
+        a.tenant_id
     FROM
         t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
@@ -671,6 +673,15 @@ def save_sql(df):
 def main():
     # 基础数据表
     df_hhx_orders = get_hhx_orders2()
+    # 员工信息
+    df_hhx_user = get_hhx_user()
+    df_hhx_orders=df_hhx_orders.merge(df_hhx_user,on=['dept_name'],how='left')
+
+    # 筛选判断
+    df_hhx_orders=df_hhx_orders.fillna(0)
+    df_hhx_orders['fuzhu']=df_hhx_orders['tenant_id2']-df_hhx_orders['tenant_id']
+    df_hhx_orders=df_hhx_orders.loc[df_hhx_orders['fuzhu']==0,:]
+
     # 订单类型
     df_hhx_orders['order_type'] = df_hhx_orders.apply(lambda x: get_order_type(x['order_type']), axis=1)
     # 营销类型
@@ -678,9 +689,7 @@ def main():
     # 成交类型
     df_clinch_type = get_clinch_type()
     df_hhx_orders = df_hhx_orders.merge(df_clinch_type, on=['order_sn'], how='left')
-    # 员工信息
-    df_hhx_user = get_hhx_user()
-    df_hhx_orders=df_hhx_orders.merge(df_hhx_user,on=['dept_name'],how='left')
+
     # 客户信息
     df_hhx_member = get_hhx_member()
     df_hhx_orders=df_hhx_orders.merge(df_hhx_member,on=['member_id'],how='left')
@@ -760,12 +769,14 @@ if __name__ == '__main__':
     # st1 = utils.date2str(st)
     # et1 = utils.date2str(et)
     # 时间转化
-    st = '2023-05-18'
-    et = '2023-06-18'
+    st = '2022-10-01'
+    et = '2023-01-01'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st, et)
     main()
+
+
 
 
 

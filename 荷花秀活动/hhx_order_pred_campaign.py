@@ -103,7 +103,8 @@ def get_member_level():
         a.member_level,
         count(1) level_members
     FROM
-        t_member_middle a
+        t_member_middle_log a
+    where a.log_name='{}'
     GROUP BY a.sys_user_id,a.member_level
     ORDER BY a.sys_user_id
     '''.format(log_name)

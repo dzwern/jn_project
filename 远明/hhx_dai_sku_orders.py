@@ -192,7 +192,7 @@ def get_sku_orders():
                 AND o.order_state IN (0, 1, 2, 3, 4, 5, 7, 12, 13, 14, 15, 16, 17)
                 -- 筛选审核阶段、已完结、待发货、待签收
                 AND d.dept_name LIKE '销售%%'
-                AND o.create_time >= '2023-01-01 00:00:00'
+                AND o.create_time >= '2023-05-01 00:00:00'
                 -- and o.create_time < '2022-07-01 00:00:00'
         ) t
         LEFT JOIN (
@@ -260,17 +260,22 @@ def del_sql():
 def main():
     df_sku_orders = get_sku_orders()
     df_sku_orders = df_sku_orders.fillna(0)
-    df_sku_orders['id'] = df_sku_orders['订单编号']
+    df_sku_orders['id'] = df_sku_orders['订单编号']+df_sku_orders['商品编号']
     df_sku_orders = df_sku_orders[
         ['id', '所属部门', '客户ID', '订单编号', '商品名称', '商品简称', '商品类型',
          '规格', '商品编号', '数量', '中心', '部门', '小组',
          '销售价', '实际支付单价', '订单状态', '下单日期', '订单类型', '地址', '订单金额',
          '退款金额', '结余金额', '营销类型', '订单规格', '换算规格', '换算率', '销售数量']]
+    df_sku_orders=df_sku_orders
     del_sql()
     save_sql(df_sku_orders)
 
 
 if __name__ == '__main__':
     main()
+
+
+
+
 
 

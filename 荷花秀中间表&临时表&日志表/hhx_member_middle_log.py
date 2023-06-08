@@ -313,12 +313,12 @@ def main():
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2023-06-01'
+    st = '2023-05-02'
     '''
     2023年1月初客户等级，2023年2月初客户等级，2023年3月初客户等级，2023年4月初客户等级，2023年5月初客户等级，2023年6月初客户等级
     2023年38女神节活动前客户等级（2.15），2023年38女神节活动后客户等级（3.2），2023年51活动前客户等级（4.18），2023年51活动后客户等级（5.2），2023年618活动前客户等级（5.31）
     '''
-    log_name='2023年6月初客户等级'
+    log_name='2023年51活动后客户等级'
     main()
 
 
