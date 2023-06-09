@@ -17,13 +17,31 @@ import sys
 from dateutil.relativedelta import relativedelta
 
 
-def get_order():
-    sql='''
+# 员工基础信息
+def get_base():
+    sql = '''
     SELECT
-        a.dept_name,
         a.nick_name,
-        count(1),
-        sum(a.order_amount) 
+        a.dept_name1,
+        a.dept_name2
+    FROM
+        t_wechat_middle a 
+    WHERE
+        a.valid_state = '正常'
+    GROUP BY a.nick_name
+
+    '''
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
+def get_order(st, et):
+    sql = '''
+    SELECT
+        a.dept_name2,
+        a.nick_name,
+        count(1) orders,
+        sum(a.order_amount) orders_amount 
     FROM
         t_orders_middle a 
     WHERE a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
@@ -31,19 +49,62 @@ def get_order():
     and a.order_amount>40
     and a.create_time>='{}'
     and a.create_time<'{}'
-    GROUP BY a.dept_name,a.nick_name
+    GROUP BY a.dept_name2,a.nick_name
     '''.format(st, et)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
 
+# 保存数据
+def save_sql(df):
+    sql = '''
+     INSERT INTO `t_nickname_rank_total` 
+     (
+     `dept_name1`,`dept_name2`,`nick_name`,`weekly_order`,
+     `weekly_amount`,`weekly_rank`,`monthly_order`,`monthly_amount`,`monthly_rank`
+     )
+     VALUES (
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s
+     )
+     ON DUPLICATE KEY UPDATE
+         `dept_name1`= VALUES(`dept_name1`),`dept_name2`= VALUES(`dept_name2`),`nick_name`= VALUES(`nick_name`),
+         `weekly_order`= VALUES(`weekly_order`),`weekly_amount`= VALUES(`weekly_amount`),`weekly_rank`= VALUES(`weekly_rank`),
+         `monthly_order`= VALUES(`monthly_order`),`monthly_amount`= VALUES(`monthly_amount`),`monthly_rank`= VALUES(`monthly_rank`)
+     '''
+    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+
+
 def main():
-    pass
+    # 员工信息
+    df_nick_name = get_base()
+    # 销售数据
+    df_order_weekly = get_order(st, st2)
+    df_order_monthly = get_order(st2, et)
+    df_nick_name = df_nick_name.merge(df_order_weekly, on=['dept_name2', 'nick_name'], how='left')
+    df_nick_name = df_nick_name.merge(df_order_monthly, on=['dept_name2', 'nick_name'], how='left')
+    df_nick_name = df_nick_name.rename(
+        columns={'orders_x': 'weekly_order', 'orders_amount_x': 'weekly_amount', 'orders_y': 'monthly_order',
+                 'orders_amount_y': 'monthly_amount'})
+    df_nick_name = df_nick_name.fillna(0)
+    df_nick_name['weekly_rank'] = df_nick_name.groupby(['dept_name2'])['weekly_amount'].rank(method='dense',
+                                                                                             ascending=False)
+    df_nick_name['monthly_rank'] = df_nick_name.groupby(['dept_name2'])['monthly_amount'].rank(method='dense',
+                                                                                               ascending=False)
+    df_nick_name = df_nick_name[
+        ['dept_name1', 'dept_name2', 'nick_name', 'weekly_order', 'weekly_amount', 'weekly_rank', 'monthly_order',
+         'monthly_amount', 'monthly_rank']]
+    save_sql(df_nick_name)
 
 
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2023-01-01'
-    et = '2023-02-01'
+    st = '2023-05-01'
+    st2 = '2023-05-15'
+    et = '2023-06-01'
     main()
+
+
+
+
