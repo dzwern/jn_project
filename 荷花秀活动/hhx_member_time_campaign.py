@@ -81,6 +81,7 @@ def save_sql(df):
      %s,%s,%s,%s,%s
      )
      ON DUPLICATE KEY UPDATE
+         `id`= VALUES(`id`),
          `order_sn`= VALUES(`order_sn`),`dept_name1`=values(`dept_name1`),`dept_name2`=values(`dept_name2`),
          `dept_name`=values(`dept_name`),`sys_user_id`=values(`sys_user_id`),`user_name`=values(`user_name`),
          `nick_name`=values(`nick_name`),`wechat_id`=values(`wechat_id`),`wechat_name`=values(`wechat_name`),
@@ -97,6 +98,7 @@ def main():
     df_member_time=get_campaign_time()
     # 存量，增量
     df_member_time['stock_increment'] = df_member_time.apply(lambda x: get_time_level(x['first_time']), axis=1)
+
     df_member_time=df_member_time[['id','order_sn','dept_name1','dept_name2','dept_name','sys_user_id','user_name',
                                    'nick_name','wechat_id','wechat_name','wechat_number','member_id','first_time',
                                    'stock_increment','year_months','years','create_time','time_diff','order_amount',
@@ -109,6 +111,7 @@ def main():
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    # 2023年五一活动，2023年38女神节活动，2023年618活动
     activity_name = '2023年618活动'
     main()
 

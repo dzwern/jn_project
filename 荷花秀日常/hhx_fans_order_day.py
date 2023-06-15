@@ -38,7 +38,7 @@ def get_member_credit():
     and a.new_sprint_time<'{}'
     and a.credit>0
     GROUP BY f.dept_name,e.nick_name,d.wecaht_number,a.tenant_id,left(a.new_sprint_time,10)
-    '''.format(st,et)
+    '''.format(st,st2)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
@@ -199,8 +199,8 @@ def main():
 
     # 判断
     df_fans_order=df_fans_order.fillna(0)
-    df_fans_order['fuzhu']=df_fans_order['tenant_id2']-df_fans_order['tenant_id']
-    df_fans_order=df_fans_order.loc[df_fans_order['fuzhu']==0,:]
+    # df_fans_order['fuzhu']=df_fans_order['tenant_id2']-df_fans_order['tenant_id']
+    # df_fans_order=df_fans_order.loc[df_fans_order['fuzhu']==0,:]
 
     # 及时销售数据
     df_order_js = get_order_js()
@@ -232,19 +232,27 @@ def main():
         'order_member_campaign_fg', 'order_amount_campaign_fg']]
     df_fans_order=df_fans_order
     print(df_fans_order)
-    del_sql()
+    # del_sql()
     save_sql(df_fans_order)
 
 
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    # 时间转化
+    # 时间转化，需要分两次运行，一次是全量，一次是系统切割时间
     # 开始时间，结束时间
+    # st='2023-01-01'
     st = '2023-01-01'
     st1 = datetime.strptime(st, "%Y-%m-%d")
+    st2 = '2023-05-17'
+    st2 = datetime.strptime(st2, "%Y-%m-%d")
     time1 = datetime.now()
-    et = time1 + relativedelta(days=1)
+    et = time1 + relativedelta(days=2)
     et1 = utils.date2str(et)
-    print(st1,et1)
+    print(st1,st2,et1)
     main()
+
+
+
+
+

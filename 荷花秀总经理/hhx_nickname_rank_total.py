@@ -29,7 +29,6 @@ def get_base():
     WHERE
         a.valid_state = '正常'
     GROUP BY a.nick_name
-
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -79,7 +78,9 @@ def main():
     # 员工信息
     df_nick_name = get_base()
     # 销售数据
-    df_order_weekly = get_order(st, st2)
+    # 本周
+    df_order_weekly = get_order(st, et)
+    # 本月
     df_order_monthly = get_order(st2, et)
     df_nick_name = df_nick_name.merge(df_order_weekly, on=['dept_name2', 'nick_name'], how='left')
     df_nick_name = df_nick_name.merge(df_order_monthly, on=['dept_name2', 'nick_name'], how='left')
@@ -100,9 +101,13 @@ def main():
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2023-05-01'
-    st2 = '2023-05-15'
-    et = '2023-06-01'
+    now = datetime.now().date()
+    # 本周
+    st = now - timedelta(days=now.weekday())
+    # 本月
+    st2 = datetime(now.year, now.month, 1)
+    et = now
+    print(st, st2, et)
     main()
 
 

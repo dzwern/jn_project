@@ -558,7 +558,7 @@ def get_hhx_activity(x):
 def get_hhx_activity1(x):
     if datetime.datetime.strptime('2023-04-18','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-04-30','%Y-%m-%d'):
         return '2023年五一活动'
-    elif datetime.datetime.strptime('2023-03-01','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-11','%Y-%m-%d'):
+    elif datetime.datetime.strptime('2023-03-01','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-03-14','%Y-%m-%d'):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-05-31','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-15','%Y-%m-%d'):
         return '2023年618活动'
@@ -679,9 +679,8 @@ def main():
 
     # 筛选判断
     df_hhx_orders=df_hhx_orders.fillna(0)
-    df_hhx_orders['fuzhu']=df_hhx_orders['tenant_id2']-df_hhx_orders['tenant_id']
-    df_hhx_orders=df_hhx_orders.loc[df_hhx_orders['fuzhu']==0,:]
-
+    # df_hhx_orders['fuzhu']=df_hhx_orders['tenant_id2']-df_hhx_orders['tenant_id']
+    # df_hhx_orders=df_hhx_orders.loc[df_hhx_orders['fuzhu']==0,:]
     # 订单类型
     df_hhx_orders['order_type'] = df_hhx_orders.apply(lambda x: get_order_type(x['order_type']), axis=1)
     # 营销类型
@@ -689,7 +688,6 @@ def main():
     # 成交类型
     df_clinch_type = get_clinch_type()
     df_hhx_orders = df_hhx_orders.merge(df_clinch_type, on=['order_sn'], how='left')
-
     # 客户信息
     df_hhx_member = get_hhx_member()
     df_hhx_orders=df_hhx_orders.merge(df_hhx_member,on=['member_id'],how='left')
@@ -769,8 +767,8 @@ if __name__ == '__main__':
     # st1 = utils.date2str(st)
     # et1 = utils.date2str(et)
     # 时间转化
-    st = '2022-10-01'
-    et = '2023-01-01'
+    st = '2023-05-17'
+    et = '2023-06-10'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st, et)

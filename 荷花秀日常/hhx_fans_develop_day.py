@@ -5,7 +5,7 @@
 # @Author  : diaozhiwei
 # @FileName: hhx_fans_develop_day.py
 # @description: 进粉开发，基础数据为各个设备每日进粉数，以及在之后的订单中开发的客户数，计算粉丝开发率
-# @update:
+# @update:由于系统切分，需要分成两次运行，运行的时间节点是5.17
 """
 
 
@@ -38,7 +38,7 @@ def get_member_credit():
     and a.new_sprint_time<'{}'
     and a.credit>0
     GROUP BY f.dept_name,e.nick_name,d.wecaht_number,a.tenant_id,left(a.new_sprint_time,10)
-    '''.format(st1,et1)
+    '''.format(et1,et2)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 
@@ -75,7 +75,7 @@ def get_member_develop():
     and a.first_time<'{}'
     and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     GROUP BY a.wechat_number,left(a.first_time,10)
-    '''.format(st1,et1)
+    '''.format(st1,et2)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -146,11 +146,10 @@ def main():
     # 部门
     df_hhx_user = get_hhx_user()
     df_credit = df_credit.merge(df_hhx_user, on=['dept_name'], how='left')
-    # 判断
-
+    # 判断，增加时间限制，5.17号之后切分系统
     df_credit=df_credit.fillna(0)
-    df_credit['fuzhu']=df_credit['tenant_id2']-df_credit['tenant_id']
-    df_credit=df_credit.loc[df_credit['fuzhu']==0,:]
+    # df_credit['fuzhu']=df_credit['tenant_id2']-df_credit['tenant_id']
+    # df_credit=df_credit.loc[df_credit['fuzhu']==0,:]
 
     # 产出
     df_develop = get_member_develop()
@@ -177,6 +176,10 @@ def main():
                                      how='left')
     df_hhx_develop = df_hhx_develop.merge(df_develop2, on=["dept_name", "nick_name", "wechat_number", "first_time"],
                                           how='left')
+    df_hhx_develop['31_90_days'] = 0
+    df_hhx_develop['31_90_orders'] = 0
+    df_hhx_develop['91_180_days'] = 0
+    df_hhx_develop['91_180_orders'] = 0
     df_hhx_develop['181_360_days'] = 0
     df_hhx_develop['181_360_orders'] = 0
     df_hhx_develop['361_days'] = 0
@@ -218,7 +221,7 @@ def main():
          'total_price', 'total_orders_price', 'develop_rate']]
     df_hhx_develop = df_hhx_develop
     print(df_hhx_develop)
-    del_sql()
+    # del_sql()
     save_sql(df_hhx_develop)
 
 
@@ -227,11 +230,13 @@ if __name__ == '__main__':
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 时间转化
     time1 = datetime.datetime.now()
-    et = time1 + relativedelta(days=1)
-    et1 = utils.date2str(et)
+    et2 = time1 + relativedelta(days=1)
+    et2 = utils.date2str(et2)
     st = '2023-01-01'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
-    print(st1,et1)
+    et = '2023-05-18'
+    et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
+    print(st1,et1,et2)
     main()
 
 

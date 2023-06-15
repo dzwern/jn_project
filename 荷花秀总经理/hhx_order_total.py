@@ -61,7 +61,66 @@ def get_order(st, et):
     FROM
         t_orders_middle a 
     WHERE a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
-    and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
+    and a.order_amount>40
+    and a.create_time>='{}'
+    and a.create_time<'{}'
+    GROUP BY a.dept_name
+    '''.format(st, et)
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
+# 及时订单
+def get_order2(st, et):
+    sql = '''
+    select 
+        a.dept_name,
+        count(1) js_orders,
+        sum(a.order_amount) js_orders_amount 
+    FROM
+        t_orders_middle a 
+    WHERE a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('当日首单日常成交','当日首单活动成交')
+    and a.order_amount>40
+    and a.create_time>='{}'
+    and a.create_time<'{}'
+    GROUP BY a.dept_name
+    '''.format(st, et)
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
+# 后续订单
+def get_order3(st, et):
+    sql = '''
+    select 
+        a.dept_name,
+        count(1) hx_orders,
+        sum(a.order_amount) hx_orders_amount 
+    FROM
+        t_orders_middle a 
+    WHERE a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('后续首单日常成交','后续首单活动成交')
+    and a.order_amount>40
+    and a.create_time>='{}'
+    and a.create_time<'{}'
+    GROUP BY a.dept_name
+    '''.format(st, et)
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
+
+
+# 复购订单
+def get_order4(st, et):
+    sql = '''
+    select 
+        a.dept_name,
+        count(1) fg_orders,
+        sum(a.order_amount) fg_orders_amount 
+    FROM
+        t_orders_middle a 
+    WHERE a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.clinch_type in ('复购日常成交','复购活动成交')
     and a.order_amount>40
     and a.create_time>='{}'
     and a.create_time<'{}'
@@ -90,17 +149,22 @@ def save_sql(df):
     sql = '''
      INSERT INTO `t_order_total` 
      (
-     `dept_name1`,`dept_name2`,`fans`,`day_order`,
-     `day_amount`,`weekly_order`,`weekly_amount`,`monthly_order`,`monthly_amount`,
+     `dept_name1`,`dept_name2`,`fans`,`day_order`,`day_amount`,
+     `js_orders`,`js_orders_amount`,`hx_orders`,`hx_orders_amount`,`fg_orders`,
+     `fg_orders_amount`,`weekly_order`,`weekly_amount`,`monthly_order`,`monthly_amount`,
      `target_amount`,`target_rate`
      )
      VALUES (
      %s,%s,%s,%s,%s,
-     %s,%s,%s,%s,%s,%s
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s,%s,
+     %s,%s
      )
      ON DUPLICATE KEY UPDATE
          `dept_name1`= VALUES(`dept_name1`),`dept_name2`= VALUES(`dept_name2`),`fans`= VALUES(`fans`),
-         `day_order`= VALUES(`day_order`),`day_amount`= VALUES(`day_amount`),`weekly_order`= VALUES(`weekly_order`),
+         `day_order`= VALUES(`day_order`),`day_amount`= VALUES(`day_amount`),`js_orders`= VALUES(`js_orders`),
+         `js_orders_amount`= VALUES(`js_orders_amount`),`hx_orders`= VALUES(`hx_orders`),`hx_orders_amount`= VALUES(`hx_orders_amount`),
+         `fg_orders`= VALUES(`fg_orders`), `fg_orders_amount`= VALUES(`fg_orders_amount`),`weekly_order`= VALUES(`weekly_order`),
          `weekly_amount`= VALUES(`weekly_amount`),`monthly_order`= VALUES(`monthly_order`),`monthly_amount`= VALUES(`monthly_amount`),
          `target_amount`= VALUES(`target_amount`),`target_rate`= VALUES(`target_rate`)
      '''
@@ -123,33 +187,50 @@ def main():
     # 筛选进粉
     df_name_base = df_name_base.merge(df_fans, on=['dept_name'], how='left')
     df_name_base = df_name_base.fillna(0)
-    df_name_base['fuzhu'] = df_name_base['tenant_id2'] - df_name_base['tenant_id']
-    df_name_base = df_name_base.loc[df_name_base['fuzhu'] == 0, :]
-    # 销售
+    # df_name_base['fuzhu'] = df_name_base['tenant_id2'] - df_name_base['tenant_id']
+    # df_name_base = df_name_base.loc[df_name_base['fuzhu'] == 0, :]
+
+    # 销售，当日
     df_order_day = get_order(st, et)
+    # 本周
     df_order_weekly = get_order(st2, et)
+    # 本月
     df_order_monthly = get_order(st3, et)
     df_name_base = df_name_base.merge(df_order_day, on=['dept_name'], how='left')
     df_name_base = df_name_base.merge(df_order_weekly, on=['dept_name'], how='left')
     df_name_base = df_name_base.merge(df_order_monthly, on=['dept_name'], how='left')
+    # 及时订单，后续订单，复购订单
+    df_order_js = get_order2(st, et)
+    df_order_hx = get_order3(st, et)
+    df_order_fg = get_order4(st, et)
+    df_name_base = df_name_base.merge(df_order_js, on=['dept_name'], how='left')
+    df_name_base = df_name_base.merge(df_order_hx, on=['dept_name'], how='left')
+    df_name_base = df_name_base.merge(df_order_fg, on=['dept_name'], how='left')
+    # 重命名
     df_name_base = df_name_base.rename(
         columns={'orders_x': 'day_order', 'orders_y': 'weekly_order', 'orders': 'monthly_order',
                  'orders_amount_x': 'day_amount', 'orders_amount_y': 'weekly_amount',
                  'orders_amount': 'monthly_amount'})
     df_name_base = df_name_base[
-        ['dept_name1', 'dept_name2', 'fans', 'day_order', 'day_amount', 'weekly_order', 'weekly_amount',
+        ['dept_name1', 'dept_name2', 'fans',  'day_order', 'day_amount', 'js_orders', 'js_orders_amount', 'hx_orders',
+         'hx_orders_amount', 'fg_orders', 'fg_orders_amount', 'weekly_order', 'weekly_amount',
          'monthly_order', 'monthly_amount']]
     df_name_base = df_name_base.fillna(0)
     df_name_base = df_name_base.groupby(['dept_name1', 'dept_name2'])[
-        'fans', 'day_order', 'day_amount', 'weekly_order', 'weekly_amount', 'monthly_order', 'monthly_amount'].sum().reset_index()
+        'fans', 'day_order', 'day_amount', 'js_orders', 'js_orders_amount', 'hx_orders',
+         'hx_orders_amount', 'fg_orders', 'fg_orders_amount', 'weekly_order', 'weekly_amount',
+         'monthly_order', 'monthly_amount'].sum().reset_index()
     # 目标
     df_target = get_target()
     df_name_base = df_name_base.merge(df_target, on=['dept_name2'], how='left')
-    df_name_base['target_rate'] = df_name_base['target_amount'] / df_name_base['monthly_amount']
+    df_name_base['target_rate'] = df_name_base['monthly_amount']/df_name_base['target_amount']
     df_name_base = df_name_base.fillna(0)
+    df_name_base = df_name_base.loc[df_name_base['monthly_amount'] != 0, :]
     df_name_base = df_name_base[
-        ['dept_name1', 'dept_name2', 'fans', 'day_order', 'day_amount', 'weekly_order', 'weekly_amount',
+        ['dept_name1', 'dept_name2', 'fans', 'day_order', 'day_amount', 'js_orders', 'js_orders_amount', 'hx_orders',
+         'hx_orders_amount', 'fg_orders', 'fg_orders_amount', 'weekly_order', 'weekly_amount',
          'monthly_order', 'monthly_amount', 'target_amount', 'target_rate']]
+    print(df_name_base)
     del_sql()
     save_sql(df_name_base)
 
@@ -157,12 +238,13 @@ def main():
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2023-05-01'
-    st2 = '2023-05-10'
-    st3 = '2023-05-15'
-    et = '2023-06-01'
-    monthly = '5月'
+    now = datetime.now().date()
+    st = now - timedelta(days=1)
+    # 本周
+    st2 = now - timedelta(days=now.weekday())
+    # 本月
+    st3 = datetime(now.year, now.month, 1)
+    et = now
+    print(st, st2, st3, et)
+    monthly = '6月'
     main()
-
-
-

@@ -43,11 +43,16 @@ def get_user_oid():
     sql = '''
     SELECT 
         a.sys_user_id,
+        a.user_name,
+        a.nick_name,
+        a.dept_name1,
+        a.dept_name2,
+        a.dept_name,
+        count(DISTINCT a.wechat_id) wechat_nums,
         a.order_sn,
         sum(a.order_amount) order_amount
     FROM 
-    t_orders_middle a
-    LEFT JOIN  t_member_middle b on a.member_id=b.member_id
+        t_orders_middle a
     # 状态
     where a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     and a.clinch_type in ('后续首单日常成交','后续首单活动成交','复购日常成交','复购活动成交')
@@ -205,11 +210,11 @@ def del_sql():
 
 def main():
     # 员工基础信息
-    df_user_base = get_user_base()
+    # df_user_base = get_user_base()
     # 订单信息
     df_user_oid = get_user_oid()
-    df_user_oid_base = df_user_base.merge(df_user_oid, on=['sys_user_id'], how='left')
-    df_user_oid_base = df_user_oid_base.fillna(0)
+    # df_user_oid_base = df_user_base.merge(df_user_oid, on=['sys_user_id'], how='left')
+    df_user_oid_base = df_user_oid.fillna(0)
     # 订单区间
     # df_user_oid_base['order_interval'] = df_user_oid_base.apply(lambda x: get_order_divide(x['order_amount']), axis=1)
     df1 = df_user_oid_base[df_user_oid_base['dept_name2'] == '光辉部蜜肤语前端']
@@ -241,5 +246,10 @@ def main():
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    # 2023年五一活动，2023年38女神节活动，2023年618活动
     activity_name = '2023年618活动'
     main()
+
+
+
+

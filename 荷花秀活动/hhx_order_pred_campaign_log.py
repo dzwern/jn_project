@@ -38,8 +38,7 @@ def get_wechat_pred():
     FROM
         t_wechat_middle a 
     WHERE
-        a.valid_state = '正常'
-    and a.wechat_name not in ('玫瑰诗') 
+        a.wechat_name not in ('玫瑰诗') 
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
@@ -62,6 +61,25 @@ def get_member_category():
 
 # 客户类型，新粉和活动期间新进粉丝
 def get_wechat_fans(st, et):
+    sql = '''
+    SELECT 
+        a.wechat_id,
+        sum(a.credit) new_fans
+    FROM 
+        t_wechat_fans_log a
+    LEFT JOIN t_wechat d on a.wechat_id=d.id
+    WHERE a.tenant_id in ( '25') 
+    AND a.new_sprint_time >= '{}' 
+    AND a.new_sprint_time < '{}'
+    and d.valid_state=1
+    GROUP BY a.wechat_id
+    '''.format(st, et)
+    df = hhx_sql1.get_DataFrame_PD(sql)
+    return df
+
+
+# 客户类型，新粉和活动期间新进粉丝
+def get_wechat_fans2(st, et):
     sql = '''
     SELECT 
         a.wechat_id,
@@ -115,18 +133,16 @@ def get_member_level():
 # 38女神节活动时长
 # 五一活动时长
 def get_campaign_time():
-    df1 = ['光辉部三组', '光辉部一组', '光辉部八组', '光辉部七组',
-           '光芒部二组', '光芒部六组', '光芒部三组', '光芒部一组',
-           '光华部二组', '光华部五组', '光华部1组', '光华部六组',
-           '光源部蜂蜜九组', '光源部蜂蜜四组', '光源部蜂蜜五组', '光源部海参七组']
-    df2 = [7, 7, 12, 12,
-           12, 12, 12, 12,
-           7, 7, 12, 12,
-           12, 12, 12, 12]
-    df = {"dept_name": df1,
-          'activity_duration': df2}
-    data = pd.DataFrame(df)
-    return data
+    sql='''
+    SELECT
+        a.dept_name,
+        a.activity_duration
+    FROM
+        t_campaign_target_log a
+    WHERE a.activity_name='{}'
+    '''.format(activity_name)
+    df = hhx_sql2.get_DataFrame_PD(sql)
+    return df
 
 
 # 客户成交金额,成交数，粉丝转换，新进粉成交
@@ -282,7 +298,7 @@ def main():
         'V2'] - df1['V3'] - df1['V4'] - df1['V5']
     # 光芒，光源相差
     df2 = df_wechat_pred[(df_wechat_pred['dept_name1'] == '光源部') | (df_wechat_pred['dept_name1'] == '光芒部')]
-    df2['old_fans'] = df2['reality_fans']  - df1['V0'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2[
+    df2['old_fans'] = df2['reality_fans'] - df2['V1'] - df2['V2'] - df2['V3'] - df2['V4'] - df2[
         'V5']
     df_wechat_pred = pd.concat([df1, df2])
     # df_wechat_pred = df_wechat_pred[[
@@ -322,17 +338,18 @@ def main():
                                    'members_develop','members_amount','member_rate','member_price','activity_name']]
     print(df_wechat_pred)
     # 删除数据
+    # del_sql()
     save_sql(df_wechat_pred)
 
 
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2022-12-15'
-    st2 = '2023-02-15'
-    et = '2023-03-01'
-    log_name = '2023年38女神节活动前客户等级'
-    activity_name = '2023年38女神节活动'
+    st = '2023-04-18'
+    st2 = '2023-06-01'
+    et = '2023-06-15'
+    log_name = '2023年618活动前客户等级'
+    activity_name = '2023年618活动'
     main()
 
 

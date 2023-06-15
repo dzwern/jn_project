@@ -27,10 +27,6 @@ def get_user_base():
         count(DISTINCT a.wechat_id) wechat_nums
     FROM
         t_wechat_middle a 
-    WHERE
-        a.valid_state = '正常'
-    and a.wechat_name not in ('玫瑰诗') 
-    and a.dept_name1 not in ('0')
     GROUP BY a.sys_user_id
     '''
     df = hhx_sql2.get_DataFrame_PD(sql)
@@ -45,7 +41,7 @@ def get_user_fans():
         a.member_category,
         sum(a.members) fans
     FROM
-        t_pred_campaign a
+        t_pred_campaign_log a
     where a.activity_name='{}'
     GROUP BY a.sys_user_id,a.member_category
     '''.format(activity_name)
@@ -208,7 +204,6 @@ def main():
     df_member_strike = pd.concat(
         [df_member_strike, df_member_strike2, df_member_strike3, df_member_strike4, df_member_struck])
     df_user_base = df_user_base.merge(df_member_strike, on=['sys_user_id', 'member_category'], how='left')
-    df_user_base = df_user_base.fillna(0)
     # 分类汇总
     df_user_base1 = df_user_base[['sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
                                  'wechat_nums','member_category', 'fans']].drop_duplicates()
@@ -229,7 +224,7 @@ def main():
                                  'members_amount', 'member_price', 'activity_name']]
     df_user_base = df_user_base
     print(df_user_base)
-    # del_sql()
+    del_sql()
     save_sql(df_user_base)
 
 
@@ -237,13 +232,11 @@ if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     st = '2023-04-18'
-    st2 = '2023-05-31'
+    st2 = '2023-06-01'
     et = '2023-06-15'
     log_name = '2023年618活动前客户等级'
     # 活动名称  2023年五一活动，2023年38女神节活动，2023年618活动
     activity_name = '2023年618活动'
     main()
-
-
 
 
