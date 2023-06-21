@@ -35,7 +35,7 @@ def get_ym_order(st, et):
     -- 筛选营销类型
     AND b.no_performance_type in (1,3,5,6,10) 
      -- 筛选订单金额大于0
-    AND a.order_amount > 0
+    and  a.order_amount-refund_amount>0
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -55,7 +55,7 @@ def get_tc_order(st, et):
         a.tenant_id = 12 
     and a.create_time >= '{}'
     and a.create_time<'{}'
-    AND a.order_state in (0,1,2,4,5,7,12,13,14,15,16,17)
+    AND a.order_state in (0,1,2,3,4,5,7,12,13,14,15,16,17)
     AND a.order_amount>100
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
@@ -66,12 +66,14 @@ def get_tc_order(st, et):
 def get_ls_order(st, et):
     sql = '''
     SELECT
-        '赖氏' dept_name,
+        '赖氏父子' dept_name,
         count(DISTINCT a.member_id) members,
-        sum(a.order_amount) order_amounts
+        sum(a.order_amount)-sum(a.refund_amount) order_amounts
     FROM
         t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
+    LEFT JOIN sys_user c on a.sys_user_id=c.user_id
+    LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     WHERE
      a.tenant_id = 10
     and a.create_time >= '{}'
@@ -80,6 +82,8 @@ def get_ls_order(st, et):
     AND a.order_state in (0,1,2,3,4,5,7,12,13,14,15,16,17)
      -- 订单类型
     AND b.no_performance_type in (2,3,5,6,14)
+    AND (d.dept_name like "电商部" or d.dept_name like "_中心%%") 
+    and  a.order_amount-refund_amount>0
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -91,15 +95,23 @@ def get_fy_order1(st, et):
     SELECT
         '风云酱父' dept_name,
         count(DISTINCT a.member_id) members,
-        sum(a.order_amount) order_amounts
+        sum(a.order_amount)-sum(a.refund_amount) order_amounts
     FROM
         t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
+    LEFT JOIN sys_user c on a.sys_user_id=c.user_id
+    LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     WHERE
      a.tenant_id = 8
     and a.create_time >= '{}'
     and a.create_time<'{}'
+     -- 订单状态
+    AND a.order_state in (0,1,2,3,4,5,7,12,13,14,15,16,17)
+     -- 订单类型
+    AND b.no_performance_type in (2,3,5,6,14)
+    and  a.order_amount-refund_amount>0
     and not exists (select 1 from t_order_hang_up where order_id = a.id)
+    AND (d.dept_name like "%%销售%%" or d.dept_name like "离职部门")  
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -111,15 +123,23 @@ def get_fy_order2(st, et):
     SELECT
         '风云酱父' dept_name,
         count(DISTINCT a.member_id) members,
-        sum(a.order_amount) order_amounts
+        sum(a.order_amount)-sum(a.refund_amount) order_amounts
     FROM
-            t_orders a 
+        t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
+    LEFT JOIN sys_user c on a.sys_user_id=c.user_id
+    LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     WHERE
      a.tenant_id = 21
     and a.create_time >= '{}'
     and a.create_time<'{}'
+     -- 订单状态
+    AND a.order_state in (0,1,2,3,4,5,7,12,13,14,15,16,17)
+     -- 订单类型
+    AND b.no_performance_type in (2,3,5,6,14)
+    and  a.order_amount-refund_amount>0
     and not exists (select 1 from t_order_hang_up where order_id = a.id)
+    AND (d.dept_name like "%%销售%%" )  
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -140,7 +160,9 @@ def get_hhx_order1(st, et):
     and a.create_time >= '{}'
     and a.create_time<'{}'
     -- 订单状态
-    and a.order_state in (0,1,2,3,4,5,7,12,13,14,15,16,17) 
+    and a.order_state in (0,1,2,3,4,5,7,12,13,14,15,16,17)
+    # 退款状态
+    and a.refund_state not in (4) 
     and a.order_amount>40
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
@@ -155,7 +177,7 @@ def get_hhx_order2(st, et):
         count(DISTINCT a.member_id) members,
         sum(a.order_amount) order_amounts
     FROM
-            t_orders a 
+        t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
     WHERE
         a.tenant_id in ('25','26','27','28')
@@ -163,6 +185,7 @@ def get_hhx_order2(st, et):
     and a.create_time<'{}'
     -- 订单状态
     and a.order_state in (0,1,2,3,4,5,7,12,13,14,15,16,17) 
+    and a.refund_state not in (4) 
     and a.order_amount>40
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
@@ -185,7 +208,7 @@ def get_bc_order(st, et):
     and a.create_time<'{}'
      -- 订单状态
     AND a.order_state in (0,1,2,3,4,5,7,12,13,14,15,16,17)
-    AND a.order_amount>0
+    and  a.order_amount-refund_amount>0
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -197,17 +220,21 @@ def get_neh_order(st, et):
     SELECT
         '女儿红' dept_name,
         count(DISTINCT a.member_id) members,
-        sum(a.order_amount) order_amounts
+        sum(a.order_amount-a.refund_amount) order_amounts
     FROM
-            t_orders a 
+        t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
+    left join sys_user as u on u.user_id = a.sys_user_id
+    left join sys_dept as d on d.dept_id = u.dept_id
     WHERE
      a.tenant_id = 3
     and a.create_time >= '{}'
     and a.create_time<'{}'
     AND a.order_state in ( 0,1,2,3,4,5,7,13,14,15,16,17)
     AND b.no_performance_type in (6,1,5,10,3) 
-    AND a.order_amount>0
+    and  a.order_amount-refund_amount>0
+    AND a.order_amount-a.refund_amount>0 -- 选取结余金额，排除退款
+    AND d.dept_id not in (107,122,110,109,112,108,113,116,118)
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -311,6 +338,8 @@ def main():
     df_order = pd.concat([df_order_d, df_order_2d, df_order_w, df_order_m, df_order_y])
     df_order['member_price'] = df_order['order_amounts'] / df_order['members']
     df_order = df_order[['dept_name', 'time_type', 'members', 'order_amounts', 'member_price']]
+    df_order=df_order.fillna(0)
+    print(df_order)
     del_sql()
     save_sql(df_order)
 
@@ -333,3 +362,6 @@ if __name__ == '__main__':
     et = now + timedelta(days=1)
     print(st, st2, st3, st4, st5, et)
     main()
+
+
+

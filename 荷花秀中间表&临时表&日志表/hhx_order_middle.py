@@ -550,6 +550,8 @@ def get_hhx_activity(x):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-05-31','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-15','%Y-%m-%d'):
         return '2023年618活动'
+    elif datetime.datetime.strptime('2023-06-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-20','%Y-%m-%d'):
+        return '2023年618活动返场'
     else:
         return 0
 
@@ -562,6 +564,8 @@ def get_hhx_activity1(x):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-05-31','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-15','%Y-%m-%d'):
         return '2023年618活动'
+    elif datetime.datetime.strptime('2023-06-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-20','%Y-%m-%d'):
+        return '2023年618活动返场'
     else:
         return 0
 
@@ -574,6 +578,8 @@ def get_hhx_activity2(x):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-05-31','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-15','%Y-%m-%d'):
         return '2023年618活动'
+    elif datetime.datetime.strptime('2023-06-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-20','%Y-%m-%d'):
+        return '2023年618活动返场'
     else:
         return 0
 
@@ -586,6 +592,8 @@ def get_hhx_activity3(x):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-05-31','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-10','%Y-%m-%d'):
         return '2023年618活动'
+    elif datetime.datetime.strptime('2023-06-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-20','%Y-%m-%d'):
+        return '2023年618活动返场'
     else:
         return 0
 
@@ -598,6 +606,8 @@ def get_hhx_activity4(x):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-05-31','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-15','%Y-%m-%d'):
         return '2023年618活动'
+    elif datetime.datetime.strptime('2023-06-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-20','%Y-%m-%d'):
+        return '2023年618活动返场'
     else:
         return 0
 
@@ -612,6 +622,8 @@ def get_hhx_activity5(x):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-05-31','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-09','%Y-%m-%d'):
         return '2023年618活动'
+    elif datetime.datetime.strptime('2023-06-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-20','%Y-%m-%d'):
+        return '2023年618活动返场'
     else:
         return 0
 
@@ -626,6 +638,8 @@ def get_hhx_activity6(x):
         return '2023年38女神节活动'
     elif datetime.datetime.strptime('2023-05-31','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-14','%Y-%m-%d'):
         return '2023年618活动'
+    elif datetime.datetime.strptime('2023-06-17','%Y-%m-%d') <= x <= datetime.datetime.strptime('2023-06-20','%Y-%m-%d'):
+        return '2023年618活动返场'
     else:
         return 0
 
@@ -761,16 +775,16 @@ if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
-    # time1 = datetime.datetime.now()
-    # st = time1 - relativedelta(days=100)
-    # et = time1 + relativedelta(days=1)
-    # st1 = utils.date2str(st)
-    # et1 = utils.date2str(et)
+    time1 = datetime.datetime.now()
+    st = time1 - relativedelta(days=10)
+    et = time1 + relativedelta(days=1)
+    st1 = utils.date2str(st)
+    et1 = utils.date2str(et)
     # 时间转化
-    st = '2023-05-17'
-    et = '2023-06-10'
-    st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
-    et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
+    # st = '2023-05-17'
+    # et = '2023-06-10'
+    # st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
+    # et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st, et)
     main()
 

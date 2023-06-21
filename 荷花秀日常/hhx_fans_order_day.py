@@ -5,7 +5,7 @@
 # @Author  : diaozhiwei
 # @FileName: hhx_fans_order_day.py
 # @description: 
-# @update:
+# @update:由于系统切分，需要分成两次运行，运行的时间节点是5.17
 """
 
 from jn_modules.dingtalk.DingTalk import DingTalk
@@ -38,7 +38,7 @@ def get_member_credit():
     and a.new_sprint_time<'{}'
     and a.credit>0
     GROUP BY f.dept_name,e.nick_name,d.wecaht_number,a.tenant_id,left(a.new_sprint_time,10)
-    '''.format(st,st2)
+    '''.format(st2,et1)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
 

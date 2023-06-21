@@ -114,12 +114,12 @@ def main():
     df_stock['project'] = df_stock.apply(lambda x: get_index(x['tenant_id']), axis=1)
     df_stock = df_stock.fillna(0)
     # 销售数据，周销售
-    df_product_order = get_product_order(st, st2)
+    df_product_order = get_product_order(st, et)
     df_product_order['project'] = df_product_order.apply(lambda x: get_name(x['dept_name2']), axis=1)
     df_product_order = df_product_order.fillna(0)
     df_stock = df_stock.merge(df_product_order, on=['project', 'product_name'], how='left')
     # 销售数据，月销售
-    df_product_order2 = get_product_order(st, et)
+    df_product_order2 = get_product_order(st2, et)
     df_product_order2['project'] = df_product_order2.apply(lambda x: get_name(x['dept_name2']), axis=1)
     df_product_order2 = df_product_order2.fillna(0)
     df_stock = df_stock.merge(df_product_order2, on=['project', 'product_name'], how='left')
@@ -127,6 +127,7 @@ def main():
     df_stock = df_stock[
         ['id', 'product_name', 'types', 'spec', 'stock', 'weekly_order', 'monthly_order', 'tenant_id', 'project']]
     df_stock = df_stock.fillna(0)
+    print(df_stock)
     del_sql()
     save_sql(df_stock)
 
@@ -134,10 +135,26 @@ def main():
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    st = '2023-04-01'
-    st2 = '2023-05-01'
-    et = '2023-06-01'
-    st = datetime.strptime(st, "%Y-%m-%d")
-    st2 = datetime.strptime(st2, "%Y-%m-%d")
-    et = datetime.strptime(et, "%Y-%m-%d")
+    # st = '2023-04-01'
+    # st2 = '2023-05-01'
+    # et = '2023-06-01'
+    # st = datetime.strptime(st, "%Y-%m-%d")
+    # st2 = datetime.strptime(st2, "%Y-%m-%d")
+    # et = datetime.strptime(et, "%Y-%m-%d")
+    now = datetime.now().date()
+    # st = now - timedelta(days=1)
+    # 本周
+    st = now - timedelta(days=now.weekday())
+    # 本月
+    st2 = datetime(now.year, now.month, 1)
+    et = now
+    print(st, st2, et)
     main()
+
+
+
+
+
+
+
+

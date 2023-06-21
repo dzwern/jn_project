@@ -74,6 +74,14 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_nickname_rank_total;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 员工信息
     df_nick_name = get_base()
@@ -95,6 +103,8 @@ def main():
     df_nick_name = df_nick_name[
         ['dept_name1', 'dept_name2', 'nick_name', 'weekly_order', 'weekly_amount', 'weekly_rank', 'monthly_order',
          'monthly_amount', 'monthly_rank']]
+    print(df_nick_name)
+    del_sql()
     save_sql(df_nick_name)
 
 
