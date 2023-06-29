@@ -3,7 +3,7 @@
 """
 # @Time    : 2023/4/1 14:59
 # @Author  : diaozhiwei
-# @FileName: hhx_product_campaign.py
+# @FileName: demo_product_campaign.py
 # @description: 活动期间商品监控
 # @update:
 """

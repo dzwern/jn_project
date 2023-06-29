@@ -72,9 +72,9 @@ def get_member_develop():
         t_orders_middle a
     where a.first_time>='{}'
     and a.first_time<'{}'
-    # and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
+    and a.order_state not in ('订单取消','订单驳回','拒收途中','待确认拦回')
     GROUP BY a.wechat_number,left(a.first_time,10)
-    '''.format(et1, et2)
+    '''.format(st1, et2)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
 
@@ -97,7 +97,72 @@ def get_develop(x):
         return '181-360天'
     else:
         return '1年以上'
+def get_dept(x):
+    if x == '光辉部':
+        return '1部门'
+    elif x == '光华部':
+        return '2部门'
+    elif x == '光源部':
+        return '3部门'
+    elif x == '光芒部':
+        return '4部门'
+    else:
+        return '1部门'
 
+
+def get_dept2(x):
+    if x == '光华部1组':
+        return '小组1'
+    elif x == '光华部二组':
+        return '小组2'
+    elif x == '光华部六组':
+        return '小组3'
+    elif x == '光华部五组':
+        return '小组4'
+    elif x == '光华部一组1':
+        return '小组5'
+    elif x == '光华部三组':
+        return '小组6'
+    elif x == '光华部七组':
+        return '小组7'
+    elif x == '光华部一组':
+        return '小组8'
+    elif x == '光辉部八组':
+        return '小组1'
+    elif x == '光辉部七组':
+        return '小组2'
+    elif x == '光辉部三组':
+        return '小组3'
+    elif x == '光辉部一组':
+        return '小组4'
+    elif x == '光辉部二组':
+        return '小组5'
+    elif x == '光辉部五组':
+        return '小组6'
+    elif x == '光辉部六组':
+        return '小组7'
+    elif x == '光辉组九组':
+        return '小组8'
+    elif x == '光芒部二组':
+        return '小组1'
+    elif x == '光芒部六组':
+        return '小组2'
+    elif x == '光芒部三组':
+        return '小组3'
+    elif x == '光芒部一组':
+        return '小组4'
+    elif x == '光源部蜂蜜八组':
+        return '小组1'
+    elif x == '光源部蜂蜜九组':
+        return '小组2'
+    elif x == '光源部蜂蜜四组':
+        return '小组3'
+    elif x == '光源部蜂蜜五组':
+        return '小组4'
+    elif x == '光源部海参七组':
+        return '小组5'
+    else:
+        return '小组1'
 
 def save_sql(df):
     sql = '''
@@ -128,7 +193,7 @@ def save_sql(df):
          `361_days`=values(`361_days`),`total`=values(`total`),`total_orders`=values(`total_orders`),
          `total_price`=values(`total_price`),`total_orders_price`=values(`total_orders_price`),`develop_rate`=values(`develop_rate`)
      '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    hhx_sql3.executeSqlManyByConn(sql, df.values.tolist())
 
 
 # 中间表删除
@@ -136,7 +201,7 @@ def del_sql():
     sql = '''
     truncate table t_fans_develop_day;
     '''
-    hhx_sql2.executeSqlByConn(sql)
+    hhx_sql3.executeSqlByConn(sql)
 
 
 def main():
@@ -165,10 +230,6 @@ def main():
     df_develop2 = df_develop2.unstack().reset_index()
     df_develop1 = df_develop1.fillna(0)
     df_develop2 = df_develop2.fillna(0)
-    # 关联部门
-    df_develop1 = df_develop1.merge(df_hhx_user, on=['dept_name'], how='left')
-    df_develop2 = df_develop2.merge(df_hhx_user, on=['dept_name'], how='left')
-    # 重命名
     df_develop1 = df_develop1.rename(columns={
         '当日': '0_days', '1-3天': '1_3_days', '4-7天': '4_7_days', '8-30天': '8_30_days', '31-90天': '31_90_days',
         '91-180天': '91_180_days', '181-360天': '181_360_days', '1年以上': '361_days'
@@ -178,26 +239,10 @@ def main():
         '31-90天': '31_90_orders',
         '91-180天': '91_180_orders', '181-360天': '181_360_orders', '1年以上': '361_orders'
     })
-    # 合并生成新的辅助列
-    df_fuzhu1 = df_credit[["dept_name", "nick_name", "wechat_number", "first_time",'dept_name1','dept_name2']]
-    df_fuzhu2 = df_develop1[["dept_name", "nick_name", "wechat_number", "first_time",'dept_name1','dept_name2']]
-    df_fuzhu3 = df_develop2[["dept_name", "nick_name", "wechat_number", "first_time",'dept_name1','dept_name2']]
-    df_fuzhu=pd.concat([df_fuzhu1,df_fuzhu2,df_fuzhu3])
-    df_fuzhu=df_fuzhu.drop_duplicates()
-    # 关联
-    df_hhx_develop=df_fuzhu.merge(df_credit, on=["dept_name", "nick_name", "wechat_number", "first_time",'dept_name1','dept_name2'],
+    df_hhx_develop = df_credit.merge(df_develop1, on=["dept_name", "nick_name", "wechat_number", "first_time"],
                                      how='left')
-
-    df_hhx_develop = df_hhx_develop.merge(df_develop1, on=["dept_name", "nick_name", "wechat_number", "first_time",'dept_name1','dept_name2'],
-                                     how='left')
-    df_hhx_develop = df_hhx_develop.merge(df_develop2, on=["dept_name", "nick_name", "wechat_number", "first_time",'dept_name1','dept_name2'],
+    df_hhx_develop = df_hhx_develop.merge(df_develop2, on=["dept_name", "nick_name", "wechat_number", "first_time"],
                                           how='left')
-    df_hhx_develop['91_180_days'] = 0
-    df_hhx_develop['91_180_orders'] = 0
-    df_hhx_develop['181_360_days'] = 0
-    df_hhx_develop['181_360_orders'] = 0
-    df_hhx_develop['361_days'] = 0
-    df_hhx_develop['361_orders'] = 0
     df_hhx_develop['total'] = df_hhx_develop['0_days'] + df_hhx_develop['1_3_days'] + df_hhx_develop['4_7_days'] + \
                               df_hhx_develop['8_30_days'] + df_hhx_develop['31_90_days'] + df_hhx_develop[
                                   '91_180_days'] + df_hhx_develop['181_360_days'] + df_hhx_develop['361_days']
@@ -207,15 +252,15 @@ def main():
                                          '361_orders']
     df_hhx_develop = df_hhx_develop.fillna(0)
     # 及时单产
-    df_hhx_develop['0_orders_price'] = df_hhx_develop['0_orders'] / df_hhx_develop['fans']
+    df_hhx_develop['0_orders_price'] = df_hhx_develop['0_orders'] / df_hhx_develop['fans']*1.33
     # 及时开发率
-    df_hhx_develop['0_develop_rate'] = df_hhx_develop['0_days'] / df_hhx_develop['fans']
+    df_hhx_develop['0_develop_rate'] = df_hhx_develop['0_days'] / df_hhx_develop['fans']*12.214
     # 总计客单价
-    df_hhx_develop['total_price'] = df_hhx_develop['total_orders'] / df_hhx_develop['total']
+    df_hhx_develop['total_price'] = df_hhx_develop['total_orders'] / df_hhx_develop['total']*0.516
     # 总计开发单产
-    df_hhx_develop['total_orders_price'] = df_hhx_develop['total_orders'] / df_hhx_develop['fans']
+    df_hhx_develop['total_orders_price'] = df_hhx_develop['total_orders'] / df_hhx_develop['fans']*0.5123
     # 总计开发率
-    df_hhx_develop['develop_rate'] = df_hhx_develop['total'] / df_hhx_develop['fans']
+    df_hhx_develop['develop_rate'] = df_hhx_develop['total'] / df_hhx_develop['fans']*0.523
 
     df_hhx_develop['id'] = df_hhx_develop['wechat_id'].astype(str) + df_hhx_develop['first_time']
     df_hhx_develop['first_time'] = pd.to_datetime(df_hhx_develop['first_time'], errors='coerce')
@@ -225,14 +270,16 @@ def main():
     # 筛选部门
     df_hhx_develop = df_hhx_develop.fillna(0)
     # df_hhx_develop = df_hhx_develop.loc[~df_hhx_develop['dept_name1'].isin(['0']), :]
-    # df_hhx_develop = df_hhx_develop.drop(index=df_hhx_develop.dept_name1[df_hhx_develop.dept_name1 == 0].index)
-    # df_hhx_develop = df_hhx_develop.drop(index=df_hhx_develop.dept_name1[df_hhx_develop.dept_name1 == '0'].index)
+    df_hhx_develop = df_hhx_develop.drop(index=df_hhx_develop.dept_name1[df_hhx_develop.dept_name1 == 0].index)
+    df_hhx_develop = df_hhx_develop.drop(index=df_hhx_develop.dept_name1[df_hhx_develop.dept_name1 == '0'].index)
     df_hhx_develop = df_hhx_develop[
         ["id", "dept_name1", 'dept_name2', "dept_name", "nick_name", "wechat_id", "wechat_number", "first_time",
          'years', 'monthly', "fans", "0_days", '0_orders', '0_orders_price', '0_develop_rate', '1_3_days', '4_7_days',
          '8_30_days', '31_90_days', '91_180_days', '181_360_days', '361_days', 'total', 'total_orders',
          'total_price', 'total_orders_price', 'develop_rate']]
     df_hhx_develop = df_hhx_develop
+    df_hhx_develop['dept_name1'] = df_hhx_develop.apply(lambda x: get_dept(x['dept_name1']), axis=1)
+    df_hhx_develop['dept_name'] = df_hhx_develop.apply(lambda x: get_dept2(x['dept_name']), axis=1)
     print(df_hhx_develop)
     # del_sql()
     save_sql(df_hhx_develop)
@@ -241,11 +288,12 @@ def main():
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql3 = jnMysql('yanshiku_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 时间转化
     time1 = datetime.datetime.now()
     et2 = time1 + relativedelta(days=2)
     et2 = utils.date2str(et2)
-    st = '2023-01-01'
+    st = '2022-05-01'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et = '2023-05-17'
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")

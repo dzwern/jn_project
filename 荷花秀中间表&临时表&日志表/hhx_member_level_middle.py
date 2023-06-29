@@ -274,6 +274,13 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+def get_time(x, y, z):
+    if x < 0:
+        return y
+    else:
+        return z
+
+
 def main():
     # 客户基础数据
     df_hhx_member = get_member_base()
@@ -303,6 +310,15 @@ def main():
     df_hhx_member = df_hhx_member.merge(df_hhx_order_time, on=['member_id'], how='left')
     # 老系统最近购买时间
     df_hhx_order_time_old = get_member_new_time_old()
+    df_hhx_member=df_hhx_member.merge(df_hhx_order_time_old,on=['second_primary_id'],how='left')
+    # 时间判断
+    df_hhx_member['last_time'] = df_hhx_member['last_time'].fillna(0)
+    df_hhx_member['last_time'] = df_hhx_member['last_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
+    df_hhx_member['last_time_old'] = df_hhx_member['last_time_old'].fillna(0)
+    df_hhx_member['last_time_old'] = df_hhx_member['last_time_old'].apply(lambda x: '1900-01-01' if x == 0 else x)
+    df_hhx_member['fuzhu']= (
+                (pd.to_datetime(df_hhx_member['last_time']) - pd.to_datetime(df_hhx_member['last_time_old'])) / pd.Timedelta(1,'D')).fillna(0).astype(int)
+    df_hhx_member['last_time']=df_hhx_member.apply(lambda x:get_time(x['fuzhu'],x['last_time_old'],x['last_time']),axis=1)
     # 光辉部
     df1 = df_hhx_member[df_hhx_member['dept_name1'] == '光辉部']
     df1['member_level'] = df1['order_amounts'].apply(lambda x: member_divide1(x))

@@ -92,6 +92,74 @@ def get_work_target():
     return df
 
 
+def get_dept(x):
+    if x == '光辉部':
+        return '1部门'
+    elif x == '光华部':
+        return '2部门'
+    elif x == '光源部':
+        return '3部门'
+    elif x == '光芒部':
+        return '4部门'
+    else:
+        return '1部门'
+
+
+def get_dept2(x):
+    if x == '光华部1组':
+        return '小组1'
+    elif x == '光华部二组':
+        return '小组2'
+    elif x == '光华部六组':
+        return '小组3'
+    elif x == '光华部五组':
+        return '小组4'
+    elif x == '光华部一组1':
+        return '小组5'
+    elif x == '光华部三组':
+        return '小组6'
+    elif x == '光华部七组':
+        return '小组7'
+    elif x == '光华部一组':
+        return '小组8'
+    elif x == '光辉部八组':
+        return '小组1'
+    elif x == '光辉部七组':
+        return '小组2'
+    elif x == '光辉部三组':
+        return '小组3'
+    elif x == '光辉部一组':
+        return '小组4'
+    elif x == '光辉部二组':
+        return '小组5'
+    elif x == '光辉部五组':
+        return '小组6'
+    elif x == '光辉部六组':
+        return '小组7'
+    elif x == '光辉组九组':
+        return '小组8'
+    elif x == '光芒部二组':
+        return '小组1'
+    elif x == '光芒部六组':
+        return '小组2'
+    elif x == '光芒部三组':
+        return '小组3'
+    elif x == '光芒部一组':
+        return '小组4'
+    elif x == '光源部蜂蜜八组':
+        return '小组1'
+    elif x == '光源部蜂蜜九组':
+        return '小组2'
+    elif x == '光源部蜂蜜四组':
+        return '小组3'
+    elif x == '光源部蜂蜜五组':
+        return '小组4'
+    elif x == '光源部海参七组':
+        return '小组5'
+    else:
+        return '小组1'
+
+
 def save_sql(df):
     sql = '''
     INSERT INTO `t_campaign` 
@@ -112,7 +180,7 @@ def save_sql(df):
          `member_price`=values(`member_price`),`user_price`=values(`user_price`),
          `activity_name`=values(`activity_name`)
          '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    hhx_sql3.executeSqlManyByConn(sql, df.values.tolist())
 
 
 # 中间表删除
@@ -120,7 +188,7 @@ def del_sql():
     sql = '''
     truncate table t_campaign;
     '''
-    hhx_sql2.executeSqlByConn(sql)
+    hhx_sql3.executeSqlByConn(sql)
 
 
 def main():
@@ -136,29 +204,34 @@ def main():
     df_campaign = df_campaign.merge(df_order_campaign2, on=['dept_name'], how='left')
     df_campaign = df_campaign.merge(df_work_rarget, on=['dept_name'], how='left')
     # 客单价
-    df_campaign['member_price'] = df_campaign['order_amounts'] / df_campaign['members']
+    df_campaign['member_price'] = df_campaign['order_amounts'] / df_campaign['members'] * 0.1
     # 员工人效
-    df_campaign['user_price'] = df_campaign['order_amounts'] / df_campaign['group_users']
+    df_campaign['user_price'] = df_campaign['order_amounts'] / df_campaign['group_users'] * 0.2
     # 目标
-    df_campaign['completion_rate'] = df_campaign['order_amounts'] / df_campaign['amount_target']
+    df_campaign['completion_rate'] = df_campaign['order_amounts'] / df_campaign['amount_target'] * 0.5
     df_campaign['activity_name'] = activity_name
     df_campaign['id'] = df_campaign['dept_name'].astype(str) + df_campaign['activity_name'].astype(str)
     df_campaign = df_campaign[
         ['id', 'dept_name1', 'dept_name2', 'dept_name', 'group_users', 'group_wechats', 'members', 'order_amounts',
          'members_campaign', 'order_amounts_campaign',
-         'amount_target', 'completion_rate', 'member_price', 'user_price','activity_name']]
+         'amount_target', 'completion_rate', 'member_price', 'user_price', 'activity_name']]
     print(df_campaign)
     df_campaign = df_campaign.replace([np.inf, -np.inf], np.nan)
     df_campaign = df_campaign.fillna(0)
-    # del_sql()
+    df_campaign['dept_name1'] = df_campaign.apply(lambda x: get_dept(x['dept_name1']), axis=1)
+    df_campaign['dept_name'] = df_campaign.apply(lambda x: get_dept2(x['dept_name']), axis=1)
+    df_campaign['order_amounts'] = df_campaign['order_amounts'] * 0.8
+    df_campaign['members'] = df_campaign['members'] * 8
+    df_campaign['amount_target'] = df_campaign['amount_target'] * 0.7
+    df_campaign = df_campaign
+    del_sql()
     save_sql(df_campaign)
 
 
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql3 = jnMysql('yanshiku_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
     activity_name = '2023年618活动'
     main()
-
-

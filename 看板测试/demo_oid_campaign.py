@@ -70,11 +70,7 @@ def get_user_oid():
 def get_order_divide(x):
     if 700 > x >= 0:
         return '0-700'
-    elif 1000 > x >= 700:
-        return '700-1k'
-    elif 2000 > x >= 1000:
-        return '1-2k'
-    elif x >= 2000:
+    else:
         return '2k以上'
 
 
@@ -82,102 +78,116 @@ def get_order_divide(x):
 def get_order_divide2(x):
     if 900 > x >= 0:
         return '0-900'
-    elif 2000 > x >= 900:
-        return '900-2k'
-    elif 3000 > x >= 2000:
-        return '2-3k'
-    elif 4000 > x >= 3000:
-        return '3-4k'
-    elif 7000 > x >= 4000:
-        return '4-7k'
-    elif x >= 7000:
-        return '7k以上'
+    else:
+        return '2k以上'
 
 
 # 光华前端
 def get_order_divide3(x):
     if 600 > x >= 0:
         return '0-600'
-    elif 1000 > x >= 600:
-        return '600-1k'
-    elif 1500 > x >= 1000:
-        return '1-1.5k'
-    elif x >= 1500:
-        return '1.5k以上'
+    else:
+        return '2k以上'
 
 
 # 光华后端
 def get_order_divide4(x):
     if 600 > x >= 0:
         return '0-600'
-    elif 1000 > x >= 600:
-        return '600-1k'
-    elif 2000 > x >= 1000:
-        return '1-2k'
-    elif 3000 > x >= 2000:
-        return '2-3k'
-    elif 4000 > x >= 3000:
-        return '3-4k'
-    elif 5000 > x >= 4000:
-        return '4-5k'
-    elif x >= 5000:
-        return '5k以上'
+    else:
+        return '2k以上'
 
 
 # 光芒
 def get_order_divide5(x):
     if 600 > x >= 0:
         return '0-600'
-    elif 1000 > x >= 600:
-        return '600-1k'
-    elif 2000 > x >= 1000:
-        return '1-2k'
-    elif 3000 > x >= 2000:
-        return '2-3k'
-    elif 4000 > x >= 3000:
-        return '3-4k'
-    elif 5000 > x >= 4000:
-        return '4-5k'
-    elif x >= 5000:
-        return '5k以上'
+    else:
+        return '2k以上'
 
 
 # 蜂蜜
 def get_order_divide6(x):
     if 300 > x >= 0:
         return '0-300'
-    elif 500 > x >= 300:
-        return '300-500'
-    elif 1000 > x >= 500:
-        return '500-1k'
-    elif 2000 > x >= 1000:
-        return '1-2k'
-    elif 3000 > x >= 2000:
-        return '2-3k'
-    elif 4000 > x >= 3000:
-        return '3-4k'
-    elif x >= 4000:
-        return '4k以上'
+    else:
+        return '2k以上'
 
 
 # 海参
 def get_order_divide7(x):
     if 1700 > x >= 0:
         return '0-1700'
-    elif 3300 > x >= 1700:
-        return '1700-3300'
-    elif 6600 > x >= 3300:
-        return '3300-6600'
-    elif 9900 > x >= 6600:
-        return '6600-9900'
-    elif 13200 > x >= 9900:
-        return '9900-13200'
-    elif 16500 > x >= 13200:
-        return '13200-16500'
-    elif 33800 > x >= 16500:
-        return '16500-33800'
-    elif x >= 33800:
-        return '33800以上'
+    else:
+        return '2k以上'
+
+
+def get_dept(x):
+    if x == '光辉部':
+        return '1部门'
+    elif x == '光华部':
+        return '2部门'
+    elif x == '光源部':
+        return '3部门'
+    elif x == '光芒部':
+        return '4部门'
+    else:
+        return '1部门'
+
+
+def get_dept2(x):
+    if x == '光华部1组':
+        return '小组1'
+    elif x == '光华部二组':
+        return '小组2'
+    elif x == '光华部六组':
+        return '小组3'
+    elif x == '光华部五组':
+        return '小组4'
+    elif x == '光华部一组1':
+        return '小组5'
+    elif x == '光华部三组':
+        return '小组6'
+    elif x == '光华部七组':
+        return '小组7'
+    elif x == '光华部一组':
+        return '小组8'
+    elif x == '光辉部八组':
+        return '小组1'
+    elif x == '光辉部七组':
+        return '小组2'
+    elif x == '光辉部三组':
+        return '小组3'
+    elif x == '光辉部一组':
+        return '小组4'
+    elif x == '光辉部二组':
+        return '小组5'
+    elif x == '光辉部五组':
+        return '小组6'
+    elif x == '光辉部六组':
+        return '小组7'
+    elif x == '光辉组九组':
+        return '小组8'
+    elif x == '光芒部二组':
+        return '小组1'
+    elif x == '光芒部六组':
+        return '小组2'
+    elif x == '光芒部三组':
+        return '小组3'
+    elif x == '光芒部一组':
+        return '小组4'
+    elif x == '光源部蜂蜜八组':
+        return '小组1'
+    elif x == '光源部蜂蜜九组':
+        return '小组2'
+    elif x == '光源部蜂蜜四组':
+        return '小组3'
+    elif x == '光源部蜂蜜五组':
+        return '小组4'
+    elif x == '光源部海参七组':
+        return '小组5'
+    else:
+        return '小组1'
 
 
 def save_sql(df):
@@ -197,7 +207,7 @@ def save_sql(df):
          `wechat_nums`=values(`wechat_nums`),`order_sn`=values(`order_sn`),`order_amount`=values(`order_amount`),
          `order_interval`=values(`order_interval`),`activity_name`=values(`activity_name`)
          '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    hhx_sql3.executeSqlManyByConn(sql, df.values.tolist())
 
 
 # 中间表删除
@@ -205,7 +215,7 @@ def del_sql():
     sql = '''
     truncate table t_oid_campaign;
     '''
-    hhx_sql2.executeSqlByConn(sql)
+    hhx_sql3.executeSqlByConn(sql)
 
 
 def main():
@@ -238,6 +248,9 @@ def main():
         ['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
          'wechat_nums', 'order_sn', 'order_amount', 'order_interval', 'activity_name']]
     df_user_oid_base = df_user_oid_base
+    df_user_oid_base['dept_name1'] = df_user_oid_base.apply(lambda x: get_dept(x['dept_name1']), axis=1)
+    df_user_oid_base['dept_name'] = df_user_oid_base.apply(lambda x: get_dept2(x['dept_name']), axis=1)
+
     # del_sql()
     print(df_user_oid_base)
     save_sql(df_user_oid_base)
@@ -246,6 +259,7 @@ def main():
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql3 = jnMysql('yanshiku_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 2023年五一活动，2023年38女神节活动，2023年618活动
     activity_name = '2023年618活动返场'
     main()

@@ -133,15 +133,83 @@ def get_order4(st, et):
 def get_target():
     sql = '''
     SELECT
-        a.dept_name2,
+        a.dept_name1,
         sum(a.target_amount) target_amount
     FROM
         t_target_day a
     where a.monthly='{}'
-    GROUP BY a.dept_name2
+    GROUP BY a.dept_name1
     '''.format(monthly)
     df = hhx_sql2.get_DataFrame_PD(sql)
     return df
+
+
+def get_dept(x):
+    if x == '光辉部':
+        return '1部门'
+    elif x == '光华部':
+        return '2部门'
+    elif x == '光源部':
+        return '3部门'
+    elif x == '光芒部':
+        return '4部门'
+    else:
+        return '1部门'
+
+
+def get_dept2(x):
+    if x == '光华部1组':
+        return '小组1'
+    elif x == '光华部二组':
+        return '小组2'
+    elif x == '光华部六组':
+        return '小组3'
+    elif x == '光华部五组':
+        return '小组4'
+    elif x == '光华部一组1':
+        return '小组5'
+    elif x == '光华部三组':
+        return '小组6'
+    elif x == '光华部七组':
+        return '小组7'
+    elif x == '光华部一组':
+        return '小组8'
+    elif x == '光辉部八组':
+        return '小组1'
+    elif x == '光辉部七组':
+        return '小组2'
+    elif x == '光辉部三组':
+        return '小组3'
+    elif x == '光辉部一组':
+        return '小组4'
+    elif x == '光辉部二组':
+        return '小组5'
+    elif x == '光辉部五组':
+        return '小组6'
+    elif x == '光辉部六组':
+        return '小组7'
+    elif x == '光辉组九组':
+        return '小组8'
+    elif x == '光芒部二组':
+        return '小组1'
+    elif x == '光芒部六组':
+        return '小组2'
+    elif x == '光芒部三组':
+        return '小组3'
+    elif x == '光芒部一组':
+        return '小组4'
+    elif x == '光源部蜂蜜八组':
+        return '小组1'
+    elif x == '光源部蜂蜜九组':
+        return '小组2'
+    elif x == '光源部蜂蜜四组':
+        return '小组3'
+    elif x == '光源部蜂蜜五组':
+        return '小组4'
+    elif x == '光源部海参七组':
+        return '小组5'
+    else:
+        return '小组1'
 
 
 # 保存数据
@@ -149,7 +217,7 @@ def save_sql(df):
     sql = '''
      INSERT INTO `t_order_total` 
      (
-     `dept_name1`,`dept_name2`,`fans`,`day_order`,`day_amount`,
+     `dept_name1`,`dept_name`,`fans`,`day_order`,`day_amount`,
      `js_orders`,`js_orders_amount`,`hx_orders`,`hx_orders_amount`,`fg_orders`,
      `fg_orders_amount`,`weekly_order`,`weekly_amount`,`monthly_order`,`monthly_amount`,
      `target_amount`,`target_rate`
@@ -161,14 +229,14 @@ def save_sql(df):
      %s,%s
      )
      ON DUPLICATE KEY UPDATE
-         `dept_name1`= VALUES(`dept_name1`),`dept_name2`= VALUES(`dept_name2`),`fans`= VALUES(`fans`),
+         `dept_name1`= VALUES(`dept_name1`),`dept_name`= VALUES(`dept_name`),`fans`= VALUES(`fans`),
          `day_order`= VALUES(`day_order`),`day_amount`= VALUES(`day_amount`),`js_orders`= VALUES(`js_orders`),
          `js_orders_amount`= VALUES(`js_orders_amount`),`hx_orders`= VALUES(`hx_orders`),`hx_orders_amount`= VALUES(`hx_orders_amount`),
          `fg_orders`= VALUES(`fg_orders`), `fg_orders_amount`= VALUES(`fg_orders_amount`),`weekly_order`= VALUES(`weekly_order`),
          `weekly_amount`= VALUES(`weekly_amount`),`monthly_order`= VALUES(`monthly_order`),`monthly_amount`= VALUES(`monthly_amount`),
          `target_amount`= VALUES(`target_amount`),`target_rate`= VALUES(`target_rate`)
      '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    hhx_sql3.executeSqlManyByConn(sql, df.values.tolist())
 
 
 # 中间表删除
@@ -176,7 +244,7 @@ def del_sql():
     sql = '''
     truncate table t_order_total;
     '''
-    hhx_sql2.executeSqlByConn(sql)
+    hhx_sql3.executeSqlByConn(sql)
 
 
 def main():
@@ -212,25 +280,30 @@ def main():
                  'orders_amount_x': 'day_amount', 'orders_amount_y': 'weekly_amount',
                  'orders_amount': 'monthly_amount'})
     df_name_base = df_name_base[
-        ['dept_name1', 'dept_name2', 'fans',  'day_order', 'day_amount', 'js_orders', 'js_orders_amount', 'hx_orders',
+        ['dept_name1', 'dept_name', 'fans', 'day_order', 'day_amount', 'js_orders', 'js_orders_amount', 'hx_orders',
          'hx_orders_amount', 'fg_orders', 'fg_orders_amount', 'weekly_order', 'weekly_amount',
          'monthly_order', 'monthly_amount']]
     df_name_base = df_name_base.fillna(0)
-    df_name_base = df_name_base.groupby(['dept_name1', 'dept_name2'])[
+    df_name_base = df_name_base.groupby(['dept_name1', 'dept_name'])[
         'fans', 'day_order', 'day_amount', 'js_orders', 'js_orders_amount', 'hx_orders',
-         'hx_orders_amount', 'fg_orders', 'fg_orders_amount', 'weekly_order', 'weekly_amount',
-         'monthly_order', 'monthly_amount'].sum().reset_index()
+        'hx_orders_amount', 'fg_orders', 'fg_orders_amount', 'weekly_order', 'weekly_amount',
+        'monthly_order', 'monthly_amount'].sum().reset_index()
     # 目标
     df_target = get_target()
-    df_name_base = df_name_base.merge(df_target, on=['dept_name2'], how='left')
-    df_name_base['target_rate'] = df_name_base['monthly_amount']/df_name_base['target_amount']
+    df_name_base = df_name_base.merge(df_target, on=['dept_name1'], how='left')
+    df_name_base['target_rate'] = df_name_base['monthly_amount'] / df_name_base['target_amount']
     df_name_base = df_name_base.fillna(0)
     df_name_base = df_name_base.loc[df_name_base['monthly_amount'] != 0, :]
     df_name_base = df_name_base[
-        ['dept_name1', 'dept_name2', 'fans', 'day_order', 'day_amount', 'js_orders', 'js_orders_amount', 'hx_orders',
+        ['dept_name1', 'dept_name', 'fans', 'day_order', 'day_amount', 'js_orders', 'js_orders_amount', 'hx_orders',
          'hx_orders_amount', 'fg_orders', 'fg_orders_amount', 'weekly_order', 'weekly_amount',
          'monthly_order', 'monthly_amount', 'target_amount', 'target_rate']]
     print(df_name_base)
+    df_name_base['dept_name1'] = df_name_base.apply(lambda x: get_dept(x['dept_name1']), axis=1)
+    df_name_base['dept_name'] = df_name_base.apply(lambda x: get_dept2(x['dept_name']), axis=1)
+    df_name_base['weekly_amount'] = df_name_base['weekly_amount'] * 1.423
+    df_name_base['monthly_amount'] = df_name_base['monthly_amount'] * 2.4123
+    df_name_base['target_amount'] = df_name_base['target_amount'] * 23.141
     del_sql()
     save_sql(df_name_base)
 
@@ -238,6 +311,7 @@ def main():
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql3 = jnMysql('yanshiku_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     now = datetime.now().date()
     st = now - timedelta(days=1)
     # 本周

@@ -276,6 +276,9 @@ def main():
     # 客户首次购买时间
     df_member_time = get_member_time()
     df_member = df_member.merge(df_member_time, on=['member_id'], how='left')
+    # 老系统
+
+
     # 用户销售数据
     df_member_order = get_member_order()
     df_member_order['member_id'] = df_member_order['member_id'].astype(int)

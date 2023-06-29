@@ -276,6 +276,7 @@ def main():
     df_order_d = pd.concat(
         [df_ym_order_d, df_tc_order_d, df_ls_order_d, df_fy_order_d1, df_fy_order_d2, df_hhx_order_d, df_bc_order_d,
          df_neh_order_d])
+    df_order_d = df_order_d.fillna(0)
     df_order_d = df_order_d.groupby(['dept_name'])['members', 'order_amounts'].sum().reset_index()
     df_order_d['time_type'] = '当日'
     # 昨日
@@ -290,6 +291,7 @@ def main():
     df_order_2d = pd.concat(
         [df_ym_order_2d, df_tc_order_2d, df_ls_order_2d, df_fy_order_2d1, df_fy_order_2d2, df_hhx_order_2d,
          df_bc_order_2d, df_neh_order_2d])
+    df_order_2d = df_order_2d.fillna(0)
     df_order_2d = df_order_2d.groupby(['dept_name'])['members', 'order_amounts'].sum().reset_index()
     df_order_2d['time_type'] = '昨日'
     # 本周
@@ -304,6 +306,7 @@ def main():
     df_order_w = pd.concat(
         [df_ym_order_w, df_tc_order_w, df_ls_order_w, df_fy_order_w1, df_fy_order_w2, df_hhx_order_w, df_bc_order_w,
          df_neh_order_w])
+    df_order_w = df_order_w.fillna(0)
     df_order_w = df_order_w.groupby(['dept_name'])['members', 'order_amounts'].sum().reset_index()
     df_order_w['time_type'] = '本周'
     # 本月
@@ -318,6 +321,7 @@ def main():
     df_order_m = pd.concat(
         [df_ym_order_m, df_tc_order_m, df_ls_order_m, df_fy_order_m1, df_fy_order_m2, df_hhx_order_m, df_bc_order_m,
          df_neh_order_m])
+    df_order_m = df_order_m.fillna(0)
     df_order_m = df_order_m.groupby(['dept_name'])['members', 'order_amounts'].sum().reset_index()
     df_order_m['time_type'] = '本月'
     # 本年
@@ -333,12 +337,13 @@ def main():
     df_order_y = pd.concat(
         [df_ym_order_y, df_tc_order_y, df_ls_order_y, df_fy_order_y1, df_fy_order_y2, df_hhx_order_y1, df_hhx_order_y2,
          df_bc_order_y, df_neh_order_y])
+    df_order_y = df_order_y.fillna(0)
     df_order_y = df_order_y.groupby(['dept_name'])['members', 'order_amounts'].sum().reset_index()
     df_order_y['time_type'] = '本年'
     df_order = pd.concat([df_order_d, df_order_2d, df_order_w, df_order_m, df_order_y])
     df_order['member_price'] = df_order['order_amounts'] / df_order['members']
     df_order = df_order[['dept_name', 'time_type', 'members', 'order_amounts', 'member_price']]
-    df_order=df_order.fillna(0)
+    df_order = df_order.fillna(0)
     print(df_order)
     del_sql()
     save_sql(df_order)
@@ -362,6 +367,3 @@ if __name__ == '__main__':
     et = now + timedelta(days=1)
     print(st, st2, st3, st4, st5, et)
     main()
-
-
-

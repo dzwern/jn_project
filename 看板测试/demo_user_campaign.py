@@ -141,12 +141,80 @@ def get_amount_divide(x):
         return '30W以上'
 
 
+def get_dept(x):
+    if x == '光辉部':
+        return '1部门'
+    elif x == '光华部':
+        return '2部门'
+    elif x == '光源部':
+        return '3部门'
+    elif x == '光芒部':
+        return '4部门'
+    else:
+        return '1部门'
+
+
+def get_dept2(x):
+    if x == '光华部1组':
+        return '小组1'
+    elif x == '光华部二组':
+        return '小组2'
+    elif x == '光华部六组':
+        return '小组3'
+    elif x == '光华部五组':
+        return '小组4'
+    elif x == '光华部一组1':
+        return '小组5'
+    elif x == '光华部三组':
+        return '小组6'
+    elif x == '光华部七组':
+        return '小组7'
+    elif x == '光华部一组':
+        return '小组8'
+    elif x == '光辉部八组':
+        return '小组1'
+    elif x == '光辉部七组':
+        return '小组2'
+    elif x == '光辉部三组':
+        return '小组3'
+    elif x == '光辉部一组':
+        return '小组4'
+    elif x == '光辉部二组':
+        return '小组5'
+    elif x == '光辉部五组':
+        return '小组6'
+    elif x == '光辉部六组':
+        return '小组7'
+    elif x == '光辉组九组':
+        return '小组8'
+    elif x == '光芒部二组':
+        return '小组1'
+    elif x == '光芒部六组':
+        return '小组2'
+    elif x == '光芒部三组':
+        return '小组3'
+    elif x == '光芒部一组':
+        return '小组4'
+    elif x == '光源部蜂蜜八组':
+        return '小组1'
+    elif x == '光源部蜂蜜九组':
+        return '小组2'
+    elif x == '光源部蜂蜜四组':
+        return '小组3'
+    elif x == '光源部蜂蜜五组':
+        return '小组4'
+    elif x == '光源部海参七组':
+        return '小组5'
+    else:
+        return '小组1'
+
+
 # 中间表删除
 def del_sql():
     sql = '''
     truncate table t_user_campaign;
     '''
-    hhx_sql2.executeSqlByConn(sql)
+    hhx_sql3.executeSqlByConn(sql)
 
 
 def save_sql(df):
@@ -173,7 +241,7 @@ def save_sql(df):
          `member_price`=values(`member_price`),`member_develop_price`=values(`member_develop_price`),`member_price_rank`=values(`member_price_rank`),
          `amount_develop_rank`=values(`amount_develop_rank`),`activity_name`=values(`activity_name`)
          '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    hhx_sql3.executeSqlManyByConn(sql, df.values.tolist())
 
 
 def main():
@@ -196,40 +264,44 @@ def main():
     df_user_base = df_user_base.merge(df_user_amount, on=['sys_user_id'], how='left')
     df_user_base = df_user_base.fillna(0)
     # 开发率
-    df_user_base['fans_develop_rate']=df_user_base['fans_develop']/df_user_base['fans']
+    df_user_base['fans_develop_rate'] = df_user_base['fans_develop'] / df_user_base['fans'] * 0.5123
     # 复购率
-    df_user_base['member_develop_rate']=df_user_base['members_develop']/df_user_base['members']
+    df_user_base['member_develop_rate'] = df_user_base['members_develop'] / df_user_base['members'] * 1.423
     # 开发金额区间
-    df_user_base['amount_range']=df_user_base.apply(lambda x:get_amount_divide(x['members_amount']),axis=1)
+    df_user_base['amount_range'] = df_user_base.apply(lambda x: get_amount_divide(x['members_amount']), axis=1)
     # 单产
-    df_user_base['member_price']=df_user_base['members_amount']/df_user_base['members']
+    df_user_base['member_price'] = df_user_base['members_amount'] / df_user_base['members'] * 2.4123
     # 客单价
-    df_user_base['member_develop_price']=df_user_base['members_amount']/(df_user_base['fans_develop']+df_user_base['members_develop'])
+    df_user_base['member_develop_price'] = df_user_base['members_amount'] / (
+                df_user_base['fans_develop'] + df_user_base['members_develop'])
     df_user_base['activity_name'] = activity_name
     df_user_base = df_user_base.replace([np.inf, -np.inf], np.nan)
     df_user_base = df_user_base.fillna(0)
     # 单产排名
-    df_user_base['member_price_rank'] = df_user_base.groupby(['dept_name2'])['member_price'].rank(method='dense',ascending=False)
+    df_user_base['member_price_rank'] = df_user_base.groupby(['dept_name2'])['member_price'].rank(method='dense',
+                                                                                                  ascending=False)
     # 业绩排名
-    df_user_base['amount_develop_rank'] = df_user_base.groupby(['dept_name2'])['members_amount'].rank(method='dense',ascending=False)
-    df_user_base['id']=df_user_base['sys_user_id']+df_user_base['activity_name']
+    df_user_base['amount_develop_rank'] = df_user_base.groupby(['dept_name2'])['members_amount'].rank(method='dense',
+                                                                                                      ascending=False)
+    df_user_base['id'] = df_user_base['sys_user_id'] + df_user_base['activity_name']
     df_user_base = df_user_base[['id', 'sys_user_id', 'user_name', 'nick_name', 'dept_name1', 'dept_name2', 'dept_name',
                                  'wechat_nums', 'fans', 'members', 'fans_develop',
                                  'members_develop', 'fans_develop_rate', 'member_develop_rate', 'members_amount',
                                  'amount_range', 'member_price', 'member_develop_price', 'member_price_rank',
                                  'amount_develop_rank', 'activity_name']]
-    df_user_base=df_user_base
+    df_user_base = df_user_base
+    df_user_base['dept_name1'] = df_user_base.apply(lambda x: get_dept(x['dept_name1']), axis=1)
+    df_user_base['dept_name'] = df_user_base.apply(lambda x: get_dept2(x['dept_name']), axis=1)
+    df_user_base['nick_name'] = df_user_base['nick_name'].str.split('').apply(lambda x: x[1]) + '三'
     # 删除数据
-    # del_sql()
+    del_sql()
     save_sql(df_user_base)
 
 
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql3 = jnMysql('yanshiku_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 2023年五一活动，2023年38女神节活动，2023年618活动
-    activity_name = '2023年618活动返场'
+    activity_name = '2023年618活动'
     main()
-
-
-

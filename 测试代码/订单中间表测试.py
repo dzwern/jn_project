@@ -3,7 +3,7 @@
 """
 # @Time    : 2023/3/15 9:23
 # @Author  : diaozhiwei
-# @FileName: hhx_order_middle.py
+# @FileName: demo_order_middle.py
 # @description: 荷花秀订单基础信息表，主要内容有订单类型，订单时间，订单状态，订单客户等信息
 # @update：增量更新，每小时更新前7天数据，保证状态变更
 """

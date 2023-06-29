@@ -114,6 +114,74 @@ def get_member_increment_order(monthly, log_name, st, st0, et0):
     return df
 
 
+def get_dept(x):
+    if x == '光辉部':
+        return '1部门'
+    elif x == '光华部':
+        return '2部门'
+    elif x == '光源部':
+        return '3部门'
+    elif x == '光芒部':
+        return '4部门'
+    else:
+        return '1部门'
+
+
+def get_dept2(x):
+    if x == '光华部1组':
+        return '小组1'
+    elif x == '光华部二组':
+        return '小组2'
+    elif x == '光华部六组':
+        return '小组3'
+    elif x == '光华部五组':
+        return '小组4'
+    elif x == '光华部一组1':
+        return '小组5'
+    elif x == '光华部三组':
+        return '小组6'
+    elif x == '光华部七组':
+        return '小组7'
+    elif x == '光华部一组':
+        return '小组8'
+    elif x == '光辉部八组':
+        return '小组1'
+    elif x == '光辉部七组':
+        return '小组2'
+    elif x == '光辉部三组':
+        return '小组3'
+    elif x == '光辉部一组':
+        return '小组4'
+    elif x == '光辉部二组':
+        return '小组5'
+    elif x == '光辉部五组':
+        return '小组6'
+    elif x == '光辉部六组':
+        return '小组7'
+    elif x == '光辉组九组':
+        return '小组8'
+    elif x == '光芒部二组':
+        return '小组1'
+    elif x == '光芒部六组':
+        return '小组2'
+    elif x == '光芒部三组':
+        return '小组3'
+    elif x == '光芒部一组':
+        return '小组4'
+    elif x == '光源部蜂蜜八组':
+        return '小组1'
+    elif x == '光源部蜂蜜九组':
+        return '小组2'
+    elif x == '光源部蜂蜜四组':
+        return '小组3'
+    elif x == '光源部蜂蜜五组':
+        return '小组4'
+    elif x == '光源部海参七组':
+        return '小组5'
+    else:
+        return '小组1'
+
+
 # 保存数据
 def save_sql(df):
     sql = '''
@@ -134,7 +202,7 @@ def save_sql(df):
          `member_develop`=values(`member_develop`), `member_order`=values(`member_order`),
          `member_rate`=values(`member_rate`),`member_price`=values(`member_price`),`member_develop_price`=values(`member_develop_price`)
      '''
-    hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
+    hhx_sql3.executeSqlManyByConn(sql, df.values.tolist())
 
 
 # 中间表删除
@@ -142,7 +210,7 @@ def del_sql():
     sql = '''
     truncate table t_member_stock_increment_day;
     '''
-    hhx_sql2.executeSqlByConn(sql)
+    hhx_sql3.executeSqlByConn(sql)
 
 
 def main():
@@ -194,24 +262,29 @@ def main():
     df_member_order = df_member_order.fillna(0)
     df_member = df_member.merge(df_member_order,on=['dept_name', 'years', 'monthly', 'stock_increment', 'member_level'], how='left')
     # 转化率
-    df_member['member_rate'] = df_member['member_develop'] / df_member['members']
+    df_member['member_rate'] = df_member['member_develop'] / df_member['members']*0.412
     # 客单价
-    df_member['member_price'] = df_member['member_order'] / df_member['member_develop']
+    df_member['member_price'] = df_member['member_order'] / df_member['member_develop']*12
     # 单产
-    df_member['member_develop_price'] = df_member['member_order'] / df_member['members']
+    df_member['member_develop_price'] = df_member['member_order'] / df_member['members']*9.4123
     df_member = df_member.fillna(0)
     df_member['id'] = df_member['dept_name'] + df_member['years'] + df_member['monthly'] + df_member[
         'stock_increment'] + df_member['member_level']
     df_member = df_member[
         ['id', 'dept_name1', 'dept_name2', 'dept_name', 'years', 'monthly', 'stock_increment', 'member_level',
          'members', 'member_develop', 'member_order', 'member_rate', 'member_price', 'member_develop_price']]
-    del_sql()
+
+    df_member['dept_name1'] = df_member.apply(lambda x: get_dept(x['dept_name1']), axis=1)
+    df_member['dept_name'] = df_member.apply(lambda x: get_dept2(x['dept_name']), axis=1)
+
+    # del_sql()
     save_sql(df_member)
 
 
 if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
+    hhx_sql3 = jnMysql('yanshiku_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     monthly1 = '1月'
     monthly2 = '2月'
     monthly3 = '3月'
@@ -249,6 +322,10 @@ if __name__ == '__main__':
     log_name11 = '2023年11月初客户等级'
     log_name12 = '2023年12月初客户等级'
     main()
+
+
+
+
 
 
 
