@@ -198,8 +198,8 @@ def main():
     df_fans_order = df_credit.merge(df_hhx_user, on=['dept_name'], how='left')
     # 判断
     df_fans_order = df_fans_order.fillna(0)
-    # df_fans_order['fuzhu'] = df_fans_order['tenant_id2'] - df_fans_order['tenant_id']
-    # df_fans_order = df_fans_order.loc[df_fans_order['fuzhu'] == 0, :]
+    df_fans_order['fuzhu'] = df_fans_order['tenant_id2'] - df_fans_order['tenant_id']
+    df_fans_order = df_fans_order.loc[df_fans_order['fuzhu'] == 0, :]
     # 及时销售数据
     df_order_js = get_order_js()
     # 后续销售数据
@@ -232,7 +232,7 @@ def main():
         'order_member_campaign_fg', 'order_amount_campaign_fg']]
     df_fans_order = df_fans_order
     print(df_fans_order)
-    # del_sql()
+    del_sql()
     save_sql(df_fans_order)
 
 

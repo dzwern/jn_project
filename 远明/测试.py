@@ -1,9 +1,13 @@
+# -*-conding:utf-8
+
+
 # -*-conding:utf-8 -*-
-# !/usr/bin/env python3
+
+
 """
-# @Time    : 2023/5/16 17:38
-# @Author  : diaozhiwei
-# @FileName: hhx_dai_sku_orders.py
+# @Time    : 2023/07/03
+# @Author  : gengpeng
+# @FileName: dai_oid_orders_day.py
 # @description:
 # @update:
 """
@@ -65,167 +69,53 @@ def executeSqlByConn(sql='SELECT * FROM DUAL', conn=None):
         return connection.execute(sql)
 
 
-def get_sku_orders():
+def get_orders():
     sql = '''
-    SELECT 
-        所属部门,渠道,客户ID,订单编号,商品名称,商品简称,商品类型,规格,商品编号,数量,中心,部门,小组,
-        销售价,实际支付单价,订单状态,下单日期,订单类型,地址,订单金额,退款金额,结余金额,营销类型,    
-        unit_old AS '订单规格',
-        unit_new AS '换算规格',
-        rate AS '换算率',
-        CASE WHEN rate IS NOT NULL THEN 数量/rate ELSE 0 END AS '销售数量'
-        FROM (
-        SELECT
-      	t.dept_name AS '所属部门',
-      	CASE WHEN t.dept_name LIKE '销售%%' THEN '销售部' ELSE '市场部' END AS '渠道',
-        member_id AS '客户ID',
-        order_sn AS '订单编号',
-        t.product_name AS '商品名称',
-        common_name AS '商品简称',
-        is_wine AS '商品类型',
-        TRIM( 
-        BOTH '"'
-        FROM JSON_EXTRACT(specification_values, '$[0].value')
-    ) AS '规格',
-        sku_sn AS '商品编号',
-        quantity AS '数量',
-        sku_price AS '销售价',
-        real_price AS '实际支付单价',
-        CASE
-            WHEN order_state IN (0, 1, 2, 3, 4, 5) THEN '审核阶段'
-            WHEN order_state = 6 THEN '订单取消'
-            WHEN order_state = 7 THEN '已完结'
-            WHEN order_state = 8 THEN '订单驳回'
-            WHEN order_state BETWEEN 9 AND 11 THEN '拒收'
-            WHEN order_state = 12 THEN '待支付'
-            WHEN order_state BETWEEN 13 AND 16 THEN '待发货'
-            WHEN order_state = 17 THEN '待签收'
-            WHEN order_state BETWEEN 18 AND 21 THEN '订单拦回'
-            WHEN order_state = 100 THEN '异常订单'
-            ELSE '未归类'
-        END AS '订单状态',
-        create_time AS '下单日期',
-        yx_type AS '订单类型',
-        CONCAT(receiver_province, receiver_city) AS '地址',
-        order_amount AS '订单金额',
-        refund_amount AS '退款金额',
-        order_amount - refund_amount AS '结余金额',
-        CASE
-            WHEN (no_performance_type = 1) THEN '补发订单'
-            WHEN (no_performance_type = 2) THEN '客户品鉴'
-            WHEN (no_performance_type = 3) THEN '客户激活'
-            WHEN (no_performance_type = 4) THEN '客户维护'
-            WHEN (no_performance_type = 5) THEN '私人定制'
-            WHEN (no_performance_type = 6) THEN '正常销售'
-            WHEN (no_performance_type = 7) THEN '裂变赠礼'
-            WHEN (no_performance_type = 8) THEN '平台赠礼'
-            WHEN (no_performance_type = 9) THEN '客户反加'
-            WHEN (no_performance_type = 10) THEN '换货订单'
-            WHEN (no_performance_type = 11) THEN '远币兑换'
-            WHEN (no_performance_type = 12) THEN '积分兑换'
-            WHEN (no_performance_type = 13) THEN '客户转移'
-            WHEN (no_performance_type = 14) THEN '客户封坛'
-        END AS '营销类型',
-    dd.centel AS '中心',
-    CASE
-        WHEN dd.department IS NULL THEN '无部门'
-        ELSE dd.department
-    END '部门',
-    CASE
-        WHEN dd.gro IS NULL THEN '无小组'
-        ELSE dd.gro
-    END '小组'
-    FROM
-        (
-        SELECT
-            o.id AS order_id,
-            d.dept_name,
-            o.member_id,
-            oi.id AS item_id,
-            oi.product_name,
-            oi.specification_values,
-            oi.quantity,
-            o.order_state,
-            o.sys_user_id,
-            m.incoming_line_time,
-            m.member_source,
-            m.member_source_level2,
-            o.create_time,
-            o.order_sn,
-            o.order_type,
-            o.receiver_name,
-            o.receiver_detail_address,
-            o.order_amount,
-            o.refund_amount,
-            u.nick_name,
-            dd2.dict_label AS yx_type,
-            m.member_type,
-            o.receiver_province,
-            o.receiver_city,
-            o.receiver_region,
-            ori.no_performance_type,
-            u.user_name,
-            sku.sn AS sku_sn,
-            oi.sku_price,
-            oi.real_price
-        FROM
-            crm_tm_ymlj.t_orders AS o
-        LEFT JOIN crm_tm_ymlj.sys_user AS u ON 
-            u.user_id = o.sys_user_id
-        LEFT JOIN crm_tm_ymlj.sys_dept AS d ON
-            d.dept_id = u.dept_id
-        LEFT JOIN crm_tm_ymlj.t_order_item AS oi ON
-            oi.order_id = o.id
-        LEFT JOIN crm_tm_ymlj. t_sku AS sku ON
-            sku.id = oi.sku_id
-        LEFT JOIN crm_tm_ymlj.t_member AS m ON
-            m.id = o.member_id
-        INNER JOIN crm_tm_ymlj. t_order_rel_info AS ori ON
-            ori.orders_id = o.id
-            --      and ori.no_performance_type IN (3, 6) -- -- 只取正常销售、沉睡激活
-        LEFT JOIN crm_tm_ymlj.t_wechat AS w ON
-            w.id = o.wechat_id
-        LEFT JOIN crm_tm_ymlj.sys_dict_data AS dd2 ON
-            dd2.dict_type = 'order_type'
-            AND dd2.dict_value = o.order_type
-        WHERE
-            1 = 1
-            AND o.order_state IN (0, 1, 2, 3, 4, 5, 7, 12, 13, 14, 15, 16, 17)
-            -- 筛选审核阶段、已完结、待发货、待签收
-            AND (d.dept_name LIKE '销售%%' OR d.dept_name LIKE '运维部%%' 
-                   OR d.dept_name LIKE '酒厂开发%%' OR d.dept_name LIKE '市场开发%%')
-            AND o.create_time >= '2023-05-01 00:00:00'
-            -- and o.create_time < '2022-07-01 00:00:00'
-    ) t
-    LEFT JOIN (
-        SELECT
-            product_name,
-            common_name,
-            is_wine
-        FROM
-            ymlj_dx.t_product_info
-    ) a ON
-        t.product_name = a.product_name
-    LEFT JOIN ymlj_dx.dai_dept dd ON t.dept_name = dd.dept_name
-)c LEFT JOIN (
-SELECT unit_old,unit_new,rate
-FROM ymlj_dx.t_product_unit_rate
-)p ON c.规格 = p.unit_old
+     SELECT 
+      don.*,
+      dd.channel,tori.is_first_order,
+      tori.is_zhaoshang_first_order, tori.is_follow_order, tori.is_repurchase,
+      tori.is_fission
+    FROM ymlj_dx.dai_orders_new don
+    left JOIN ymlj_dx.dai_dept dd ON don.dept_name = dd.dept_name
+    left join crm_tm_ymlj.t_orders to2 ON to2.order_sn = don.order_id
+    LEFT JOIN crm_tm_ymlj.t_order_rel_info tori  ON tori.orders_id = to2.id
+    WHERE
+      don.create_time >= '2023-01-01'
+      and dd.channel in ('销售部','市场部')
     '''
-    df = get_DataFrame_PD(sql)
+    df = get_DataFrame_PD2(sql)
+    return df
+
+
+def get_members():
+    sql = '''
+     select member_id,dept_name as dept_name2 from `dai_member_5.15`
+    '''
+    df = get_DataFrame_PD2(sql)
+    return df
+
+
+def get_depts():
+    sql = '''
+     select dept_name,channel,centel,department,gro from ymlj_dx.dai_dept
+    '''
+    df = get_DataFrame_PD2(sql)
     return df
 
 
 # 保存数据
 def save_sql(df):
     sql = '''
-    INSERT INTO `dai_sku_orders` 
-     (`id`,`dept_name`,`qudao`,`member_id`,`order_sn`,`product_name`,
-     `common_name`,`is_wine`,`specification_values`,`sku_sn`,`quantity`,
-     `centel`,`department`,`gro`,`sku_price`,`real_price`,
-     `order_state`,`create_time`,`yx_type`,`receiver_province`,`order_amount`,
-     `refund_amount`,`jieyu_amount`,`no_performance_type`,`unit_old`,`unit_new`,
-     `rate`,`quantitys`
+    INSERT INTO `dai_oid_orders_day` 
+     (`order_id`,`order_state`,`order_pro`,`member_id`,
+     `member_source`,`member_source_level2`,`member_identity`,`first_communicate_time`,`incoming_line_time`,
+     `dept_name`,`nick_name`,`wechat_number`,`user_name`,`create_time`,
+     `trade_time`,`complate_date`,`order_type`,`yx_type`,`is_fission`,
+     `receiver_province`,`receiver_city`,`order_amount`,`refund_amount`,`jieyu_amount`,
+     `on_member_rank_id`,`on_member_status`,`update_time`,`order_period`,
+     `order_cycle`,`act_name`,`member_wzd`, `is_first_order`, `is_zhaoshang_first_order`,
+     `is_follow_order`, `is_repurchase`, `channel`, `centel`,`department`, `gro`
      ) 
      VALUES (
      %s,%s,%s,%s,%s,
@@ -233,18 +123,25 @@ def save_sql(df):
      %s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
      %s,%s,%s,%s,%s,
-     %s,%s,%s
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s,%s,
+     %s,%s,%s,%s
      )
      ON DUPLICATE KEY UPDATE
-         `dept_name`= VALUES(`dept_name`),`qudao`= VALUES(`qudao`),`member_id`= VALUES(`member_id`),`order_sn`=VALUES(`order_sn`),
-         `product_name`=values(`product_name`),`common_name`=values(`common_name`),`is_wine`=values(`is_wine`),
-         `specification_values`=values(`specification_values`),`sku_sn`=values(`sku_sn`),`quantity`=values(`quantity`),
-         `centel`=values(`centel`),`department`=values(`department`),`gro`=values(`gro`),
-         `sku_price`=values(`sku_price`),`real_price`=values(`real_price`),`order_state`=values(`order_state`),
-         `create_time`=values(`create_time`),`yx_type`=values(`yx_type`),`receiver_province`=values(`receiver_province`),
+         `order_id`= VALUES(`order_id`),`order_state`= VALUES(`order_state`),`order_pro`=VALUES(`order_pro`),
+         `member_id`=values(`member_id`),`member_source`=values(`member_source`),`member_source_level2`=values(`member_source_level2`),
+         `member_identity`=values(`member_identity`),`first_communicate_time`=values(`first_communicate_time`),`incoming_line_time`=values(`incoming_line_time`),
+         `dept_name`=values(`dept_name`),`nick_name`=values(`nick_name`),`wechat_number`=values(`wechat_number`),
+         `user_name`=values(`user_name`),`create_time`=values(`create_time`),`trade_time`=values(`trade_time`),
+         `complate_date`=values(`complate_date`),`order_type`=values(`order_type`),`yx_type`=values(`yx_type`),
+         `is_fission`=values(`is_fission`),`receiver_province`=values(`receiver_province`),`receiver_city`=values(`receiver_city`),
          `order_amount`=values(`order_amount`),`refund_amount`=values(`refund_amount`),`jieyu_amount`=values(`jieyu_amount`),
-         `no_performance_type`=values(`no_performance_type`),`unit_old`=values(`unit_old`),`unit_new`=values(`unit_new`),
-         `rate`=values(`rate`),`quantitys`=values(`quantitys`)
+         `on_member_rank_id`=values(`on_member_rank_id`),`on_member_status`=values(`on_member_status`),
+         `update_time`=values(`update_time`),`order_period`=values(`order_period`),`order_cycle`=values(`order_cycle`),
+         `act_name`=values(`act_name`),`member_wzd`=values(`member_wzd`),`is_first_order`=values(`is_first_order`),
+         `is_zhaoshang_first_order`=values(`is_zhaoshang_first_order`),`is_follow_order`=values(`is_follow_order`),`is_repurchase`=values(`is_repurchase`),
+         `channel`=values(`channel`),`centel`=values(`centel`),`department`=values(`department`),
+         `gro`=values(`gro`)
      '''
     executeSqlManyByConn(sql, df.values.tolist())
 
@@ -252,25 +149,87 @@ def save_sql(df):
 # 中间表删除
 def del_sql():
     sql = '''
-    truncate table dai_sku_orders;
+    truncate table dai_oid_orders_day; -- 清空订单表
     '''
     executeSqlByConn(sql)
 
 
+def dept_rep(table):
+    if "四中心" in table['dept_name']:
+        if pd.isna(table['dept_name2']):
+            return table['dept_name']
+        else:
+            return table['dept_name2']
+    else:
+        return table['dept_name']
+
+
 def main():
-    df_sku_orders = get_sku_orders()
-    df_sku_orders = df_sku_orders.fillna(0)
-    df_sku_orders['id'] = df_sku_orders['订单编号']
-    df_sku_orders = df_sku_orders[
-        ['id', '所属部门', '渠道', '客户ID', '订单编号', '商品名称', '商品简称', '商品类型',
-         '规格', '商品编号', '数量', '中心', '部门', '小组',
-         '销售价', '实际支付单价', '订单状态', '下单日期', '订单类型', '地址', '订单金额',
-         '退款金额', '结余金额', '营销类型', '订单规格', '换算规格', '换算率', '销售数量']]
+    df_order = get_orders()  # 订单表
+    df_member = get_members()  # 客户表
+    df_dept = get_depts()  # 部门表
+
+    print('读取数据')
+    # 剔除备注列，作用不大，文本占用内存
+    df_order.drop(columns='memo', axis=0, inplace=True)
+
+    # 填充缺失值
+    df_order['is_fission'].fillna('非裂变', inplace=True)
+    df_order['member_wzd'].fillna('其他', inplace=True)
+    df_order['member_source_level2'].fillna('无二级渠道', inplace=True)
+    df_order['on_member_status'].fillna('-1', inplace=True)
+    print('处理缺失值1')
+    #  因三四中心合并,需替换四中心的订单给三中心,用5月15日留存的客户表销售部门归属做替换
+    # 四中心订单最近的是5月5号的 ，所以只需要对这之前的替换即可
+    df_order1 = pd.merge(df_order, df_member, on='member_id', how='left')
+    df_order1['dept_name'] = df_order1.apply(dept_rep, axis=1)
+    print('处理四中心替换')
+    # 删除原部门
+    df_order1.drop(columns=['dept_name2', 'channel'], axis=1, inplace=True)
+    # 匹配新中心部门
+    df_order2 = pd.merge(df_order1, df_dept, on='dept_name', how='left')
+    # 填充可能的缺失值
+    df_order2['department'].fillna('无部门', inplace=True)
+    df_order2['gro'].fillna('无小组', inplace=True)
+    # 只取销售市场部
+    df_order3 = df_order2.query('channel in ["销售部","市场部"]')
+    print('处理部门小组缺失值')
+
+    df_order3 = df_order3[
+        ['order_id', 'order_state', 'order_pro', 'member_id', 'member_source',
+         'member_source_level2', 'member_identity', 'first_communicate_time',
+         'incoming_line_time', 'dept_name', 'nick_name', 'wechat_number',
+         'user_name', 'create_time', 'trade_time', 'complate_date', 'order_type',
+         'yx_type', 'is_fission', 'receiver_province', 'receiver_city',
+         'order_amount', 'refund_amount', 'jieyu_amount', 'on_member_rank_id',
+         'on_member_status', 'update_time', 'order_period', 'order_cycle',
+         'act_name', 'member_wzd', 'is_first_order', 'is_zhaoshang_first_order',
+         'is_follow_order', 'is_repurchase', 'channel', 'centel',
+         'department', 'gro']]
+
+    df_order3["complate_date"].replace("NaT", np.NaN, inplace=True)
+    df_order3["incoming_line_time"].replace("NaT", np.NaN, inplace=True)
+    df_order3 = df_order3.fillna(0)
+    df_order3['update_time'] = df_order3['update_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
+    df_order3['complate_date'] = df_order3['complate_date'].apply(lambda x: '1900-01-01' if x == 0 else x)
+    df_order3['incoming_line_time'] = df_order3['incoming_line_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
+    print('处理时间缺失值')
+    df_order3 = df_order3[
+        ['order_id', 'order_state', 'order_pro', 'member_id', 'member_source',
+         'member_source_level2', 'member_identity', 'first_communicate_time',
+         'incoming_line_time', 'dept_name', 'nick_name', 'wechat_number',
+         'user_name', 'create_time', 'trade_time', 'complate_date', 'order_type',
+         'yx_type', 'is_fission', 'receiver_province', 'receiver_city',
+         'order_amount', 'refund_amount', 'jieyu_amount', 'on_member_rank_id',
+         'on_member_status', 'update_time', 'order_period', 'order_cycle',
+         'act_name', 'member_wzd', 'is_first_order', 'is_zhaoshang_first_order',
+         'is_follow_order', 'is_repurchase', 'channel', 'centel',
+         'department', 'gro']]
     del_sql()
-    save_sql(df_sku_orders)
+    print('删除旧数据')
+    save_sql(df_order3)
+    print('插入数据完成')
 
 
 if __name__ == '__main__':
     main()
-
-

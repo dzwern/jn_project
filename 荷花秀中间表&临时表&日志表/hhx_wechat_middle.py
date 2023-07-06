@@ -137,7 +137,7 @@ def main():
                            'oneway_fans']]
     df_wechat = df_wechat.fillna(0)
     print(df_wechat)
-    del_sql()
+    # del_sql()
     save_sql(df_wechat)
 
 

@@ -709,6 +709,8 @@ def main():
     df_hhx_orders = df_hhx_orders.merge(df_member_source, on=['order_sn'], how='left')
     df_hhx_orders['member_source'] = df_hhx_orders.apply(lambda x: get_member_source2(x['member_source']), axis=1)
     # 沟通时间差
+    df_hhx_orders['first_time']=df_hhx_orders['first_time'].fillna(0)
+    df_hhx_orders['first_time'] = df_hhx_orders['first_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_hhx_orders['first_time']=df_hhx_orders.apply(lambda x: "2000-01-01" if x['first_time']<datetime.datetime.strptime('2000-01-01','%Y-%m-%d') else x['first_time'],axis=1)
     df_hhx_orders['ct'] = df_hhx_orders['create_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
     df_hhx_orders['ft'] = df_hhx_orders['first_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
@@ -780,8 +782,8 @@ if __name__ == '__main__':
     # st1 = utils.date2str(st)
     # et1 = utils.date2str(et)
     # 时间转化
-    st = '2023-01-01'
-    et = '2023-05-18'
+    st = '2023-05-17'
+    et = '2023-07-01'
     st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
     et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st, et)

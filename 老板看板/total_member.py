@@ -509,6 +509,7 @@ def main():
          df_fy_member2, df_ls_member, df_ls_member2, df_tc_member, df_tc_member2, df_fy_member3, df_fy_member4])
     df_member = df_member
     df_member['dept_name'] = df_member.apply(lambda x: get_tenant(x['dept_name']), axis=1)
+    df_member=df_member.fillna(0)
     # 将小于2017年的客户转换2017
     df_member.loc[df_member['yearly'].astype(int) < 2017, 'yearly'] = 2017
     df_member.loc[df_member['yearly'].astype(int) > 2023, 'yearly'] = 2023

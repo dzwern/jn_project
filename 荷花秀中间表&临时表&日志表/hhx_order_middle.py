@@ -96,7 +96,7 @@ def get_hhx_orders2():
     LEFT JOIN sys_dept d on c.dept_id=d.dept_id
     LEFT JOIN t_wechat e on a.wechat_id=e.id 
     WHERE
-        a.tenant_id in ('25')
+        a.tenant_id in ('25','26','27','28')
     and a.create_time>='{}'
     and a.create_time<'{}'
     '''.format(st1,et1)
@@ -194,7 +194,7 @@ def get_clinch_type():
     FROM 
         t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
-    WHERE a.tenant_id in ('25')
+    WHERE a.tenant_id in ('25','26','27','28')
     and a.create_time>='{}'
     and a.create_time<'{}'
     and is_first_order=1
@@ -209,7 +209,7 @@ def get_clinch_type():
     FROM 
         t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
-    WHERE a.tenant_id in ('25')
+    WHERE a.tenant_id in ('25','26','27','28')
     and a.create_time>='{}'
     and a.create_time<'{}' 
     and b.is_follow_order=1
@@ -224,7 +224,7 @@ def get_clinch_type():
     FROM 
         t_orders a 
     LEFT JOIN t_order_rel_info b on a.id=b.orders_id
-    WHERE a.tenant_id in ('25')
+    WHERE a.tenant_id in ('25','26','27','28')
     and a.create_time>='{}'
     and a.create_time<'{}' 
     and b.is_repurchase=1
@@ -259,7 +259,7 @@ def get_member_source():
     FROM 
         t_orders a
     LEFT JOIN t_member b on a.member_id=b.id
-    WHERE a.tenant_id in ('25')
+    WHERE a.tenant_id in ('25','26','27','28')
     and a.create_time>='{}'
     and a.create_time<'{}'
     GROUP BY a.order_sn
@@ -366,7 +366,7 @@ def get_hhx_member():
     from 
      t_member a
     WHERE
-        a.tenant_id in ('25')
+        a.tenant_id in ('25','26','27','28')
     '''
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -381,7 +381,7 @@ def get_product_name():
     FROM 
         t_orders a
     left join t_order_item b on a.id = b.order_id
-    WHERE a.tenant_id in ('25') 
+    WHERE a.tenant_id in ('25','26','27','28')
     and a.create_time>='{}'
     and a.create_time<'{}'
     GROUP BY a.order_sn
@@ -692,8 +692,8 @@ def main():
 
     # 筛选判断
     df_hhx_orders=df_hhx_orders.fillna(0)
-    # df_hhx_orders['fuzhu']=df_hhx_orders['tenant_id2']-df_hhx_orders['tenant_id']
-    # df_hhx_orders=df_hhx_orders.loc[df_hhx_orders['fuzhu']==0,:]
+    df_hhx_orders['fuzhu']=df_hhx_orders['tenant_id2']-df_hhx_orders['tenant_id']
+    df_hhx_orders=df_hhx_orders.loc[df_hhx_orders['fuzhu']==0,:]
     # 订单类型
     df_hhx_orders['order_type'] = df_hhx_orders.apply(lambda x: get_order_type(x['order_type']), axis=1)
     # 营销类型
@@ -709,6 +709,8 @@ def main():
     df_hhx_orders = df_hhx_orders.merge(df_member_source, on=['order_sn'], how='left')
     df_hhx_orders['member_source'] = df_hhx_orders.apply(lambda x: get_member_source2(x['member_source']), axis=1)
     # 沟通时间差
+    df_hhx_orders['first_time']=df_hhx_orders['first_time'].fillna(0)
+    df_hhx_orders['first_time'] = df_hhx_orders['first_time'].apply(lambda x: '1900-01-01' if x == 0 else x)
     df_hhx_orders['first_time']=df_hhx_orders.apply(lambda x: "2000-01-01" if x['first_time']<datetime.datetime.strptime('2000-01-01','%Y-%m-%d') else x['first_time'],axis=1)
     df_hhx_orders['ct'] = df_hhx_orders['create_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
     df_hhx_orders['ft'] = df_hhx_orders['first_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
@@ -774,18 +776,23 @@ if __name__ == '__main__':
     hhx_sql1=jnMysql('crm_tm_jnmt','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2=jnMysql('hhx_dx','dzw','dsf#4oHGd','rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     # 开始时间，结束时间
-    # time1 = datetime.datetime.now()
-    # st = time1 - relativedelta(days=10)
-    # et = time1 + relativedelta(days=1)
-    # st1 = utils.date2str(st)
-    # et1 = utils.date2str(et)
+    time1 = datetime.datetime.now()
+    st = time1 - relativedelta(days=30)
+    et = time1 + relativedelta(days=1)
+    st1 = utils.date2str(st)
+    et1 = utils.date2str(et)
     # 时间转化
-    st = '2022-01-01'
-    et = '2023-01-01'
-    st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
-    et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
-    print(st, et)
+    # st = '2022-01-01'
+    # et = '2023-01-01'
+    # st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
+    # et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
+    # print(st, et)
     main()
+
+
+
+
+
 
 
 
