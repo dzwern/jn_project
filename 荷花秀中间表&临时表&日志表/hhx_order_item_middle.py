@@ -57,7 +57,8 @@ def get_order_product2():
         b.product_name,
         b.sku_price,
         b.real_price,
-        b.quantity
+        b.quantity,
+        a.tenant_id 
     FROM
         t_orders a
     left join t_order_item b on a.id=b.order_id
@@ -70,7 +71,6 @@ def get_order_product2():
     and a.refund_state not in (4)
     and a.create_time>='{}'
     and a.create_time<'{}'
-    and a.order_amount>40
     '''.format(st, et)
     df = hhx_sql1.get_DataFrame_PD(sql)
     return df
@@ -215,6 +215,14 @@ def save_sql(df):
     hhx_sql2.executeSqlManyByConn(sql, df.values.tolist())
 
 
+# 中间表删除
+def del_sql():
+    sql = '''
+    truncate table t_order_item_middle;
+    '''
+    hhx_sql2.executeSqlByConn(sql)
+
+
 def main():
     # 产品信息数据
     df_order_product = get_order_product2()
@@ -222,6 +230,9 @@ def main():
     df_order_dept = get_hhx_user()
     df_order_product = df_order_product.merge(df_order_dept, on=['dept_name'], how='left')
     df_order_product = df_order_product.fillna(0)
+    # 租户
+    # df_order_product['fuzhu']=df_order_product['tenant_id2']-df_order_product['tenant_id']
+    # df_order_product=df_order_product.loc[df_order_product['fuzhu']==0,:]
     # 活动信息
     # 光源蜂蜜
     df0 = df_order_product[df_order_product['dept_name2'] == '光源部蜂蜜组']
@@ -253,6 +264,7 @@ def main():
     df_order_product = df_order_product[
         ['id', 'order_sn', 'create_time', 'order_id', 'dept_name1', 'dept_name2', 'dept_name', 'product_name',
          'sku_price', 'real_price', 'quantity', 'activity_name']]
+    # del_sql()
     # 保存数据
     save_sql(df_order_product)
 
@@ -260,16 +272,16 @@ def main():
 if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
-    time1 = datetime.datetime.now()
-    st = time1 - relativedelta(days=10)
-    et = time1 + relativedelta(days=1)
-    st = utils.date2str(st)
-    et = utils.date2str(et)
+    # time1 = datetime.datetime.now()
+    # st = time1 - relativedelta(days=10)
+    # et = time1 + relativedelta(days=1)
+    # st = utils.date2str(st)
+    # et = utils.date2str(et)
     # 时间转化
-    # st = '2023-05-18'
-    # et = '2023-06-01'
-    # st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
-    # et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
+    st = '2023-05-18'
+    et = '2023-07-07'
+    st1 = datetime.datetime.strptime(st, "%Y-%m-%d")
+    et1 = datetime.datetime.strptime(et, "%Y-%m-%d")
     print(st, et)
     main()
 

@@ -278,7 +278,6 @@ def main():
     df_member = df_member.merge(df_member_time, on=['member_id'], how='left')
     # 老系统
 
-
     # 用户销售数据
     df_member_order = get_member_order()
     df_member_order['member_id'] = df_member_order['member_id'].astype(int)
@@ -321,6 +320,8 @@ if __name__ == '__main__':
     hhx_sql1 = jnMysql('crm_tm_jnmt', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     hhx_sql2 = jnMysql('hhx_dx', 'dzw', 'dsf#4oHGd', 'rm-2ze4184a0p7wd257yko.mysql.rds.aliyuncs.com')
     main()
+
+
 
 
 
